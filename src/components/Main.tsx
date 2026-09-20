@@ -4,16 +4,25 @@ import { ConversionToggle } from './conversion-toggle'
 import { CountTotal } from './count-total'
 import { ReceiptDetails } from './receipt-details'
 import { HistoryDetails } from './history-details'
-import type { Receipt } from '@/types'
 import { SectionBlock } from './section'
 import { SettingOptions } from './setting-options'
+import { useTariff } from '@/tariff-store'
+import { useSettings } from '@/settings-store'
 
 type MainProps = {
-  receipts: Receipt[]
   records: { kwh: number; money: number }[]
 }
 
-export const Main: React.FC<MainProps> = ({ receipts, records }) => {
+export const Main: React.FC<MainProps> = ({ records }) => {
+  const { fee } = useTariff()
+  const { hasTax, tax } = useSettings()
+
+  const receipts = [
+    { label: 'Energía · 14 kWh', money: 13.2 },
+    { label: 'Cargo Fijo · Mensual', money: fee },
+    { label: 'Sub Total · Sin IGV', money: 13 },
+    { label: `IGV · ${hasTax ? 'Incluido' : 'Excluido'}`, money: tax },
+  ]
 
   return (
     <div id="container">

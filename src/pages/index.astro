@@ -2,13 +2,6 @@
 import { Main } from '../components/Main.tsx';
 import Layout from '../layouts/Layout.astro';
 
-const receipts = [
-  { label: "Energía · 14 kWh", money: 13.2 },
-  { label: "Cargo Fijo · Mensual", money: 8 },
-  { label: "Sub Total · Sin IGV", money: 13 },
-  { label: "IGV · Desactivado", money: 12.1 },
-];
-
 const records = [
   { kwh: 12.2, money: 180 },
   { kwh: 10.8, money: 112 },
@@ -19,5 +12,5 @@ const records = [
 ---
 
 <Layout>
-	<Main receipts={receipts} records={records} client:load />
+	<Main records={records} client:load />
 </Layout>
