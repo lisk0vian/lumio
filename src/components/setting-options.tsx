@@ -21,62 +21,90 @@ import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
 import { useTariff } from '@/tariff-store'
 
 export const SettingOptions = () => {
-  const tariff = useTariff()
+  // States
+  const price = useTariff((state) => state.price)
+  const fee = useTariff((state) => state.fee)
+  const tax = useSettings((state) => Math.round(state.tax * 100 * 100) / 100)
 
-  const { tax, setTax, hasTax } = useSettings()
+  // Setters del store (selectores, se piden en el render)
+  const setPriceStore = useTariff((state) => state.setPrice)
+  const setFeeStore = useTariff((state) => state.setFee)
+  const setTaxStore = useSettings((state) => state.setTax)
+
+  // Wrappers que parsean el string del input antes de guardarlo
+  const setPrice = (val: string) => {
+    const parsed = parseFloat(val)
+    setPriceStore(Number.isNaN(parsed) ? 0 : parsed)
+  }
+  const setFee = (val: string) => {
+    const parsed = parseFloat(val)
+    setFeeStore(Number.isNaN(parsed) ? 0 : parsed)
+  }
+  const setTax = (val: string) => {
+    const parsed = parseFloat(val)
+    const safe = Number.isNaN(parsed) ? 0 : parsed
+    setTaxStore(Math.round(safe * 100) / 100 / 100) // redondea antes de dividir
+  }
+
+  const hasTax = useSettings((state) => state.hasTax)
 
   return (
-    <div className="w-full h-full flex items-center col-span-3 gap-3">
-      <SelectRegulator />
-      <SelectTariff />
-      <div className="flex justify-between items-center">
-        <p className="text-sm">S/ </p>
-        <Input
-          className="border-b-2 border-foreground/40 focus:border-foreground text-right max-w-15 mx-2 text-sm"
-          type="number"
-          min={0}
-          value={tariff.price}
-          onChange={(e) => tariff.setPrice(parseFloat(e.target.value))}
-        />
-        <p className="text-sm">/kWh</p>
+    <div className="w-full h-full flex flex-wrap items-center col-span-3 gap-3">
+      <div className="flex gap-3">
+        <SelectRegulator />
+        <SelectTariff />
       </div>
-      <div className="flex justify-between items-center">
-        <p className="text-sm">Fijo S/ </p>
-        <Input
-          className="border-b-2 border-foreground/40 focus:border-foreground text-right max-w-15 ml-1 text-sm"
-          type="number"
-          min={0}
-          value={tariff.fee}
-          onChange={(e) => tariff.setFee(parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="flex justify-between items-center">
-        <p className="text-sm">IVG </p>
-        <Input
-          className="border-b-2 border-foreground/40 focus:border-foreground text-right max-w-15 mx-2 text-sm"
+      {/* Input for price per Kwh */}
+      <InputSetting
+        label="S/"
+        unit="/kwh"
+        value={price}
+        min={0}
+        type="number"
+        onValueChange={(val) => setPrice(val)}
+      />
+      {/* Input for fixed charge */}
+      <InputSetting
+        label="fijo S/"
+        type="number"
+        min={0}
+        value={fee}
+        onValueChange={(val) => setFee(val)}
+      />
+      <InputSetting
+        label="alumbrado S/"
+        type="number"
+        min={0}
+        value={fee}
+        onValueChange={(val) => setFee(val)}
+      />
+      {/* Input for tax charge */}
+      <div className="flex">
+        <InputSetting
+          label="IVG"
+          unit="%"
           type="number"
           min={1}
           max={100}
           step={1}
-          onChange={(e) => setTax(parseInt(e.target.value) / 100)}
-          value={tax * 100}
+          onValueChange={(val) => setTax(val)}
+          value={tax}
         />
-        <p>%</p>
+        <Toggle
+          className={cn(
+            'hover:none',
+            'font-bold tracking-wide',
+            'aria-pressed:bg-primary aria-pressed:dark:text-primary-foreground', // hasTax == true
+            'bg-muted text-foreground' // hasTax == false
+          )}
+          pressed={hasTax}
+          onPressedChange={(pressed) => {
+            useSettings.setState({ hasTax: pressed })
+          }}
+        >
+          {hasTax ? 'Incluido' : 'Excluido'}
+        </Toggle>
       </div>
-      <Toggle
-        className={cn(
-          'hover:none',
-          'font-bold tracking-wide',
-          'aria-pressed:bg-primary aria-pressed:dark:text-primary-foreground', // hasTax == true
-          'bg-muted text-foreground' // hasTax == false
-        )}
-        pressed={hasTax}
-        onPressedChange={(pressed) => {
-          useSettings.setState({ hasTax: pressed })
-        }}
-      >
-        {hasTax ? 'Incluido' : 'Excluido'}
-      </Toggle>
       <Tabs className="rounded-sm" defaultValue="mensual">
         <TabsList>
           <TabsTrigger className="" value="mensual">
@@ -145,5 +173,32 @@ const SelectTariff = () => {
           ))}
       </SelectContent>
     </Select>
+  )
+}
+
+type InputSettingProps = React.ComponentProps<typeof Input> & {
+  label: string
+  unit?: string
+}
+
+const InputSetting = ({
+  label,
+  unit,
+  className,
+  ...props
+}: InputSettingProps) => {
+  return (
+    <div className="flex justify-between items-center text-sm mr-3">
+      <p>{label}</p>
+      <Input
+        className={cn(
+          'border-b-2 border-foreground/40 focus:border-foreground text-right font-mono max-w-15',
+          unit ? 'mx-2' : 'ml-2',
+          className
+        )}
+        {...props}
+      />
+      {unit && <p>{unit}</p>}
+    </div>
   )
 }
