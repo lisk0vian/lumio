@@ -13,7 +13,7 @@ export const SectionBlock = ({
 }: SectionProps) => {
   return (
     <div {...props} className={cn('w-full', className)}>
-      <p className="text-xs font-semibold mb-2 uppercase tracking-widest">{title}</p>
+      <p className="text-xs font-semibold mb-2 uppercase tracking-widest text-accent-foreground">{title}</p>
       {children}
     </div>
   )

@@ -8,6 +8,7 @@ import { SectionBlock } from './section'
 import { SettingOptions } from './setting-options'
 import { useTariff } from '@/tariff-store'
 import { useSettings } from '@/settings-store'
+import { EnergyScale } from './energy-scale'
 
 type MainProps = {
   records: { kwh: number; money: number }[]
@@ -42,8 +43,11 @@ export const Main: React.FC<MainProps> = ({ records }) => {
             </SectionBlock>
           </div>
         </div>
-        <div className="bg-blue-400 rounded-2xl w-full h-full flex justify-center items-center font-black text-white">
-          2
+        <div className="w-full h-full flex justify-center">
+          <SectionBlock title="Tu nivel de consumo">
+            <h1 className='text-4xl font-semibold'>Sin Datos</h1>
+            <EnergyScale />
+          </SectionBlock>
         </div>
         <SettingOptions />
       </main>
