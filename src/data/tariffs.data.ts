@@ -28,6 +28,7 @@ export const tariffCategories: TariffCategory[] = [
     fixedCharge: 2.34,
     // Verified from a real June 2026 electricity bill, Lima Norte system.
     pricePerKwh: 0.6144,
+    publicLightingCharge: 0.1,
     verified: true,
   },
   {
@@ -39,6 +40,7 @@ export const tariffCategories: TariffCategory[] = [
     label: "Commercial",
     billingPeriod: 'monthly',
     fixedCharge: 3.64,
+    publicLightingCharge: 0.1,
     // Rough estimate -- not confirmed against an official pliego. Edit when known.
     pricePerKwh: 0.70,
     verified: false,
@@ -52,6 +54,7 @@ export const tariffCategories: TariffCategory[] = [
     label: "Rural",
     billingPeriod: 'monthly',
     fixedCharge: 0,
+    publicLightingCharge: 0.1,
     // Rough estimate -- not confirmed against an official pliego. Edit when known.
     pricePerKwh: 0.58,
     verified: false,
@@ -65,6 +68,7 @@ export const tariffCategories: TariffCategory[] = [
     label: "Residential",
     billingPeriod: 'monthly',
     fixedCharge: 0,
+    publicLightingCharge: 0.1,
     // Rough estimate -- not confirmed against an official pliego. Edit when known.
     pricePerKwh: 0.60,
     verified: false,
@@ -78,6 +82,7 @@ export const tariffCategories: TariffCategory[] = [
     label: "Industrial",
     billingPeriod: 'monthly',
     fixedCharge: 0,
+    publicLightingCharge: 0.1,
     // Rough estimate -- not confirmed against an official pliego. Edit when known.
     pricePerKwh: 0.45,
     verified: false,

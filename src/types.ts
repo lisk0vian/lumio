@@ -56,6 +56,7 @@ export interface TariffCategory {
   label: string;                // human-readable segment label, e.g. "Residential"
   pricePerKwh: number;          // approximate reference price, user-editable
   fixedCharge: number;          // regulated base fee, charged regardless of consumption
+  publicLightingCharge: number; // municipal fee for public lighting, varies by district
   verified: boolean;            // true if this price was confirmed against a real source
   billingPeriod: BillingPeriod;
 }

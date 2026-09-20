@@ -1,12 +1,12 @@
 import { create } from 'zustand'
-import type { BillingPeriod, Regulator } from './types'
-import { regulators, tariffCategories } from './data/tariffs.data'
-import { getValueById } from './utils/tariffs.utils'
+import type { Regulator } from './types'
+import { regulators } from './data/tariffs.data'
 
 type State = {
     regulator?: Regulator
     tax: number,
-    hasTax: boolean
+    hasTax: boolean,
+    hasRate: boolean
 }
 
 type Action = {
@@ -18,7 +18,8 @@ const baseRegulator = regulators[0];
 
 export const useSettings = create<State & Action>((set) => ({
     regulator: baseRegulator,
-    hasTax: true,
+    hasTax: true,               // fixedCharge
+    hasRate: true,              // publicLightingCharge
     tax: .18,
 
     setTax: (tax) => set({ tax }),
