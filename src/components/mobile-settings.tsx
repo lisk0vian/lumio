@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PeriodSegment } from './period-segment'
 import { SelectRegulator, SelectTariff, TaxToggle, ChargeToggle } from './setting-options'
@@ -135,9 +136,10 @@ export const MobileSettingsReset = () => {
       onClick={() => {
         resetAll()
       }}
-      className="mt-6 min-h-11 cursor-pointer p-0 text-left text-xs text-muted-foreground underline underline-offset-[3px]"
+      className="mt-6 flex min-h-11 cursor-pointer items-center gap-2 p-0 text-left text-xs text-muted-foreground underline underline-offset-[3px]"
     >
-      {t('settings.reset')}
+      <RotateCcw className="size-4" aria-hidden="true" />
+      restablecer valores
     </button>
   )
 }

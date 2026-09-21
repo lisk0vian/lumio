@@ -43,8 +43,7 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
     period,
   }
 
-  const handleCommit = () => {
-    const clean = sanitizeNonNegative(rawValue)
+  const handleCommit = () => {    const clean = sanitizeNonNegative(rawValue)
     if (clean <= 0) return
     if (isKwhMode) {
       const { total } = calculateKwhToMoney(clean, inputs)
@@ -67,6 +66,11 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
     }
   }
 
+  // Derived counterpart shown as a hint under the input.
+  const hint = isKwhMode
+    ? `≈ S/ ${calculateKwhToMoney(rawValue, inputs).total.toFixed(2)}`
+    : `≈ ${calculateMoneyToKwh(rawValue, inputs).kwh.toFixed(1)} kWh`
+
   return (
     <div className="flex flex-col">
       <div className="flex items-baseline gap-3 border-b border-border py-5 2xl:py-6">
@@ -87,13 +91,16 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleCommit()
             }}
-            className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-none 2xl:text-6xl"
+            className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-foreground 2xl:text-6xl"
           />
           <span className="font-mono text-base text-muted-foreground 2xl:text-lg">
             {isKwhMode ? 'kWh' : 'S/'}
           </span>
         </p>
       </div>
+      <p className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
+        {hint}
+      </p>
       <div className="flex items-baseline justify-between gap-3 pt-2">
         <p className="text-xs whitespace-nowrap text-muted-foreground">{t('calculator.enterSaves')}</p>
         {showResumen ? (

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { Calculator, History, Settings, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SummaryTotal } from './summary-total'
 import { ConversionToggle } from './conversion-toggle'
@@ -8,24 +9,28 @@ import { HistoryDetails } from './history-details'
 import { GlossaryBlock } from './glossary-block'
 import { HistorySidebar } from './history-sidebar'
 import { MobileSettings, MobileSettingsReset } from './mobile-settings'
+import { ShareReceiptButton } from './share-receipt'
 import { SectionBlock } from './section'
+import { TopBar } from './top-bar'
 import { useLumioStore } from '@/stores/lumio-store'
-import { EnergyScale } from './energy-scale'
+import { EnergyScale, LevelHint } from './energy-scale'
 import {
   buildReceipts,
   calculateKwhToMoney,
   calculateMoneyToKwh,
 } from '@/utils/tariffs.utils'
-import { t } from '@/i18n'
+import { t, useActiveLang } from '@/i18n'
 
 type MobileTab = 'calc' | 'hist' | 'ajustes'
 
-// Hoisted nav config: static, never recreated per render.
-const TABS: { key: MobileTab; label: string }[] = [
-  { key: 'calc', label: t('nav.calculate') },
-  { key: 'hist', label: t('nav.history') },
-  { key: 'ajustes', label: t('nav.settings') },
-]
+// Nav config builder: resolved per render so it follows the active language.
+function getTabs(): { key: MobileTab; label: string; icon: LucideIcon }[] {
+  return [
+    { key: 'calc', label: t('nav.calculate'), icon: Calculator },
+    { key: 'hist', label: t('nav.history'), icon: History },
+    { key: 'ajustes', label: t('nav.settings'), icon: Settings },
+  ]
+}
 
 function MobileEyebrow({ children }: { children: ReactNode }) {
   return (
@@ -53,6 +58,7 @@ function CalcPanel() {
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
+  const activeLang = useLumioStore((state) => state.activeLang)
 
   const inputs = {
     pricePerKwh,
@@ -70,18 +76,28 @@ function CalcPanel() {
     : calculateMoneyToKwh(inputMoney, inputs).kwh
   const displayTotal = isKwhMode
     ? calculateKwhToMoney(inputKwh, inputs).total
-    : inputMoney
-  const { receipts } = buildReceipts(activeKwh, inputs)
+    : activeKwh
+  const { receipts } = buildReceipts(activeKwh, inputs, activeLang)
 
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
       <MobileEyebrow>{t('calculator.title')}</MobileEyebrow>
-      <SummaryTotal total={displayTotal} surchages={[t('calculator.withoutIgv'), t('calculator.netAmount')]} />
+      <SummaryTotal
+        total={displayTotal}
+        unit={isKwhMode ? 'money' : 'kwh'}
+        surchages={
+          isKwhMode
+            ? [t('calculator.withoutIgv'), t('calculator.netAmount')]
+            : [t('calculator.estimatedConsumption')]
+        }
+      />
+      <ShareReceiptButton className="mt-4" />
       <div className="mt-4">
-        <EnergyScale />
-        <p className="mt-2 text-xs text-muted-foreground">
-          {t('calculator.writeConsumption')}
-        </p>
+        <EnergyScale activeKwh={activeKwh} />
+        <LevelHint
+          activeKwh={activeKwh}
+          className="mt-2 text-xs text-muted-foreground"
+        />
       </div>
       <ConversionToggle />
       <CountTotal showResumen />
@@ -143,9 +159,14 @@ function AjustesPanel() {
 
 export const MobileTabs = () => {
   const [tab, setTab] = useState<MobileTab>('calc')
+  useActiveLang()
+  const TABS = getTabs()
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground lg:hidden">
+      <div className="flex-none px-5 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <TopBar />
+      </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tab === 'calc' ? (
           <CalcPanel />
@@ -156,18 +177,19 @@ export const MobileTabs = () => {
         )}
       </div>
       <nav className="sticky bottom-0 flex flex-none border-t border-border bg-muted/40 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
-        {TABS.map(({ key, label }) => (
+        {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             type="button"
             onClick={() => setTab(key)}
             className={cn(
-              '-mt-px min-h-11 flex-1 cursor-pointer border-t-2 pt-3 pb-1 text-xs',
+              '-mt-px flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-t-2 pt-2 pb-1 text-xs',
               tab === key
                 ? 'border-foreground font-medium text-foreground'
                 : 'border-transparent font-normal text-muted-foreground'
             )}
           >
+            <Icon className="size-5" aria-hidden="true" />
             {label}
           </button>
         ))}

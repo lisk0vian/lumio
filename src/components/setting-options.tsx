@@ -6,10 +6,8 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from './ui/select'
 import {
-  getValueById,
   getTariffsForRegulator,
   groupTariffsByCode,
   parseSettingNumber,
@@ -19,6 +17,7 @@ import { Input } from '@base-ui/react'
 import { Toggle } from './ui/toggle'
 import { cn } from '@/lib/utils'
 import { PeriodSegment } from './period-segment'
+import { Power, PowerOff } from 'lucide-react'
 import { useLumioStore } from '@/stores/lumio-store'
 import { t } from '@/i18n'
 
@@ -47,27 +46,27 @@ export const SettingOptions = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        'mt-auto flex justify-between w-full flex-wrap items-center gap-x-3 gap-y-3 border-t border-border pt-7 pb-2 text-xs text-muted-foreground 2xl:pt-10',
+        'mt-auto flex w-full flex-wrap items-center gap-x-3 gap-y-3 border-t border-border pt-7 pb-2 text-xs text-muted-foreground 2xl:pt-10',
         className
       )}
     >
-      <div className="flex gap-3 max-lg:flex-col max-lg:items-stretch">
-        <SelectRegulator />
-        <SelectTariff />
+      <div className="flex min-w-56 flex-1 flex-wrap gap-3 max-lg:flex-col max-lg:items-stretch">
+        <SelectRegulator triggerClassName="min-w-44 flex-1 max-w-60" />
+        <SelectTariff triggerClassName="min-w-44 flex-1 max-w-60" />
       </div>
       {/* Input for price per Kwh */}
       <InputSetting
         label="S/"
-        unit="/kwh"
+        unit="/kWh"
         value={pricePerKwh}
         min={0}
         type="number"
         onValueChange={(val) => setPrice(val)}
       />
       {/* Input for fixed charge */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-none items-center gap-2">
         <InputSetting
-          label="fijo S/"
+          label="Fijo S/"
           type="number"
           min={0}
           value={fixedCharge}
@@ -75,9 +74,9 @@ export const SettingOptions = ({ className }: { className?: string }) => {
         />
         <ChargeToggle kind="fixed" />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-none items-center gap-2">
         <InputSetting
-          label="alumbrado S/"
+          label="Alumbrado S/"
           type="number"
           min={0}
           value={publicLightingCharge}
@@ -87,7 +86,7 @@ export const SettingOptions = ({ className }: { className?: string }) => {
       </div>
       {/* Input for tax charge + period: wrapped together so they
           wrap as one intentional unit, never leaving Periodo orphaned */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 max-lg:w-full">
         <InputSetting
           label="IGV"
@@ -137,12 +136,13 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
   const setIsLighting = useLumioStore(
     (state) => state.setIsPublicLightingEnabled
   )
+  const chargeLabel = kind === 'fixed' ? 'Cargo fijo' : 'Alumbrado'
 
   return (
     <Toggle
       className={cn(
         'hover:none',
-        'min-h-9 font-medium tracking-wide max-lg:min-h-11',
+        'min-h-9 min-w-9 font-medium tracking-wide max-lg:min-h-11 max-lg:min-w-11',
         'aria-pressed:bg-primary aria-pressed:text-primary-foreground',
         'bg-muted text-foreground'
       )}
@@ -151,8 +151,14 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
         if (kind === 'fixed') setIsFixed(pressed)
         else setIsLighting(pressed)
       }}
+      aria-label={`${chargeLabel} ${isEnabled ? 'incluido' : 'excluido'}`}
+      title={`${chargeLabel} ${isEnabled ? 'incluido' : 'excluido'}`}
     >
-      {isEnabled ? 'On' : 'Off'}
+      {isEnabled ? (
+        <Power className="size-4" aria-hidden="true" />
+      ) : (
+        <PowerOff className="size-4" aria-hidden="true" />
+      )}
     </Toggle>
   )
 }
@@ -160,14 +166,15 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
 export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: string }) => {
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const setRegulator = useLumioStore((state) => state.setRegulator)
-  const label = getValueById(regulators, regulatorId, 'name')
 
   return (
     <Select value={regulatorId} onValueChange={(id) => id && setRegulator(id)}>
       <SelectTrigger className={cn('min-w-32', triggerClassName)}>
-        <SelectValue placeholder="Select a regulator">{label}</SelectValue>
+        <span className="flex min-w-0 flex-1 truncate text-left">
+          {regulators.find((r) => r.id === regulatorId)?.name ?? ''}
+        </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
         {regulators.map((regulator, idx) => (
           <SelectGroup key={regulator.countryCode}>
             <SelectLabel>{regulator.countryCode}</SelectLabel>
@@ -185,8 +192,7 @@ export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const tariffId = useLumioStore((state) => state.tariffId)
   const setTariff = useLumioStore((state) => state.setTariff)
-
-  const label = getValueById(tariffCategories, tariffId, 'label')
+  const tariff = tariffCategories.find((item) => item.id === tariffId)
 
   return (
     <Select
@@ -194,9 +200,11 @@ export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }
       onValueChange={(id) => id && setTariff(id)}
     >
       <SelectTrigger className={cn('min-w-32', triggerClassName)}>
-        <SelectValue placeholder="Select a tariff">{label}</SelectValue>
+        <span className="flex min-w-0 flex-1 truncate text-left">
+          {tariff ? `${tariff.code} · ${tariff.label}` : ''}
+        </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
         {regulatorId &&
           groupTariffsByCode(
             getTariffsForRegulator(regulatorId, tariffCategories)
@@ -229,12 +237,12 @@ const InputSetting = ({
   ...props
 }: InputSettingProps) => {
   return (
-    <div className="flex items-center gap-2 text-sm max-lg:mr-0 max-lg:w-full">
+    <div className="flex flex-none items-center gap-2 text-xs max-lg:mr-0 max-lg:w-full">
       <p className="whitespace-nowrap">{label}</p>
       <span className="ml-auto flex items-center gap-2">
         <Input
           className={cn(
-            'max-w-16 border-b-2 border-foreground/40 text-right font-mono tabular-nums focus:border-foreground',
+            'h-7 max-w-16 border-b-2 border-foreground/40 text-right font-mono tabular-nums focus:border-foreground',
             className
           )}
           {...props}

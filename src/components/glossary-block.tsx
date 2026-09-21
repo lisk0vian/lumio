@@ -2,26 +2,29 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { t } from '@/i18n'
 
-const TERMS = [
-  {
-    term: t('glossary.fixedCharge.term'),
-    def: t('glossary.fixedCharge.def'),
-  },
-  {
-    term: t('glossary.igv.term'),
-    def: t('glossary.igv.def'),
-  },
-  {
-    term: t('glossary.lighting.term'),
-    def: t('glossary.lighting.def'),
-  },
-  {
-    term: t('glossary.kwh.term'),
-    def: t('glossary.kwh.def'),
-  },
-]
+function getTerms() {
+  return [
+    {
+      term: t('glossary.fixedCharge.term'),
+      def: t('glossary.fixedCharge.def'),
+    },
+    {
+      term: t('glossary.igv.term'),
+      def: t('glossary.igv.def'),
+    },
+    {
+      term: t('glossary.lighting.term'),
+      def: t('glossary.lighting.def'),
+    },
+    {
+      term: t('glossary.kwh.term'),
+      def: t('glossary.kwh.def'),
+    },
+  ]
+}
 
 export const GlossaryBlock = () => {
+  const TERMS = getTerms()
   const [selected, setSelected] = useState(0)
 
   return (

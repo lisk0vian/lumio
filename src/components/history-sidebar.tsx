@@ -1,5 +1,6 @@
 import { useLumioStore } from '@/stores/lumio-store'
 import { t } from '@/i18n'
+import { X } from 'lucide-react'
 
 type HistorySidebarProps = {
   hidden: boolean
@@ -64,9 +65,10 @@ export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) 
             <button
               type="button"
               onClick={() => removeRecord(id)}
+              aria-label="Eliminar cálculo"
               className="cursor-pointer font-mono text-xs text-muted-foreground max-lg:min-h-11 max-lg:px-2"
             >
-              &#10005;
+              <X className="size-4" aria-hidden="true" />
             </button>
           </div>
         </div>

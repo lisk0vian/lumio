@@ -2,15 +2,14 @@ import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { t } from '@/i18n'
 
-const PERIODOS: { key: 'monthly' | 'bimonthly'; label: string }[] = [
-  { key: 'monthly', label: t('settings.monthly') },
-  { key: 'bimonthly', label: t('settings.bimonthly') },
-]
-
 // Shared segmented control backed by the global tariff period.
 export const PeriodSegment = () => {
   const period = useLumioStore((state) => state.period)
   const setPeriod = useLumioStore((state) => state.setPeriod)
+  const PERIODOS: { key: 'monthly' | 'bimonthly'; label: string }[] = [
+    { key: 'monthly', label: t('settings.monthly') },
+    { key: 'bimonthly', label: t('settings.bimonthly') },
+  ]
 
   return (
     <div className="flex">
