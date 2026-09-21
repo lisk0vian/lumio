@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { PeriodSegment } from './period-segment'
-import { SelectRegulator, SelectTariff, TaxToggle } from './setting-options'
+import { SelectRegulator, SelectTariff, TaxToggle, ChargeToggle } from './setting-options'
 import { parseSettingNumber, parseTaxPercent } from '@/utils/tariffs.utils'
-import { useTariff } from '@/tariff-store'
-import { useSettings } from '@/settings-store'
+import { useLumioStore } from '@/stores/lumio-store'
+import { t } from '@/i18n'
 
 // Ghost trigger: keeps the shadcn select behavior, borderless and
 // right-aligned like a label/control row. Desktop triggers untouched.
@@ -50,58 +50,76 @@ function UnderlineInput({
 }
 
 export const MobileSettings = () => {
-  const price = useTariff((state) => state.price)
-  const fee = useTariff((state) => state.fee)
-  const tax = useSettings((state) => state.tax)
-  const setPrice = useTariff((state) => state.setPrice)
-  const setFee = useTariff((state) => state.setFee)
-  const setTax = useSettings((state) => state.setTax)
+  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
+  const fixedCharge = useLumioStore((state) => state.fixedCharge)
+  const publicLightingCharge = useLumioStore(
+    (state) => state.publicLightingCharge
+  )
+  const igvRate = useLumioStore((state) => state.igvRate)
+  const setPricePerKwh = useLumioStore((state) => state.setPricePerKwh)
+  const setFixedCharge = useLumioStore((state) => state.setFixedCharge)
+  const setPublicLightingCharge = useLumioStore(
+    (state) => state.setPublicLightingCharge
+  )
+  const setIgvRate = useLumioStore((state) => state.setIgvRate)
 
-  const taxPercent = Math.round(tax * 100 * 100) / 100
+  const taxPercent = Math.round(igvRate * 100 * 100) / 100
 
   return (
     <div className="flex flex-col">
-      <SettingRow label="Regulador">
+      <SettingRow label={t('settings.regulator')}>
         <SelectRegulator triggerClassName={GHOST_TRIGGER} />
       </SettingRow>
 
-      <SettingRow label="Tarifa">
+      <SettingRow label={t('settings.tariff')}>
         <SelectTariff triggerClassName={GHOST_TRIGGER} />
       </SettingRow>
 
-      <SettingRow label="Precio por kWh">
+      <SettingRow label={t('settings.price')}>
         <span className="font-mono text-xs text-muted-foreground">S/</span>
         <UnderlineInput
-          value={price}
+          value={pricePerKwh}
           min={0}
           step={0.01}
-          onChange={(val) => setPrice(parseSettingNumber(val))}
+          onChange={(val) => setPricePerKwh(parseSettingNumber(val))}
         />
       </SettingRow>
 
-      <SettingRow label="Cargo fijo">
+      <SettingRow label={t('settings.fixedCharge')}>
         <span className="font-mono text-xs text-muted-foreground">S/</span>
         <UnderlineInput
-          value={fee}
+          value={fixedCharge}
           min={0}
           step={0.1}
-          onChange={(val) => setFee(parseSettingNumber(val))}
+          onChange={(val) => setFixedCharge(parseSettingNumber(val))}
         />
+        <ChargeToggle kind="fixed" />
       </SettingRow>
 
-      <SettingRow label="IGV">
+      <SettingRow label={t('settings.publicLighting')}>
+        <span className="font-mono text-xs text-muted-foreground">S/</span>
+        <UnderlineInput
+          value={publicLightingCharge}
+          min={0}
+          step={0.1}
+          onChange={(val) => setPublicLightingCharge(parseSettingNumber(val))}
+        />
+        <ChargeToggle kind="lighting" />
+      </SettingRow>
+
+      <SettingRow label={t('settings.igv')}>
         <UnderlineInput
           narrow
           value={taxPercent}
           min={0}
           step={1}
-          onChange={(val) => setTax(parseTaxPercent(val))}
+          onChange={(val) => setIgvRate(parseTaxPercent(val))}
         />
         <span className="font-mono text-xs text-muted-foreground">%</span>
         <TaxToggle />
       </SettingRow>
 
-      <SettingRow label="Periodo">
+      <SettingRow label={t('settings.period')}>
         <PeriodSegment />
       </SettingRow>
     </div>
@@ -109,19 +127,17 @@ export const MobileSettings = () => {
 }
 
 export const MobileSettingsReset = () => {
-  const resetTariff = useTariff((state) => state.reset)
-  const resetSettings = useSettings((state) => state.reset)
+  const resetAll = useLumioStore((state) => state.resetAll)
 
   return (
     <button
       type="button"
       onClick={() => {
-        resetTariff()
-        resetSettings()
+        resetAll()
       }}
       className="mt-6 min-h-11 cursor-pointer p-0 text-left text-xs text-muted-foreground underline underline-offset-[3px]"
     >
-      restablecer valores
+      {t('settings.reset')}
     </button>
   )
 }

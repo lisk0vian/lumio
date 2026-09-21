@@ -1,16 +1,8 @@
 ---
 import { Main } from '../components/main.tsx';
 import Layout from '../layouts/Layout.astro';
-
-const records = [
-  { kwh: 12.2, money: 180 },
-  { kwh: 10.8, money: 112 },
-  { kwh: 7.2, money: 11 },
-  { kwh: 12.2, money: 11 },
-  { kwh: 1.3, money: 4 },
-];
 ---
 
 <Layout>
-	<Main records={records} client:load />
+	<Main client:load />
 </Layout>

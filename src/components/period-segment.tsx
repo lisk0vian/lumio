@@ -1,18 +1,16 @@
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useLumioStore } from '@/stores/lumio-store'
+import { t } from '@/i18n'
 
-type Periodo = 'mensual' | 'bimestral'
-
-const PERIODOS: { key: Periodo; label: string }[] = [
-  { key: 'mensual', label: 'Mensual' },
-  { key: 'bimestral', label: 'Bimestral' },
+const PERIODOS: { key: 'monthly' | 'bimonthly'; label: string }[] = [
+  { key: 'monthly', label: t('settings.monthly') },
+  { key: 'bimonthly', label: t('settings.bimonthly') },
 ]
 
-// Segmented control with decorative local state (mirrors the previous
-// uncontrolled Tabs). Shared by the desktop footer and the mobile rows
-// so both keep a single look.
+// Shared segmented control backed by the global tariff period.
 export const PeriodSegment = () => {
-  const [periodo, setPeriodo] = useState<Periodo>('mensual')
+  const period = useLumioStore((state) => state.period)
+  const setPeriod = useLumioStore((state) => state.setPeriod)
 
   return (
     <div className="flex">
@@ -20,10 +18,10 @@ export const PeriodSegment = () => {
         <button
           key={key}
           type="button"
-          onClick={() => setPeriodo(key)}
+          onClick={() => setPeriod(key)}
           className={cn(
             'min-h-9 cursor-pointer rounded-md px-2.5 text-xs max-lg:min-h-11',
-            periodo === key
+            period === key
               ? 'bg-primary font-medium text-primary-foreground'
               : 'font-normal text-muted-foreground'
           )}

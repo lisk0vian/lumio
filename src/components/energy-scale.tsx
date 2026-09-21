@@ -1,24 +1,25 @@
 import { cn } from '@/lib/utils'
+import { t } from '@/i18n'
 
 const energyLevels: (EnergyBandProps & { key: string })[] = [
   {
     key: 'low',
-    label: 'Bajo',
+    label: t('scale.low'),
     range: '< 70',
   },
   {
     key: 'normal',
-    label: 'Normal',
+    label: t('scale.normal'),
     range: '70-140',
   },
   {
     key: 'high',
-    label: 'Alto',
+    label: t('scale.high'),
     range: '140-250',
   },
   {
     key: 'extra-high',
-    label: 'Muy alto',
+    label: t('scale.extraHigh'),
     range: '> 250',
   },
 ]

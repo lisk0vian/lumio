@@ -11,21 +11,54 @@ import { HistorySidebar } from './history-sidebar'
 import { MobileTabs } from './mobile-tabs'
 import { SectionBlock } from './section'
 import { SettingOptions } from './setting-options'
-import { useTariff } from '@/tariff-store'
-import { useSettings } from '@/settings-store'
+import { useLumioStore } from '@/stores/lumio-store'
 import { EnergyScale } from './energy-scale'
-import { buildReceiptBreakdown } from '@/utils/tariffs.utils'
+import {
+  buildReceipts,
+  calculateKwhToMoney,
+  calculateMoneyToKwh,
+} from '@/utils/tariffs.utils'
+import { t } from '@/i18n'
 
-type MainProps = {
-  records: { kwh: number; money: number }[]
-}
-
-export const Main: FC<MainProps> = ({ records }) => {
-  const { fee } = useTariff()
-  const { hasTax, tax } = useSettings()
+export const Main: FC = () => {
+  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
+  const fixedCharge = useLumioStore((state) => state.fixedCharge)
+  const publicLightingCharge = useLumioStore(
+    (state) => state.publicLightingCharge
+  )
+  const igvRate = useLumioStore((state) => state.igvRate)
+  const isFixedChargeEnabled = useLumioStore(
+    (state) => state.isFixedChargeEnabled
+  )
+  const isPublicLightingEnabled = useLumioStore(
+    (state) => state.isPublicLightingEnabled
+  )
+  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
+  const period = useLumioStore((state) => state.period)
+  const direction = useLumioStore((state) => state.direction)
+  const inputKwh = useLumioStore((state) => state.inputKwh)
+  const inputMoney = useLumioStore((state) => state.inputMoney)
   const [sidebarHidden, setSidebarHidden] = useState(false)
 
-  const receipts = buildReceiptBreakdown(fee, hasTax, tax).receipts
+  const inputs = {
+    pricePerKwh,
+    fixedCharge,
+    publicLightingCharge,
+    igvRate,
+    isFixedChargeEnabled,
+    isPublicLightingEnabled,
+    isTaxEnabled,
+    period,
+  }
+  const isKwhMode = direction === 'kwh-to-money'
+  const activeKwh = isKwhMode
+    ? inputKwh
+    : calculateMoneyToKwh(inputMoney, inputs).kwh
+  const displayTotal = isKwhMode
+    ? calculateKwhToMoney(inputKwh, inputs).total
+    : inputMoney
+
+  const receipts = buildReceipts(activeKwh, inputs).receipts
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -35,32 +68,32 @@ export const Main: FC<MainProps> = ({ records }) => {
           <div className="my-auto flex flex-col items-start gap-8 lg:flex-row lg:gap-11 2xl:gap-16">
             <div className="flex min-w-0 flex-1 flex-col">
               <p className="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase 2xl:mb-4 2xl:text-xs">
-                Total a pagar
+                {t('calculator.title')}
               </p>
-              <SummaryTotal total={0} surchages={['Sin IGV', 'Monto neto']} />
+              <SummaryTotal total={displayTotal} surchages={[t('calculator.withoutIgv'), t('calculator.netAmount')]} />
               <ConversionToggle />
               <CountTotal />
               <div className="mt-6 grid grid-cols-1 items-start gap-8 border-t border-border pt-5 md:grid-cols-2 md:gap-8.5 2xl:mt-10 2xl:gap-12 2xl:pt-8">
-                <SectionBlock title="Desglose del recibo">
+                <SectionBlock title={t('receipt.breakdown')}>
                   <ReceiptDetails receipts={receipts} />
                 </SectionBlock>
-                <SectionBlock title="Tus cálculos guardados">
-                  <HistoryDetails records={records} />
+                <SectionBlock title={t('sections.saved')}>
+                  <HistoryDetails />
                   <ReferenceBlock />
                 </SectionBlock>
               </div>
             </div>
             <div className="flex w-full flex-none flex-col lg:w-90">
-              <SectionBlock title="Tu nivel de consumo">
-                <p className="mt-2 mb-3 text-[1.75rem] leading-tight 2xl:text-[2.25rem]">Sin datos</p>
+              <SectionBlock title={t('sections.level')}>
+                <p className="mt-2 mb-3 text-[1.75rem] leading-tight 2xl:text-[2.25rem]">{t('calculator.noData')}</p>
                 <EnergyScale />
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  Escribe tu consumo para saber si es alto o normal
+                  {t('calculator.writeConsumption')}
                 </p>
               </SectionBlock>
               <SavingTip />
               <div className="mt-6 border-t border-border pt-5 2xl:mt-8 2xl:pt-7">
-                <SectionBlock title="Qué significa cada cosa">
+                <SectionBlock title={t('sections.glossary')}>
                   <GlossaryBlock />
                 </SectionBlock>
               </div>
@@ -71,13 +104,12 @@ export const Main: FC<MainProps> = ({ records }) => {
         </div>
 
         <HistorySidebar
-          records={records}
           hidden={sidebarHidden}
           onHide={() => setSidebarHidden(true)}
           onShow={() => setSidebarHidden(false)}
         />
         </div>
-        <MobileTabs records={records} />
+        <MobileTabs />
       </main>
     </div>
   )

@@ -1,54 +1,40 @@
-import { MONEY, type Receipt } from '@/types'
+import { MONEY } from '@/types'
+import { useLumioStore } from '@/stores/lumio-store'
+import { t } from '@/i18n'
 
 type HistoryFieldProps = {
   label: string
   value: string | number
 }
 
-type Record = {
-  kwh: number
-  money: number
-}
+export const HistoryDetails = () => {
+  const records = useLumioStore((state) => state.records)
 
-interface HistoryDetailsProps {
-  records?: Record[]
-}
-
-export const HistoryDetails = ({ records }: HistoryDetailsProps) => {
-  if (!records) {
+  if (records.length === 0) {
     return (
       <div>
         <p className="text-xs">
-          Aún no guardas ninguno. Escribe tu consumo y presiona Enter para tener
-          promedio, máximo y mínimo aquí.
+          {t('history.empty')}
         </p>
       </div>
     )
   }
 
   const avgs = {
-    money: records
-      ? (
-          records.reduce((acc, { money }) => acc + money, 0) / records.length
-        ).toFixed(2)
-      : 0,
-    kwh: records
-      ? (
-          records.reduce((acc, { kwh }) => acc + kwh, 0) / records.length
-        ).toFixed(2)
-      : 0,
+    money: (records.reduce((acc, { resultMoney }) => acc + resultMoney, 0) / records.length).toFixed(2),
+    kwh: (records.reduce((acc, { resultKwh }) => acc + resultKwh, 0) / records.length).toFixed(2),
   }
 
-  const moneyArr = records ? records?.map(({ money }) => money) : [0]
+  const moneyArr = records.map(({ resultMoney }) => resultMoney)
 
   const minPrice = Math.min(...moneyArr)
   const maxPrice = Math.max(...moneyArr)
 
   const historyMapper = {
-    'Gasto Promedio': avgs['money'],
-    'Consumo Promedio': `${avgs['kwh']} kwh`,
-    'Gasto Minimo': minPrice,
-    'Gasto Maximo': maxPrice,
+    [t('history.avgExpense')]: avgs['money'],
+    [t('history.avgConsumption')]: `${avgs['kwh']} kwh`,
+    [t('history.minExpense')]: minPrice,
+    [t('history.maxExpense')]: maxPrice,
   }
 
   return (

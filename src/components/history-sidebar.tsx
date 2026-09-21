@@ -1,16 +1,16 @@
-type HistoryRecord = {
-  kwh: number
-  money: number
-}
+import { useLumioStore } from '@/stores/lumio-store'
+import { t } from '@/i18n'
 
 type HistorySidebarProps = {
-  records: HistoryRecord[]
   hidden: boolean
   onHide: () => void
   onShow: () => void
 }
 
-export const HistorySidebar = ({ records, hidden, onHide, onShow }: HistorySidebarProps) => {
+export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) => {
+  const records = useLumioStore((state) => state.records)
+  const removeRecord = useLumioStore((state) => state.removeRecord)
+  const clearRecords = useLumioStore((state) => state.clearRecords)
   if (records.length === 0) return null
 
   if (hidden) {
@@ -21,7 +21,7 @@ export const HistorySidebar = ({ records, hidden, onHide, onShow }: HistorySideb
           onClick={onShow}
           className="cursor-pointer text-xs tracking-[0.14em] text-muted-foreground uppercase xl:[writing-mode:vertical-rl]"
         >
-          Historial · {records.length}
+          {t('history.title')} · {records.length}
         </button>
       </div>
     )
@@ -31,37 +31,39 @@ export const HistorySidebar = ({ records, hidden, onHide, onShow }: HistorySideb
     <aside className="w-full flex-none bg-muted/50 px-8 py-8 max-lg:bg-transparent max-lg:px-0 max-lg:py-0 xl:w-80 xl:py-11">
       <div className="mb-3 flex items-baseline justify-between">
         <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-          Historial · {records.length}
+          {t('history.title')} · {records.length}
         </p>
-        <button
-          type="button"
-          onClick={onHide}
-          className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]"
-        >
-          ocultar
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={clearRecords}
+            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]"
+          >
+            {t('history.clear')}
+          </button>
+          <button
+            type="button"
+            onClick={onHide}
+            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]"
+          >
+            {t('history.hide')}
+          </button>
+        </div>
       </div>
-      {records.map(({ kwh, money }, idx) => (
-        <div key={idx} className="border-b border-border py-3">
+      {records.map(({ id, resultKwh, resultMoney }) => (
+        <div key={id} className="border-b border-border py-3">
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {kwh.toFixed(1)} kWh
+              {resultKwh.toFixed(1)} kWh
             </span>
             <span className="font-mono text-base font-medium tabular-nums">
-              S/ {money.toFixed(2)}
+              S/ {resultMoney.toFixed(2)}
             </span>
           </div>
           <div className="mt-1 flex justify-end gap-2">
             <button
               type="button"
-              title="Próximamente"
-              className="cursor-pointer text-xs text-primary max-lg:min-h-11 max-lg:px-2"
-            >
-              editar
-            </button>
-            <button
-              type="button"
-              title="Próximamente"
+              onClick={() => removeRecord(id)}
               className="cursor-pointer font-mono text-xs text-muted-foreground max-lg:min-h-11 max-lg:px-2"
             >
               &#10005;

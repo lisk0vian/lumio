@@ -9,23 +9,22 @@ import { GlossaryBlock } from './glossary-block'
 import { HistorySidebar } from './history-sidebar'
 import { MobileSettings, MobileSettingsReset } from './mobile-settings'
 import { SectionBlock } from './section'
-import { useTariff } from '@/tariff-store'
-import { useSettings } from '@/settings-store'
+import { useLumioStore } from '@/stores/lumio-store'
 import { EnergyScale } from './energy-scale'
-import { buildReceiptBreakdown } from '@/utils/tariffs.utils'
+import {
+  buildReceipts,
+  calculateKwhToMoney,
+  calculateMoneyToKwh,
+} from '@/utils/tariffs.utils'
+import { t } from '@/i18n'
 
 type MobileTab = 'calc' | 'hist' | 'ajustes'
 
-type HistoryRecord = {
-  kwh: number
-  money: number
-}
-
 // Hoisted nav config: static, never recreated per render.
 const TABS: { key: MobileTab; label: string }[] = [
-  { key: 'calc', label: 'Calcular' },
-  { key: 'hist', label: 'Historial' },
-  { key: 'ajustes', label: 'Ajustes' },
+  { key: 'calc', label: t('nav.calculate') },
+  { key: 'hist', label: t('nav.history') },
+  { key: 'ajustes', label: t('nav.settings') },
 ]
 
 function MobileEyebrow({ children }: { children: ReactNode }) {
@@ -37,24 +36,57 @@ function MobileEyebrow({ children }: { children: ReactNode }) {
 }
 
 function CalcPanel() {
-  const { fee } = useTariff()
-  const { hasTax, tax } = useSettings()
-  const { receipts } = buildReceiptBreakdown(fee, hasTax, tax)
+  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
+  const fixedCharge = useLumioStore((state) => state.fixedCharge)
+  const publicLightingCharge = useLumioStore(
+    (state) => state.publicLightingCharge
+  )
+  const igvRate = useLumioStore((state) => state.igvRate)
+  const isFixedChargeEnabled = useLumioStore(
+    (state) => state.isFixedChargeEnabled
+  )
+  const isPublicLightingEnabled = useLumioStore(
+    (state) => state.isPublicLightingEnabled
+  )
+  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
+  const period = useLumioStore((state) => state.period)
+  const direction = useLumioStore((state) => state.direction)
+  const inputKwh = useLumioStore((state) => state.inputKwh)
+  const inputMoney = useLumioStore((state) => state.inputMoney)
+
+  const inputs = {
+    pricePerKwh,
+    fixedCharge,
+    publicLightingCharge,
+    igvRate,
+    isFixedChargeEnabled,
+    isPublicLightingEnabled,
+    isTaxEnabled,
+    period,
+  }
+  const isKwhMode = direction === 'kwh-to-money'
+  const activeKwh = isKwhMode
+    ? inputKwh
+    : calculateMoneyToKwh(inputMoney, inputs).kwh
+  const displayTotal = isKwhMode
+    ? calculateKwhToMoney(inputKwh, inputs).total
+    : inputMoney
+  const { receipts } = buildReceipts(activeKwh, inputs)
 
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
-      <MobileEyebrow>Total a pagar</MobileEyebrow>
-      <SummaryTotal total={0} surchages={['Sin IGV', 'Monto neto']} />
+      <MobileEyebrow>{t('calculator.title')}</MobileEyebrow>
+      <SummaryTotal total={displayTotal} surchages={[t('calculator.withoutIgv'), t('calculator.netAmount')]} />
       <div className="mt-4">
         <EnergyScale />
         <p className="mt-2 text-xs text-muted-foreground">
-          Escribe tu consumo para saber si es alto o normal
+          {t('calculator.writeConsumption')}
         </p>
       </div>
       <ConversionToggle />
       <CountTotal showResumen />
       <div className="mt-6">
-        <SectionBlock title="Desglose del recibo">
+        <SectionBlock title={t('receipt.breakdown')}>
           <ReceiptDetails receipts={receipts} />
         </SectionBlock>
       </div>
@@ -62,15 +94,16 @@ function CalcPanel() {
   )
 }
 
-function HistPanel({ records }: { records: HistoryRecord[] }) {
+function HistPanel() {
+  const records = useLumioStore((state) => state.records)
   const [sidebarHidden, setSidebarHidden] = useState(false)
 
   if (records.length === 0) {
     return (
       <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
-        <MobileEyebrow>Historial · 0</MobileEyebrow>
+        <MobileEyebrow>{t('history.title')} · 0</MobileEyebrow>
         <p className="mt-4 text-[0.8125rem] leading-relaxed text-muted-foreground">
-          Todavía no guardas nada. Escribe tu consumo en Calcular y presiona Enter.
+          {t('history.emptyShort')}
         </p>
       </div>
     )
@@ -78,13 +111,12 @@ function HistPanel({ records }: { records: HistoryRecord[] }) {
 
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
-      <MobileEyebrow>Historial · {records.length}</MobileEyebrow>
+      <MobileEyebrow>{t('history.title')} · {records.length}</MobileEyebrow>
       <div className="mt-3.5 mb-6">
-        <HistoryDetails records={records} />
+        <HistoryDetails />
       </div>
       <div className="mt-4">
         <HistorySidebar
-          records={records}
           hidden={sidebarHidden}
           onHide={() => setSidebarHidden(true)}
           onShow={() => setSidebarHidden(false)}
@@ -97,11 +129,11 @@ function HistPanel({ records }: { records: HistoryRecord[] }) {
 function AjustesPanel() {
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
-      <MobileEyebrow>Ajustes</MobileEyebrow>
+      <MobileEyebrow>{t('nav.settings')}</MobileEyebrow>
       <MobileSettings />
       <MobileSettingsReset />
       <div className="mt-6">
-        <SectionBlock title="Qué significa cada cosa">
+        <SectionBlock title={t('sections.glossary')}>
           <GlossaryBlock />
         </SectionBlock>
       </div>
@@ -109,7 +141,7 @@ function AjustesPanel() {
   )
 }
 
-export const MobileTabs = ({ records }: { records: HistoryRecord[] }) => {
+export const MobileTabs = () => {
   const [tab, setTab] = useState<MobileTab>('calc')
 
   return (
@@ -118,7 +150,7 @@ export const MobileTabs = ({ records }: { records: HistoryRecord[] }) => {
         {tab === 'calc' ? (
           <CalcPanel />
         ) : tab === 'hist' ? (
-          <HistPanel records={records} />
+          <HistPanel />
         ) : (
           <AjustesPanel />
         )}

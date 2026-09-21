@@ -15,28 +15,34 @@ import {
   parseSettingNumber,
   parseTaxPercent,
 } from '@/utils/tariffs.utils'
-import { useSettings } from '@/settings-store'
 import { Input } from '@base-ui/react'
 import { Toggle } from './ui/toggle'
 import { cn } from '@/lib/utils'
 import { PeriodSegment } from './period-segment'
-import { useTariff } from '@/tariff-store'
+import { useLumioStore } from '@/stores/lumio-store'
+import { t } from '@/i18n'
 
 export const SettingOptions = ({ className }: { className?: string }) => {
-  // States
-  const price = useTariff((state) => state.price)
-  const fee = useTariff((state) => state.fee)
-  const tax = useSettings((state) => Math.round(state.tax * 100 * 100) / 100)
+  // Canonical state
+  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
+  const fixedCharge = useLumioStore((state) => state.fixedCharge)
+  const publicLightingCharge = useLumioStore((state) => state.publicLightingCharge)
+  const igvRate = useLumioStore((state) => state.igvRate)
+  const setPricePerKwhStore = useLumioStore((state) => state.setPricePerKwh)
+  const setFixedChargeStore = useLumioStore((state) => state.setFixedCharge)
+  const setPublicLightingStore = useLumioStore(
+    (state) => state.setPublicLightingCharge
+  )
+  const setIgvRateStore = useLumioStore((state) => state.setIgvRate)
 
-  // Setters del store (selectores, se piden en el render)
-  const setPriceStore = useTariff((state) => state.setPrice)
-  const setFeeStore = useTariff((state) => state.setFee)
-  const setTaxStore = useSettings((state) => state.setTax)
+  const taxPercent = Math.round(igvRate * 100 * 100) / 100
 
   // Wrappers que parsean el string del input antes de guardarlo
-  const setPrice = (val: string) => setPriceStore(parseSettingNumber(val))
-  const setFee = (val: string) => setFeeStore(parseSettingNumber(val))
-  const setTax = (val: string) => setTaxStore(parseTaxPercent(val))
+  const setPrice = (val: string) => setPricePerKwhStore(parseSettingNumber(val))
+  const setFee = (val: string) => setFixedChargeStore(parseSettingNumber(val))
+  const setLighting = (val: string) =>
+    setPublicLightingStore(parseSettingNumber(val))
+  const setTax = (val: string) => setIgvRateStore(parseTaxPercent(val))
 
   return (
     <div
@@ -53,39 +59,45 @@ export const SettingOptions = ({ className }: { className?: string }) => {
       <InputSetting
         label="S/"
         unit="/kwh"
-        value={price}
+        value={pricePerKwh}
         min={0}
         type="number"
         onValueChange={(val) => setPrice(val)}
       />
       {/* Input for fixed charge */}
-      <InputSetting
-        label="fijo S/"
-        type="number"
-        min={0}
-        value={fee}
-        onValueChange={(val) => setFee(val)}
-      />
-      <InputSetting
-        label="alumbrado S/"
-        type="number"
-        min={0}
-        value={fee}
-        onValueChange={(val) => setFee(val)}
-      />
+      <div className="flex items-center gap-2">
+        <InputSetting
+          label="fijo S/"
+          type="number"
+          min={0}
+          value={fixedCharge}
+          onValueChange={(val) => setFee(val)}
+        />
+        <ChargeToggle kind="fixed" />
+      </div>
+      <div className="flex items-center gap-2">
+        <InputSetting
+          label="alumbrado S/"
+          type="number"
+          min={0}
+          value={publicLightingCharge}
+          onValueChange={(val) => setLighting(val)}
+        />
+        <ChargeToggle kind="lighting" />
+      </div>
       {/* Input for tax charge + period: wrapped together so they
           wrap as one intentional unit, never leaving Periodo orphaned */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 max-lg:w-full">
         <InputSetting
-          label="IVG"
+          label="IGV"
           unit="%"
           type="number"
           min={1}
           max={100}
           step={1}
           onValueChange={(val) => setTax(val)}
-          value={tax}
+          value={taxPercent}
         />
         <TaxToggle />
         </div>
@@ -96,29 +108,58 @@ export const SettingOptions = ({ className }: { className?: string }) => {
 }
 
 export const TaxToggle = () => {
-  const hasTax = useSettings((state) => state.hasTax)
+  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
+  const setIsTaxEnabled = useLumioStore((state) => state.setIsTaxEnabled)
 
   return (
     <Toggle
       className={cn(
         'hover:none',
         'min-h-9 font-medium tracking-wide max-lg:min-h-11',
-        'aria-pressed:bg-primary aria-pressed:text-primary-foreground', // hasTax == true
-        'bg-muted text-foreground' // hasTax == false
+        'aria-pressed:bg-primary aria-pressed:text-primary-foreground', // isTaxEnabled == true
+        'bg-muted text-foreground' // isTaxEnabled == false
       )}
-      pressed={hasTax}
+      pressed={isTaxEnabled}
       onPressedChange={(pressed) => {
-        useSettings.setState({ hasTax: pressed })
+        setIsTaxEnabled(pressed)
       }}
     >
-      {hasTax ? 'Incluido' : 'Excluido'}
+      {isTaxEnabled ? t('receipt.included') : t('receipt.excluded')}
+    </Toggle>
+  )
+}
+
+export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
+  const isEnabled = useLumioStore((state) =>
+    kind === 'fixed' ? state.isFixedChargeEnabled : state.isPublicLightingEnabled
+  )
+  const setIsFixed = useLumioStore((state) => state.setIsFixedChargeEnabled)
+  const setIsLighting = useLumioStore(
+    (state) => state.setIsPublicLightingEnabled
+  )
+
+  return (
+    <Toggle
+      className={cn(
+        'hover:none',
+        'min-h-9 font-medium tracking-wide max-lg:min-h-11',
+        'aria-pressed:bg-primary aria-pressed:text-primary-foreground',
+        'bg-muted text-foreground'
+      )}
+      pressed={isEnabled}
+      onPressedChange={(pressed) => {
+        if (kind === 'fixed') setIsFixed(pressed)
+        else setIsLighting(pressed)
+      }}
+    >
+      {isEnabled ? 'On' : 'Off'}
     </Toggle>
   )
 }
 
 export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: string }) => {
-  const regulatorId = useSettings((state) => state.regulator?.id)
-  const setRegulator = useSettings().setRegulator
+  const regulatorId = useLumioStore((state) => state.regulatorId)
+  const setRegulator = useLumioStore((state) => state.setRegulator)
   const label = getValueById(regulators, regulatorId, 'name')
 
   return (
@@ -141,23 +182,24 @@ export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: strin
 }
 
 export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }) => {
-  const regulator = useSettings((state) => state.regulator)
-  const tariff = useTariff()
+  const regulatorId = useLumioStore((state) => state.regulatorId)
+  const tariffId = useLumioStore((state) => state.tariffId)
+  const setTariff = useLumioStore((state) => state.setTariff)
 
-  const label = getValueById(tariffCategories, tariff.id, 'label')
+  const label = getValueById(tariffCategories, tariffId, 'label')
 
   return (
     <Select
-      value={tariff.id ?? ''}
-      onValueChange={(id) => id && tariff.setTariff(id)}
+      value={tariffId ?? ''}
+      onValueChange={(id) => id && setTariff(id)}
     >
       <SelectTrigger className={cn('min-w-32', triggerClassName)}>
         <SelectValue placeholder="Select a tariff">{label}</SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {regulator &&
+        {regulatorId &&
           groupTariffsByCode(
-            getTariffsForRegulator(regulator.id, tariffCategories)
+            getTariffsForRegulator(regulatorId, tariffCategories)
           ).map(({ code, items, voltageLevel }) => (
             <SelectGroup key={code}>
               <SelectLabel>

@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { t } from '@/i18n'
 
 const TERMS = [
   {
-    term: 'Cargo fijo',
-    def: 'Lo que te cobran cada mes solo por estar conectado, aunque no consumas nada.',
+    term: t('glossary.fixedCharge.term'),
+    def: t('glossary.fixedCharge.def'),
   },
   {
-    term: 'IGV 18 %',
-    def: 'Impuesto que se suma al final, sobre la energía más el cargo fijo. Puedes apagarlo aquí si quieres ver el monto neto.',
+    term: t('glossary.igv.term'),
+    def: t('glossary.igv.def'),
   },
   {
-    term: 'Alumbrado público',
-    def: 'Aporte por las luces de la calle. Va aparte de tu consumo y suele ser una parte pequeña del recibo.',
+    term: t('glossary.lighting.term'),
+    def: t('glossary.lighting.def'),
   },
   {
-    term: 'kWh',
-    def: 'Un kilovatio-hora: tener algo de 1000 W encendido durante una hora.',
+    term: t('glossary.kwh.term'),
+    def: t('glossary.kwh.def'),
   },
 ]
 
