@@ -52,7 +52,7 @@ export const HistoryDetails = ({ records }: HistoryDetailsProps) => {
   }
 
   return (
-    <div className="font-mono">
+    <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-xs text-muted-foreground">
       {Object.entries(historyMapper).map(([label, value], idx) => (
         <HistoryField key={idx} label={label} value={value} />
       ))}
@@ -61,10 +61,10 @@ export const HistoryDetails = ({ records }: HistoryDetailsProps) => {
 }
 
 const HistoryField = ({ label, value }: HistoryFieldProps) => (
-  <div className="flex justify-between text-sm">
+  <>
     <p className="capitalize">{label}</p>
-    <p className="text-foreground/90">
+    <p className="text-right font-mono tabular-nums text-foreground">
       {typeof value === 'number' ? `${MONEY} ${value.toFixed(2)}` : `${value}`}
     </p>
-  </div>
+  </>
 )

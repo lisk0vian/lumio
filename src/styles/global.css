@@ -191,15 +191,31 @@
 
   input[type='number'] {
     appearance: textfield; /* estándar */
-    -moz-appearance: textfield; /* Firefox */
     -webkit-appearance: none; /* Chrome, Safari, Edge */
+  }
+
+  /* Firefox no entiende el keyword estándar `textfield`: necesita el prefijo.
+     Va en @supports para que LightningCSS no lo elimine como "redundante". */
+  @supports (-moz-appearance: textfield) {
+    input[type='number'] {
+      -moz-appearance: textfield;
+    }
   }
 
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {
     appearance: none; /* estándar */
-    -webkit-appearance: none; /* WebKit */
     margin: 0;
+  }
+
+  /* Blink (Chrome/Brave/Edge) exige el prefijo en estos pseudo-elementos
+     aunque exista el estándar. Va en @supports para que LightningCSS
+     no lo elimine como "redundante" (misma técnica que el fix Firefox). */
+  @supports (-webkit-appearance: none) {
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
   }
 
   input:focus {
