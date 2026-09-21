@@ -3,7 +3,12 @@
 // and reused by whatever component ends up consuming them.
 
 import type { BillingPeriod, KwhToMoneyResult, Receipt, Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
-import { t } from "../i18n";
+import { ui, defaultLang, type AppLang } from "../i18n/ui";
+
+function translate(lang: AppLang | undefined, key: keyof typeof ui.es): string {
+  const active = lang ?? defaultLang
+  return ui[active][key] ?? ui[defaultLang][key]
+}
 
 /**
  * Human-readable labels for each voltage level, based on IEC 60038.
@@ -175,26 +180,27 @@ export function calculateMoneyToKwh(
 
 export function buildReceipts(
   kwh: number,
-  inputs: CalculationInputs
+  inputs: CalculationInputs,
+  lang?: AppLang
 ): { receipts: Receipt[]; total: number } {
   const result = calculateKwhToMoney(kwh, inputs)
   const receipts: Receipt[] = [
-    { label: `${t('receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
+    { label: `${translate(lang, 'receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
   ]
 
   if (inputs.isFixedChargeEnabled) {
-    receipts.push({ label: t('receipt.fixedCharge'), money: result.fixedCharge })
+    receipts.push({ label: translate(lang, 'receipt.fixedCharge'), money: result.fixedCharge })
   }
   if (inputs.isPublicLightingEnabled) {
-    receipts.push({ label: t('receipt.publicLighting'), money: result.publicLightingCharge })
+    receipts.push({ label: translate(lang, 'receipt.publicLighting'), money: result.publicLightingCharge })
   }
 
-  receipts.push({ label: t('receipt.subtotal'), money: result.subtotal })
+  receipts.push({ label: translate(lang, 'receipt.subtotal'), money: result.subtotal })
   receipts.push({
-    label: `${t('receipt.igv')} · ${inputs.isTaxEnabled ? t('receipt.included') : t('receipt.excluded')}`,
+    label: `${translate(lang, 'receipt.igv')} · ${inputs.isTaxEnabled ? translate(lang, 'receipt.included') : translate(lang, 'receipt.excluded')}`,
     money: result.igv,
   })
-  receipts.push({ label: t('receipt.total'), money: result.total })
+  receipts.push({ label: translate(lang, 'receipt.total'), money: result.total })
 
   return { receipts, total: result.total }
 }

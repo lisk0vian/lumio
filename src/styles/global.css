@@ -50,6 +50,10 @@
   --primary: oklch(0.8541 0.1706 86.9206);
   --primary-foreground: oklch(0.1913 0 0);
 
+  /* readable accent text: terracotta in light (5.81:1 on white),
+     primary yellow in dark (13:1). Plain text-primary fails in light (1.57:1). */
+  --ember: oklch(0.52 0.13 45);
+
   --secondary: oklch(0.1913 0 0);
   --secondary-foreground: oklch(1 0 0);
 
@@ -101,6 +105,7 @@
 
   --primary: oklch(0.8799 0.1535 89.7806);
   --primary-foreground: oklch(0.1913 0 0);
+  --ember: oklch(0.8799 0.1535 89.7806);
 
   --secondary: oklch(0.9843 0.004 106.472);
   --secondary-foreground: oklch(0.1913 0 0);
@@ -138,6 +143,7 @@
   --color-popover-foreground: var(--popover-foreground);
 
   --color-primary: var(--primary);
+  --color-ember: var(--ember);
   --color-primary-foreground: var(--primary-foreground);
 
   --color-secondary: var(--secondary);
@@ -220,5 +226,9 @@
 
   input:focus {
     @apply outline-none ring-0;
+  }
+
+  button {
+    touch-action: manipulation;
   }
 }
