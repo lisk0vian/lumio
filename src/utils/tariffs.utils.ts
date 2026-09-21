@@ -2,7 +2,8 @@
 // No React/UI code here on purpose -- these can be unit tested in isolation
 // and reused by whatever component ends up consuming them.
 
-import type { Receipt, Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
+import type { BillingPeriod, KwhToMoneyResult, Receipt, Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
+import { t } from "../i18n";
 
 /**
  * Human-readable labels for each voltage level, based on IEC 60038.
@@ -79,6 +80,7 @@ export function getValueById<T extends { id: string }>(
  * Builds the receipt breakdown rows (plus Total) from the active tariff
  * settings. Placeholder values until the real calculation is wired;
  * shared by the desktop layout and the mobile tabs so both show the same.
+ * @deprecated Use buildReceipts with canonical inputs instead.
  */
 export function buildReceiptBreakdown(
     fee: number,
@@ -93,5 +95,106 @@ export function buildReceiptBreakdown(
     ];
     const total = base.reduce((acc, { money }) => acc + money, 0);
 
-    return { receipts: [...base, { label: "Total", money: total }] };
+    return { receipts: [...base, { label: 'Total', money: total }], total };
+}
+
+export type CalculationInputs = {
+  pricePerKwh: number
+  fixedCharge: number
+  publicLightingCharge: number
+  igvRate: number
+  isFixedChargeEnabled: boolean
+  isPublicLightingEnabled: boolean
+  isTaxEnabled: boolean
+  period: BillingPeriod
+}
+
+export function sanitizeNonNegative(value: number): number {
+  if (!Number.isFinite(value) || value < 0) return 0
+  return value
+}
+
+export function periodMultiplier(period: BillingPeriod): number {
+  return period === 'bimonthly' ? 2 : 1
+}
+
+export function calculateKwhToMoney(
+  kwh: number,
+  inputs: CalculationInputs
+): KwhToMoneyResult {
+  const safeKwh = sanitizeNonNegative(kwh)
+  const price = sanitizeNonNegative(inputs.pricePerKwh)
+  const fixed = inputs.isFixedChargeEnabled
+    ? sanitizeNonNegative(inputs.fixedCharge)
+    : 0
+  const lighting = inputs.isPublicLightingEnabled
+    ? sanitizeNonNegative(inputs.publicLightingCharge)
+    : 0
+  const rate = inputs.isTaxEnabled ? sanitizeNonNegative(inputs.igvRate) : 0
+
+  const monthlySubtotal = safeKwh * price + fixed + lighting
+  const monthlyIgv = monthlySubtotal * rate
+  const multiplier = periodMultiplier(inputs.period)
+
+  const subtotal = monthlySubtotal * multiplier
+  const igv = monthlyIgv * multiplier
+
+  return {
+    energy: safeKwh * price * multiplier,
+    fixedCharge: fixed * multiplier,
+    publicLightingCharge: lighting * multiplier,
+    subtotal,
+    igv,
+    total: subtotal + igv,
+  }
+}
+
+export function calculateMoneyToKwh(
+  total: number,
+  inputs: CalculationInputs
+): { kwh: number } {
+  const safeTotal = sanitizeNonNegative(total)
+  const price = sanitizeNonNegative(inputs.pricePerKwh)
+  if (price === 0) return { kwh: 0 }
+
+  const fixed = inputs.isFixedChargeEnabled
+    ? sanitizeNonNegative(inputs.fixedCharge)
+    : 0
+  const lighting = inputs.isPublicLightingEnabled
+    ? sanitizeNonNegative(inputs.publicLightingCharge)
+    : 0
+  const rate = inputs.isTaxEnabled ? sanitizeNonNegative(inputs.igvRate) : 0
+  const multiplier = periodMultiplier(inputs.period)
+
+  const monthlyTotal = safeTotal / multiplier
+  const monthlyFixed = fixed + lighting
+  if (monthlyTotal < monthlyFixed) return { kwh: 0 }
+
+  return { kwh: (monthlyTotal - monthlyFixed) / (price * (1 + rate)) }
+}
+
+export function buildReceipts(
+  kwh: number,
+  inputs: CalculationInputs
+): { receipts: Receipt[]; total: number } {
+  const result = calculateKwhToMoney(kwh, inputs)
+  const receipts: Receipt[] = [
+    { label: `${t('receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
+  ]
+
+  if (inputs.isFixedChargeEnabled) {
+    receipts.push({ label: t('receipt.fixedCharge'), money: result.fixedCharge })
+  }
+  if (inputs.isPublicLightingEnabled) {
+    receipts.push({ label: t('receipt.publicLighting'), money: result.publicLightingCharge })
+  }
+
+  receipts.push({ label: t('receipt.subtotal'), money: result.subtotal })
+  receipts.push({
+    label: `${t('receipt.igv')} · ${inputs.isTaxEnabled ? t('receipt.included') : t('receipt.excluded')}`,
+    money: result.igv,
+  })
+  receipts.push({ label: t('receipt.total'), money: result.total })
+
+  return { receipts, total: result.total }
 }

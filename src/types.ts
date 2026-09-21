@@ -5,6 +5,51 @@ export type Receipt = {
   money: number
 }
 
+/** Calculation direction for the bidirectional converter. */
+export type CalculationDirection = 'kwh-to-money' | 'money-to-kwh'
+
+/** Snapshot of the tariff + settings used for a calculation.
+ *  Stored inside each history record so past entries stay immutable
+ *  even if the hardcoded DB or the settings change later.
+ */
+export interface TariffSnapshot {
+  tariffId: string
+  regulatorId: string
+  pricePerKwh: number
+  fixedCharge: number
+  publicLightingCharge: number
+  igvRate: number
+  isFixedChargeEnabled: boolean
+  isPublicLightingEnabled: boolean
+  isTaxEnabled: boolean
+  period: BillingPeriod
+}
+
+/** Canonical history entry persisted in localStorage. */
+export interface HistoryRecord {
+  id: string
+  createdAt: string
+  direction: CalculationDirection
+  inputKwh: number | null
+  inputMoney: number | null
+  resultKwh: number
+  resultMoney: number
+  snapshot: TariffSnapshot
+}
+
+/** Breakdown of a kWh -> money calculation. */
+export interface KwhToMoneyResult {
+  energy: number
+  fixedCharge: number
+  publicLightingCharge: number
+  subtotal: number
+  igv: number
+  total: number
+}
+
+export const STORAGE_KEY = 'lumio:v1'
+export const HISTORY_LIMIT = 100
+
 // types.ts
 // Core data model for the energy tariff selector.
 // Structure: Regulator -> TariffCategory (grouped by code + voltageLevel in the UI).
