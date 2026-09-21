@@ -12,6 +12,7 @@ type State = {
 type Action = {
     setRegulator: (id: string) => void
     setTax: (tax: number) => void
+    reset: () => void
 }
 
 const baseRegulator = regulators[0];
@@ -27,6 +28,12 @@ export const useSettings = create<State & Action>((set) => ({
         const regulator = regulators.find((reg) => reg.id === id);
         if (regulator) set({ regulator })
     },
+    reset: () => set({
+        regulator: baseRegulator,
+        hasTax: true,
+        hasRate: true,
+        tax: .18,
+    }),
 }))
 
 

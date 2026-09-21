@@ -17,6 +17,7 @@ export type TariffAction = {
     setPrice: (price: number) => void
     setRegulator: (id: string) => void
     setTariff: (id: string) => void
+    reset: () => void
 }
 
 const baseRegulator = regulators[0];
@@ -57,6 +58,13 @@ export const useTariff = create<TariffState & TariffAction>((set) => ({
         period: tariff.billingPeriod,
       });
     }
-  }
+  },
+  reset: () => set({
+    id: baseTariff?.id ?? '',
+    regulatorId: baseTariff?.regulatorId,
+    period: baseTariff?.billingPeriod ?? 'monthly',
+    fee: baseTariff?.fixedCharge ?? 0,
+    price: baseTariff?.pricePerKwh ?? 0,
+  }),
 }));
 

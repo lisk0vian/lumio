@@ -2,7 +2,7 @@
 // No React/UI code here on purpose -- these can be unit tested in isolation
 // and reused by whatever component ends up consuming them.
 
-import type { Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
+import type { Receipt, Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
 
 /**
  * Human-readable labels for each voltage level, based on IEC 60038.
@@ -51,16 +51,47 @@ export function groupTariffsByCode(categories: TariffCategory[]): TariffGroup[] 
 }
 
 /**
- *   
- * @param items data for used
- * @param id 
- * @param key 
- * @returns 
+ * Parses a raw settings input into a safe number.
+ * Empty or invalid input becomes 0 instead of NaN.
  */
+export function parseSettingNumber(val: string): number {
+    const parsed = parseFloat(val);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Parses a tax percentage input (e.g. "18") into a rate (e.g. 0.18),
+ * rounded to two decimals before dividing.
+ */
+export function parseTaxPercent(val: string): number {
+    const safe = parseSettingNumber(val);
+    return Math.round(safe * 100) / 100 / 100;
+}
 export function getValueById<T extends { id: string }>(
   items: T[],
   id: string | undefined,
   key: keyof T
 ): string | undefined {
   return items.find((item) => item.id === id)?.[key] as string | undefined;
+}
+
+/**
+ * Builds the receipt breakdown rows (plus Total) from the active tariff
+ * settings. Placeholder values until the real calculation is wired;
+ * shared by the desktop layout and the mobile tabs so both show the same.
+ */
+export function buildReceiptBreakdown(
+    fee: number,
+    hasTax: boolean,
+    tax: number
+): { receipts: Receipt[]; total: number } {
+    const base: Receipt[] = [
+        { label: "Energía · 14 kWh", money: 13.2 },
+        { label: "Cargo Fijo · Mensual", money: fee },
+        { label: "Sub Total · Sin IGV", money: 13 },
+        { label: `IGV · ${hasTax ? "Incluido" : "Excluido"}`, money: tax },
+    ];
+    const total = base.reduce((acc, { money }) => acc + money, 0);
+
+    return { receipts: [...base, { label: "Total", money: total }] };
 }
