@@ -29,55 +29,61 @@
 :root {
   --radius: 0.5rem;
 
-  /* base */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.1913 0 0);
+  /* base — papel cálido, no blanco puro: la página es off-white para que
+     --card (#fff) siga existiendo *encima* y las superficies se distingan.
+     Los neutros llevan chroma ~0.007–0.018 en hue 80–95 (ámbar tenue):
+     grises puros (chroma 0) leían como blanco/negro ajeno a la marca. */
+  --background: oklch(0.981 0.007 95);
+  --foreground: oklch(0.205 0.008 80);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.1913 0 0);
+  --card-foreground: oklch(0.205 0.008 80);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1913 0 0);
+  --popover-foreground: oklch(0.205 0.008 80);
 
-  --muted: oklch(0.9606 0.0027 106.4494);
-  --muted-foreground: oklch(0.4951 0.0094 99.0279);
+  --muted: oklch(0.945 0.018 90);
+  --muted-foreground: oklch(0.5 0.014 88);
 
-  --border: oklch(0.9091 0.0068 97.3594);
-  --input: oklch(0.9091 0.0068 97.3594);
+  --border: oklch(0.892 0.018 90);
+  --input: oklch(0.892 0.018 90);
   --ring: oklch(0.8541 0.1706 86.9206);
 
   /* brand */
   --primary: oklch(0.8541 0.1706 86.9206);
   --primary-foreground: oklch(0.1913 0 0);
 
-  /* readable accent text: terracotta in light (5.81:1 on white),
-     primary yellow in dark (13:1). Plain text-primary fails in light (1.57:1). */
+  /* Acento legible: terracota en claro (5.5:1 sobre papel), amarillo primary
+     en oscuro (13:1). text-primary pelado falla en claro (1.57:1). También
+     es el color de los trazos que *significan* algo (underline activo, rail). */
   --ember: oklch(0.52 0.13 45);
 
-  --secondary: oklch(0.1913 0 0);
-  --secondary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.205 0.008 80);
+  --secondary-foreground: oklch(0.985 0.006 95);
 
   --destructive: oklch(0.5676 0.2084 27.0613);
   --destructive-foreground: oklch(1 0 0);
 
-  --accent: oklch(0.9638 0.0522 92.9269);
-  --accent-foreground: oklch(0.1913 0 0);
+  /* accent = superficie de selección (ámbar tenue). Nunca blanco: el blanco
+     queda reservado a la tinta. accent-foreground = el ámbar legible encima. */
+  --accent: oklch(0.955 0.045 90);
+  --accent-foreground: var(--ember);
 
   /* charts — escala de intensidad de consumo, amarillo a rojo, negro como referencia */
   --chart-1: oklch(0.8541 0.1706 86.9206); /* consumo bajo */
   --chart-2: oklch(0.7837 0.1587 72.9913); /* consumo medio-bajo */
   --chart-3: oklch(0.6574 0.1789 40.4469); /* consumo medio-alto */
   --chart-4: oklch(0.549 0.1741 29.9397); /* consumo alto */
-  --chart-5: oklch(0.1913 0 0); /* línea de referencia / promedio */
+  --chart-5: oklch(0.205 0.008 80); /* línea de referencia / promedio */
 
   /* sidebar — siempre negro, en claro y oscuro */
-  --sidebar: oklch(0.1913 0 0);
-  --sidebar-foreground: oklch(0.9843 0.004 106.472);
+  --sidebar: oklch(0.19 0.008 85);
+  --sidebar-foreground: oklch(0.965 0.012 95);
   --sidebar-primary: oklch(0.8541 0.1706 86.9206);
   --sidebar-primary-foreground: oklch(0.1913 0 0);
-  --sidebar-accent: oklch(0.2562 0 0);
-  --sidebar-accent-foreground: oklch(0.9843 0.004 106.472);
-  --sidebar-border: oklch(0.285 0 0);
+  --sidebar-accent: oklch(0.265 0.01 85);
+  --sidebar-accent-foreground: oklch(0.965 0.012 95);
+  --sidebar-border: oklch(0.295 0.012 85);
   --sidebar-ring: oklch(0.8541 0.1706 86.9206);
 
   /* tipografía */
@@ -87,48 +93,53 @@
 }
 
 .dark {
-  --background: oklch(0.1822 0 0);
-  --foreground: oklch(0.9843 0.004 106.472);
+  /* Carbón cálido (mismo hue ámbar que el claro), no #121212 puro. La tinta
+     baja de 98% a 94.5% L: sigue en 16:1, pero deja de encandilar. */
+  --background: oklch(0.18 0.006 85);
+  --foreground: oklch(0.945 0.016 92);
 
-  --card: oklch(0.2221 0 0);
-  --card-foreground: oklch(0.9843 0.004 106.472);
+  --card: oklch(0.223 0.009 85);
+  --card-foreground: oklch(0.945 0.016 92);
 
-  --popover: oklch(0.2221 0 0);
-  --popover-foreground: oklch(0.9843 0.004 106.472);
+  --popover: oklch(0.223 0.009 85);
+  --popover-foreground: oklch(0.945 0.016 92);
 
-  --muted: oklch(0.2686 0 0);
-  --muted-foreground: oklch(0.704 0.0086 106.6179);
+  --muted: oklch(0.272 0.013 85);
+  --muted-foreground: oklch(0.73 0.014 90);
 
-  --border: oklch(0.3012 0 0);
-  --input: oklch(0.3012 0 0);
+  --border: oklch(0.305 0.016 85);
+  --input: oklch(0.305 0.016 85);
   --ring: oklch(0.8799 0.1535 89.7806);
 
   --primary: oklch(0.8799 0.1535 89.7806);
   --primary-foreground: oklch(0.1913 0 0);
   --ember: oklch(0.8799 0.1535 89.7806);
 
-  --secondary: oklch(0.9843 0.004 106.472);
-  --secondary-foreground: oklch(0.1913 0 0);
+  /* Era casi blanco (0.9843): --secondary es una *superficie*, y tenerlo claro
+     convertía todo bg-secondary en un bloque blanco. */
+  --secondary: oklch(0.272 0.013 85);
+  --secondary-foreground: oklch(0.945 0.016 92);
 
   --destructive: oklch(0.6922 0.1976 23.8341);
   --destructive-foreground: oklch(0.1913 0 0);
 
-  --accent: oklch(0.2774 0.0369 94.5243);
+  /* Selección ámbar sobre carbón: primary encima da 9.5:1 (AA/AAA de sobra). */
+  --accent: oklch(0.3 0.045 85);
   --accent-foreground: oklch(0.8799 0.1535 89.7806);
 
   --chart-1: oklch(0.8799 0.1535 89.7806);
   --chart-2: oklch(0.8217 0.1402 79.0805);
   --chart-3: oklch(0.7321 0.1454 51.5425);
   --chart-4: oklch(0.6384 0.1762 32.722);
-  --chart-5: oklch(0.8729 0.0126 91.5315);
+  --chart-5: oklch(0.945 0.016 92);
 
-  --sidebar: oklch(0.1591 0 0);
-  --sidebar-foreground: oklch(0.9843 0.004 106.472);
+  --sidebar: oklch(0.165 0.008 85);
+  --sidebar-foreground: oklch(0.965 0.012 95);
   --sidebar-primary: oklch(0.8799 0.1535 89.7806);
   --sidebar-primary-foreground: oklch(0.1913 0 0);
-  --sidebar-accent: oklch(0.2393 0 0);
-  --sidebar-accent-foreground: oklch(0.9843 0.004 106.472);
-  --sidebar-border: oklch(0.2686 0 0);
+  --sidebar-accent: oklch(0.245 0.01 85);
+  --sidebar-accent-foreground: oklch(0.965 0.012 95);
+  --sidebar-border: oklch(0.275 0.012 85);
   --sidebar-ring: oklch(0.8799 0.1535 89.7806);
 }
 
