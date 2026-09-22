@@ -76,7 +76,7 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
         unit={isKwhMode ? 'money' : 'kwh'}
         surchages={
           isKwhMode
-            ? [t('calculator.withoutIgv'), t('calculator.netAmount')]
+            ? [t(isTaxEnabled ? 'calculator.withIgv' : 'calculator.withoutIgv'), t('calculator.netAmount')]
             : [t('calculator.estimatedConsumption')]
         }
       />

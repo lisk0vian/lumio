@@ -88,7 +88,7 @@ function CalcPanel({ lang }: { lang: AppLang }) {
         unit={isKwhMode ? 'money' : 'kwh'}
         surchages={
           isKwhMode
-            ? [t('calculator.withoutIgv'), t('calculator.netAmount')]
+            ? [t(isTaxEnabled ? 'calculator.withIgv' : 'calculator.withoutIgv'), t('calculator.netAmount')]
             : [t('calculator.estimatedConsumption')]
         }
       />
@@ -110,7 +110,7 @@ function CalcPanel({ lang }: { lang: AppLang }) {
         <p className="mt-3">
           <a
             href={lang === 'en' ? '/en/calculation' : '/calculo'}
-            className="text-xs text-ember underline underline-offset-[3px]"
+            className="text-xs link-ember"
           >
             {t('explainer.link')}
           </a>

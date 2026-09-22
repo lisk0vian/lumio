@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { animate } from 'animejs'
 import { Input } from '@/components/ui/input'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
+import { isReducedMotion, LUMIO_COMMIT_EVENT } from '@/utils/animated-number.utils'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
@@ -34,6 +36,13 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
   const period = useLumioStore((state) => state.period)
   const t = useTranslations(lang)
 
+  const rowRef = useRef<HTMLDivElement | null>(null)
+  const unitRef = useRef<HTMLSpanElement | null>(null)
+  const hintRef = useRef<HTMLParagraphElement | null>(null)
+  const shakeAnimRef = useRef<ReturnType<typeof animate> | null>(null)
+  const firstDirectionRef = useRef(true)
+  const lastHintAnimRef = useRef(0)
+
   const isKwhMode = direction === 'kwh-to-money'
   const rawValue = isKwhMode ? inputKwh : inputMoney
 
@@ -61,9 +70,19 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
     period,
   }
 
+  const shakeRow = () => {
+    const el = rowRef.current
+    if (!el || isReducedMotion()) return
+    shakeAnimRef.current?.cancel()
+    shakeAnimRef.current = animate(el, { x: [0, -7, 7, -5, 5, 0], duration: 300, ease: 'outQuad' })
+  }
+
   const handleCommit = () => {
     const clean = sanitizeNonNegative(rawValue)
-    if (clean <= 0) return
+    if (clean <= 0) {
+      shakeRow()
+      return
+    }
     if (isKwhMode) {
       const { total } = calculateKwhToMoney(clean, inputs)
       addRecord({
@@ -83,6 +102,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
         resultMoney: clean,
       })
     }
+    window.dispatchEvent(new Event(LUMIO_COMMIT_EVENT))
   }
 
   // Derived counterpart shown as a hint under the input.
@@ -90,8 +110,35 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
     ? `≈ S/ ${calculateKwhToMoney(rawValue, inputs).total.toFixed(2)}`
     : `≈ ${calculateMoneyToKwh(rawValue, inputs).kwh.toFixed(1)} kWh`
 
+  // Unit fades/slides when the conversion direction flips (rare event).
+  useEffect(() => {
+    if (firstDirectionRef.current) {
+      firstDirectionRef.current = false
+      return
+    }
+    const el = unitRef.current
+    if (!el || isReducedMotion()) return
+    animate(el, { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' })
+  }, [isKwhMode])
+
+  // Hint slides on value changes, throttled so fast typing never queues it.
+  useEffect(() => {
+    const el = hintRef.current
+    if (!el || isReducedMotion()) return
+    const now = Date.now()
+    if (now - lastHintAnimRef.current < 250) return
+    lastHintAnimRef.current = now
+    animate(el, { opacity: [0.35, 1], y: [3, 0], duration: 150, ease: 'outCubic' })
+  }, [hint])
+
+  useEffect(() => {
+    return () => {
+      shakeAnimRef.current?.cancel()
+    }
+  }, [])
+
   return (
-    <div className="flex flex-col">
+    <div ref={rowRef} className="flex flex-col">
       <div className="flex items-baseline gap-3 border-b border-border py-5 2xl:py-6">
         <p className="text-xs whitespace-nowrap text-muted-foreground">
           {isKwhMode ? t('calculator.consumption') : t('calculator.amount')}
@@ -115,12 +162,12 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
             }}
             className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-foreground 2xl:text-6xl"
           />
-          <span className="font-mono text-base text-muted-foreground 2xl:text-lg">
+          <span ref={unitRef} className="inline-block font-mono text-base text-muted-foreground 2xl:text-lg">
             {isKwhMode ? 'kWh' : 'S/'}
           </span>
         </p>
       </div>
-      <p className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
+      <p ref={hintRef} className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
         {hint}
       </p>
       <div className="flex items-baseline justify-between gap-3 pt-2">
