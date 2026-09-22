@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { animate } from 'animejs'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { calculateKwhToMoney } from '@/utils/tariffs.utils'
+import { isReducedMotion } from '@/utils/animated-number.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 import { savingTips } from '@/data/tips.data'
+
+const AUTOPLAY_MS = 6000
+const SLIDE_PX = 14
 
 export const SavingTip = ({ lang, className }: { lang: AppLang; className?: string }) => {
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
@@ -13,11 +18,26 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
   const t = useTranslations(lang)
   const [index, setIndex] = useState(0)
 
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const barAnimRef = useRef<ReturnType<typeof animate> | null>(null)
+  const slideAnimRef = useRef<ReturnType<typeof animate> | null>(null)
+  const dirRef = useRef<1 | -1>(1)
+  const hoverRef = useRef(false)
+  const focusRef = useRef(false)
+  const firstRef = useRef(true)
+
   const tip = savingTips[index]
 
-  const goPrev = () =>
+  const goPrev = () => {
+    dirRef.current = -1
     setIndex((i) => (i - 1 + savingTips.length) % savingTips.length)
-  const goNext = () => setIndex((i) => (i + 1) % savingTips.length)
+  }
+  const goNext = () => {
+    dirRef.current = 1
+    setIndex((i) => (i + 1) % savingTips.length)
+  }
 
   const savings = calculateKwhToMoney(tip.kwhPerMonth, {
     pricePerKwh,
@@ -30,10 +50,98 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
     period: 'monthly',
   }).total
 
+  // Directional slide on tip change: exits toward the pressed arrow, the new
+  // tip enters from the opposite side. Skipped on first paint and under
+  // prefers-reduced-motion; rapid clicks cancel the previous slide.
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false
+      return
+    }
+    const el = contentRef.current
+    if (!el || isReducedMotion()) return
+    slideAnimRef.current?.cancel()
+    slideAnimRef.current = animate(el, {
+      opacity: [0, 1],
+      x: [SLIDE_PX * dirRef.current, 0],
+      duration: 250,
+      ease: 'outCubic',
+    })
+  }, [index])
+
+  // Autoplay: the progress bar IS the timer (scaleX 0→1, linear). Completion
+  // advances to the next tip, and any index change retriggers the effect, so
+  // manual navigation always resets the countdown. No autoplay at all under
+  // prefers-reduced-motion.
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar || isReducedMotion()) return
+    const anim = animate(bar, {
+      scaleX: [0, 1],
+      duration: AUTOPLAY_MS,
+      ease: 'linear',
+      onComplete: () => {
+        dirRef.current = 1
+        setIndex((i) => (i + 1) % savingTips.length)
+      },
+    })
+    barAnimRef.current = anim
+    return () => {
+      anim.cancel()
+    }
+  }, [index])
+
+  // Pause while hovered, focused, or the tab is hidden; resume otherwise.
+  useEffect(() => {
+    const syncPause = () => {
+      const anim = barAnimRef.current
+      if (!anim) return
+      if (hoverRef.current || focusRef.current || document.visibilityState === 'hidden') anim.pause()
+      else anim.play()
+    }
+    const root = rootRef.current
+    const onEnter = () => {
+      hoverRef.current = true
+      syncPause()
+    }
+    const onLeave = () => {
+      hoverRef.current = false
+      syncPause()
+    }
+    const onFocusIn = () => {
+      focusRef.current = true
+      syncPause()
+    }
+    const onFocusOut = () => {
+      focusRef.current = false
+      syncPause()
+    }
+    root?.addEventListener('mouseenter', onEnter)
+    root?.addEventListener('mouseleave', onLeave)
+    root?.addEventListener('focusin', onFocusIn)
+    root?.addEventListener('focusout', onFocusOut)
+    document.addEventListener('visibilitychange', syncPause)
+    return () => {
+      root?.removeEventListener('mouseenter', onEnter)
+      root?.removeEventListener('mouseleave', onLeave)
+      root?.removeEventListener('focusin', onFocusIn)
+      root?.removeEventListener('focusout', onFocusOut)
+      document.removeEventListener('visibilitychange', syncPause)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      barAnimRef.current?.cancel()
+      slideAnimRef.current?.cancel()
+    }
+  }, [])
+
   // Rail ámbar + superficie cálida: el bloque de consejos es el único
   // momento editorial de la página, así que carga el color de marca.
   return (
     <div
+      ref={rootRef}
       className={cn(
         'mt-6 border-l-2 border-ember bg-accent/60 px-4 py-4 2xl:mt-8',
         className
@@ -48,7 +156,7 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
             type="button"
             aria-label={t('tip.prev')}
             onClick={goPrev}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -59,19 +167,24 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
             type="button"
             aria-label={t('tip.next')}
             onClick={goNext}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
       </div>
-      <p className="mt-2 min-h-11 text-base leading-snug 2xl:text-lg">
-        {t(tip.textKey)}
-      </p>
-      <p className="mt-1.5 font-mono text-xs tabular-nums text-ember">
-        &minus;{tip.kwhPerMonth.toFixed(1)} kWh · &asymp; S/ {savings.toFixed(2)}{' '}
-        {t('tip.perMonth')}
-      </p>
+      <div ref={contentRef}>
+        <p className="mt-2 min-h-11 text-base leading-snug 2xl:text-lg">
+          {t(tip.textKey)}
+        </p>
+        <p className="mt-1.5 font-mono text-xs tabular-nums text-ember">
+          &minus;{tip.kwhPerMonth.toFixed(1)} kWh · &asymp; S/ {savings.toFixed(2)}{' '}
+          {t('tip.perMonth')}
+        </p>
+      </div>
+      <div aria-hidden="true" className="mt-3 h-0.5 overflow-hidden rounded-full bg-ember/15">
+        <div ref={barRef} style={{ transform: 'scaleX(0)' }} className="h-full w-full origin-left bg-ember" />
+      </div>
     </div>
   )
 }
