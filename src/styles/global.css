@@ -243,3 +243,27 @@
     touch-action: manipulation;
   }
 }
+
+/* Glossary CSS-only tabs (see features/glossary/glossary-block.tsx): each
+   term wraps its radio + label + panel in a display:contents box, so the
+   flex row is unaffected. Correlation is done with :has() on the wrapper —
+   Tailwind's peer variant compiles to `.peer:checked ~ *` (general sibling),
+   which leaks across every preceding radio when several share a container
+   and selects/shows multiple tabs at once. :has() matches only the term's
+   own checked input. Colors resolve from theme vars, so dark mode follows. */
+[data-glossary-panel] {
+  display: none;
+}
+[data-glossary-tab]:has(> input:checked) > [data-glossary-panel] {
+  display: block;
+}
+[data-glossary-tab]:has(> input:checked) > label {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 500;
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 40%, transparent);
+}
+[data-glossary-tab] > input:focus-visible + label {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+}
