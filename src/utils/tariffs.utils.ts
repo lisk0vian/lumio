@@ -73,6 +73,54 @@ export function parseTaxPercent(val: string): number {
     const safe = parseSettingNumber(val);
     return Math.round(safe * 100) / 100 / 100;
 }
+
+/**
+ * Filters free-typed entry text down to digits and a single decimal
+ * separator, normalizing a comma to a dot ("22,5" -> "22.5").
+ *
+ * Needed because the amount/kWh field has to stay a *text* input: a
+ * controlled number input rewrites its own value on every keystroke, so the
+ * trailing separator of a half-typed "22." gets erased and the next digit
+ * lands in the wrong place ("22.5" became "225").
+ */
+export function sanitizeEntryText(text: string): string {
+    let sanitized = '';
+    let hasSeparator = false;
+
+    for (const char of text.replace(/,/g, '.')) {
+        if (char >= '0' && char <= '9') {
+            sanitized += char;
+        } else if (char === '.' && !hasSeparator) {
+            hasSeparator = true;
+            sanitized += char;
+        }
+    }
+
+    return sanitized;
+}
+
+/**
+ * Entry text -> number. Anything not yet a usable amount (empty, "0", "0.",
+ * a lone separator, text) becomes 0, so intermediate keystrokes never throw
+ * off the derived hint. A stray minus sign is dropped rather than negating:
+ * this field only accepts non-negative values.
+ */
+export function parseEntryText(text: string): number {
+    const parsed = Number.parseFloat(sanitizeEntryText(text));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+/**
+ * Number -> entry text, rounded to 2 decimals with trailing zeros trimmed.
+ * Used only when the field is filled from the outside (unit switch, reset,
+ * rehydration): without it, a correct conversion like 22.5852 would surface
+ * as "22.5852", and repeated switches could expose float residue such as
+ * "22.000000000000007".
+ */
+export function formatEntryText(value: number): string {
+    if (!Number.isFinite(value) || value <= 0) return '';
+    return String(Number(value.toFixed(2)));
+}
 export function getValueById<T extends { id: string }>(
   items: T[],
   id: string | undefined,
@@ -172,10 +220,21 @@ export function calculateMoneyToKwh(
   const multiplier = periodMultiplier(inputs.period)
 
   const monthlyTotal = safeTotal / multiplier
-  const monthlyFixed = fixed + lighting
-  if (monthlyTotal < monthlyFixed) return { kwh: 0 }
+  const monthlyCharges = fixed + lighting
 
-  return { kwh: (monthlyTotal - monthlyFixed) / (price * (1 + rate)) }
+  // Exact inverse of calculateKwhToMoney, which applies the IGV to the whole
+  // subtotal (energy + charges). So the IGV has to be undone *before* the
+  // charges are subtracted. Subtracting first divided money by (1 + rate) and
+  // left the charges taxed at the wrong step, inflating every conversion by
+  // charges * rate / (price * (1 + rate)): with the base tariff that is
+  // +0.815 kWh, added again on every unit switch.
+  //
+  // The guard is the smallest bill this tariff can produce (charges + IGV).
+  // Comparing against the charges alone let smaller amounts through and
+  // produced a negative consumption.
+  if (monthlyTotal < monthlyCharges * (1 + rate)) return { kwh: 0 }
+
+  return { kwh: (monthlyTotal / (1 + rate) - monthlyCharges) / price }
 }
 
 export function buildReceipts(
