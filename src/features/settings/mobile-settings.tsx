@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
+import { useRef } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FieldSweep, useFieldFeedback } from './field-feedback'
 import { PeriodSegment } from './period-segment'
 import { SelectRegulator, SelectTariff, TaxToggle, ChargeToggle } from './setting-options'
 import { parseSettingNumber, parseTaxPercent } from '@/utils/tariffs.utils'
 import { useLumioStore } from '@/stores/lumio-store'
+import type { SettingFieldId } from '@/utils/animated-number.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 
 // Ghost trigger: keeps the shadcn select behavior, borderless and
@@ -26,27 +29,59 @@ function UnderlineInput({
   min,
   step,
   narrow,
+  field,
   onChange,
 }: {
   value: number
   min?: number
   step?: number
   narrow?: boolean
+  field?: SettingFieldId
   onChange: (val: string) => void
 }) {
+  const wrapRef = useRef<HTMLSpanElement | null>(null)
+  const { sweepRef, sweep, setHover, prime, settle, commit } = useFieldFeedback(field)
+  const fixedOn = useLumioStore((state) => state.isFixedChargeEnabled)
+  const lightingOn = useLumioStore((state) => state.isPublicLightingEnabled)
+  const taxOn = useLumioStore((state) => state.isTaxEnabled)
+  const enabled =
+    field === 'fixed' ? fixedOn : field === 'lighting' ? lightingOn : field === 'tax' ? taxOn : true
+
   return (
-    <input
-      type="number"
-      inputMode="decimal"
-      value={value}
-      min={min}
-      step={step}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        'min-h-11 border-b border-border bg-transparent text-right font-mono text-base font-medium tabular-nums outline-none focus:border-ember',
-        narrow ? 'w-12' : 'w-20'
-      )}
-    />
+    <span
+      ref={wrapRef}
+      onMouseEnter={() => {
+        setHover(true)
+        if (enabled) prime()
+      }}
+      onMouseLeave={() => {
+        setHover(false)
+        settle()
+      }}
+      className="relative inline-flex"
+    >
+      <input
+        type="number"
+        inputMode="decimal"
+        value={value}
+        min={min}
+        step={step}
+        disabled={!enabled}
+        onChange={(e) => {
+          sweep()
+          onChange(e.target.value)
+        }}
+        onBlur={() => commit(wrapRef.current)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit(wrapRef.current)
+        }}
+        className={cn(
+          'min-h-11 border-b border-border bg-transparent text-right font-mono text-base font-medium tabular-nums outline-none focus:border-ember disabled:cursor-not-allowed disabled:opacity-50',
+          narrow ? 'w-12' : 'w-20'
+        )}
+      />
+      <FieldSweep sweepRef={sweepRef} />
+    </span>
   )
 }
 
@@ -74,7 +109,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
       </SettingRow>
 
       <SettingRow label={t('settings.tariff')}>
-        <SelectTariff triggerClassName={GHOST_TRIGGER} />
+        <SelectTariff lang={lang} triggerClassName={GHOST_TRIGGER} />
       </SettingRow>
 
       <SettingRow label={t('settings.price')}>
@@ -91,6 +126,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
         <span className="font-mono text-xs text-muted-foreground">S/</span>
         <UnderlineInput
           value={fixedCharge}
+          field="fixed"
           min={0}
           step={0.1}
           onChange={(val) => setFixedCharge(parseSettingNumber(val))}
@@ -102,6 +138,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
         <span className="font-mono text-xs text-muted-foreground">S/</span>
         <UnderlineInput
           value={publicLightingCharge}
+          field="lighting"
           min={0}
           step={0.1}
           onChange={(val) => setPublicLightingCharge(parseSettingNumber(val))}
@@ -113,6 +150,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
         <UnderlineInput
           narrow
           value={taxPercent}
+          field="tax"
           min={0}
           step={1}
           onChange={(val) => setIgvRate(parseTaxPercent(val))}

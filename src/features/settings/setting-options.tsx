@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+import { animate } from 'animejs'
 import { regulators, tariffCategories } from '@/data/tariffs.data'
 import {
   Select,
@@ -10,9 +12,12 @@ import {
 import {
   getTariffsForRegulator,
   groupTariffsByCode,
+  isCustomTariff,
   parseSettingNumber,
   parseTaxPercent,
 } from '@/utils/tariffs.utils'
+import { isReducedMotion, LUMIO_SETTING_EVENT, type SettingFieldId } from '@/utils/animated-number.utils'
+import { FieldSweep, useFieldFeedback } from './field-feedback'
 import { Input } from '@base-ui/react'
 import { Toggle } from '@/components/ui/toggle'
 import { cn } from '@/lib/utils'
@@ -53,7 +58,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
     >
       <div className="flex min-w-56 flex-1 flex-wrap gap-3 max-lg:flex-col max-lg:items-stretch">
         <SelectRegulator triggerClassName="min-w-44 flex-1 max-w-60" />
-        <SelectTariff triggerClassName="min-w-44 flex-1 max-w-60" />
+        <SelectTariff lang={lang} triggerClassName="min-w-44 flex-1 max-w-60" />
       </div>
       {/* Input for price per Kwh */}
       <InputSetting
@@ -68,6 +73,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
       <div className="flex flex-none items-center gap-2">
         <InputSetting
           label={t('settings.fixedShort')}
+          field="fixed"
           type="number"
           min={0}
           value={fixedCharge}
@@ -78,6 +84,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
       <div className="flex flex-none items-center gap-2">
         <InputSetting
           label={t('settings.lightingShort')}
+          field="lighting"
           type="number"
           min={0}
           value={publicLightingCharge}
@@ -92,6 +99,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
         <InputSetting
           label="IGV"
           unit="%"
+          field="tax"
           type="number"
           min={1}
           max={100}
@@ -111,6 +119,19 @@ export const TaxToggle = ({ lang }: { lang: AppLang }) => {
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const setIsTaxEnabled = useLumioStore((state) => state.setIsTaxEnabled)
   const t = useTranslations(lang)
+  const textRef = useRef<HTMLSpanElement | null>(null)
+  const firstRef = useRef(true)
+
+  // Incluido/Excluido swaps: fade + slide, skipped on first paint.
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false
+      return
+    }
+    const el = textRef.current
+    if (!el || isReducedMotion()) return
+    animate(el, { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' })
+  }, [isTaxEnabled])
 
   return (
     <Toggle
@@ -124,9 +145,14 @@ export const TaxToggle = ({ lang }: { lang: AppLang }) => {
       pressed={isTaxEnabled}
       onPressedChange={(pressed) => {
         setIsTaxEnabled(pressed)
+        window.dispatchEvent(
+          new CustomEvent(LUMIO_SETTING_EVENT, { detail: { field: 'tax', enabled: pressed } })
+        )
       }}
     >
-      {isTaxEnabled ? t('receipt.included') : t('receipt.excluded')}
+      <span ref={textRef} className="inline-block">
+        {isTaxEnabled ? t('receipt.included') : t('receipt.excluded')}
+      </span>
     </Toggle>
   )
 }
@@ -142,6 +168,19 @@ export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'l
   const t = useTranslations(lang)
   const chargeLabel = t(kind === 'fixed' ? 'settings.fixedCharge' : 'settings.publicLighting')
   const stateLabel = t(isEnabled ? 'receipt.included' : 'receipt.excluded')
+  const iconRef = useRef<HTMLSpanElement | null>(null)
+  const firstRef = useRef(true)
+
+  // Icon swap pops in, skipped on first paint.
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false
+      return
+    }
+    const el = iconRef.current
+    if (!el || isReducedMotion()) return
+    animate(el, { scale: [0.6, 1], duration: 180, ease: 'outCubic' })
+  }, [isEnabled])
 
   return (
     <Toggle
@@ -156,14 +195,21 @@ export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'l
       onPressedChange={(pressed) => {
         if (kind === 'fixed') setIsFixed(pressed)
         else setIsLighting(pressed)
+        window.dispatchEvent(
+          new CustomEvent(LUMIO_SETTING_EVENT, { detail: { field: kind, enabled: pressed } })
+        )
       }}
       aria-label={`${chargeLabel} ${stateLabel}`}
       title={`${chargeLabel} ${stateLabel}`}
     >
       {isEnabled ? (
-        <Power className="size-4" aria-hidden="true" />
+        <span ref={iconRef} className="inline-flex">
+          <Power className="size-4" aria-hidden="true" />
+        </span>
       ) : (
-        <PowerOff className="size-4" aria-hidden="true" />
+        <span ref={iconRef} className="inline-flex">
+          <PowerOff className="size-4" aria-hidden="true" />
+        </span>
       )}
     </Toggle>
   )
@@ -172,12 +218,26 @@ export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'l
 export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: string }) => {
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const setRegulator = useLumioStore((state) => state.setRegulator)
+  const nameRef = useRef<HTMLSpanElement | null>(null)
+  const firstRef = useRef(true)
+  const name = regulators.find((r) => r.id === regulatorId)?.name ?? ''
+
+  // Trigger text crossfades when the regulator changes.
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false
+      return
+    }
+    const el = nameRef.current
+    if (!el || isReducedMotion()) return
+    animate(el, { opacity: [0.3, 1], duration: 120, ease: 'outCubic' })
+  }, [name])
 
   return (
     <Select value={regulatorId} onValueChange={(id) => id && setRegulator(id)}>
       <SelectTrigger className={cn('min-w-32', triggerClassName)}>
-        <span className="flex min-w-0 flex-1 truncate text-left">
-          {regulators.find((r) => r.id === regulatorId)?.name ?? ''}
+        <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
+          {name}
         </span>
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
@@ -194,11 +254,43 @@ export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: strin
   )
 }
 
-export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }) => {
+export const SelectTariff = ({ lang, triggerClassName }: { lang: AppLang; triggerClassName?: string }) => {
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const tariffId = useLumioStore((state) => state.tariffId)
+  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
+  const fixedCharge = useLumioStore((state) => state.fixedCharge)
+  const publicLightingCharge = useLumioStore(
+    (state) => state.publicLightingCharge
+  )
+  const period = useLumioStore((state) => state.period)
   const setTariff = useLumioStore((state) => state.setTariff)
+  const t = useTranslations(lang)
   const tariff = tariffCategories.find((item) => item.id === tariffId)
+  const nameRef = useRef<HTMLSpanElement | null>(null)
+  const firstRef = useRef(true)
+
+  // Editing any tariff-owned field diverges from the catalog entry: the
+  // trigger then reads Personalizada until a tariff is picked again.
+  const custom = isCustomTariff(
+    { pricePerKwh, fixedCharge, publicLightingCharge, period },
+    tariff
+  )
+  const display = custom
+    ? t('settings.customTariff')
+    : tariff
+      ? `${tariff.code} · ${tariff.label}`
+      : ''
+
+  // Trigger text crossfades on tariff switches, including into Personalizada.
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false
+      return
+    }
+    const el = nameRef.current
+    if (!el || isReducedMotion()) return
+    animate(el, { opacity: [0.3, 1], duration: 120, ease: 'outCubic' })
+  }, [display])
 
   return (
     <Select
@@ -206,8 +298,8 @@ export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }
       onValueChange={(id) => id && setTariff(id)}
     >
       <SelectTrigger className={cn('min-w-32', triggerClassName)}>
-        <span className="flex min-w-0 flex-1 truncate text-left">
-          {tariff ? `${tariff.code} · ${tariff.label}` : ''}
+        <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
+          {display}
         </span>
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
@@ -234,25 +326,63 @@ export const SelectTariff = ({ triggerClassName }: { triggerClassName?: string }
 type InputSettingProps = React.ComponentProps<typeof Input> & {
   label: string
   unit?: string
+  field?: SettingFieldId
 }
 
 const InputSetting = ({
   label,
   unit,
   className,
+  field,
+  onValueChange,
+  onBlur,
+  onKeyDown,
   ...props
 }: InputSettingProps) => {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const { sweepRef, sweep, setHover, prime, settle, commit } = useFieldFeedback(field)
+  const fixedOn = useLumioStore((state) => state.isFixedChargeEnabled)
+  const lightingOn = useLumioStore((state) => state.isPublicLightingEnabled)
+  const taxOn = useLumioStore((state) => state.isTaxEnabled)
+  const enabled =
+    field === 'fixed' ? fixedOn : field === 'lighting' ? lightingOn : field === 'tax' ? taxOn : true
+
   return (
-    <div className="flex flex-none items-center gap-2 text-xs max-lg:mr-0 max-lg:w-full">
+    <div
+      ref={wrapRef}
+      onMouseEnter={() => {
+        setHover(true)
+        if (enabled) prime()
+      }}
+      onMouseLeave={() => {
+        setHover(false)
+        settle()
+      }}
+      className="flex flex-none items-center gap-2 text-xs max-lg:mr-0 max-lg:w-full"
+    >
       <p className="whitespace-nowrap">{label}</p>
-      <span className="ml-auto flex items-center gap-2">
+      <span className="relative ml-auto flex items-center gap-2">
         <Input
           className={cn(
-            'h-7 max-w-16 border-b-2 border-border text-right font-mono tabular-nums focus:border-ember',
+            'h-7 max-w-16 border-b-2 border-border text-right font-mono tabular-nums focus:border-ember disabled:cursor-not-allowed disabled:opacity-50',
             className
           )}
           {...props}
+          disabled={props.disabled ?? !enabled}
+          onValueChange={(...args) => {
+            sweep()
+            onValueChange?.(...args)
+          }}
+          onBlur={(event) => {
+            commit(wrapRef.current)
+            onBlur?.(event)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') commit(wrapRef.current)
+            onKeyDown?.(event)
+          }}
         />
+        <FieldSweep sweepRef={sweepRef} />
         {unit && <p className="whitespace-nowrap">{unit}</p>}
       </span>
     </div>
