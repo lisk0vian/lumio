@@ -7,9 +7,7 @@ import type {
   TariffSnapshot,
 } from '@/types'
 import { HISTORY_LIMIT, STORAGE_KEY } from '@/types'
-import type { AppLang } from '@/i18n/ui'
 import { regulators, tariffCategories } from '@/data/tariffs.data'
-import { resolveInitialLang } from '@/i18n/utils'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
@@ -30,8 +28,6 @@ export type LumioState = {
   inputKwh: number
   inputMoney: number
   records: HistoryRecord[]
-  activeLang: AppLang
-  langResolved: boolean
 }
 
 export type LumioAction = {
@@ -48,7 +44,6 @@ export type LumioAction = {
   setDirectionWithConversion: (direction: CalculationDirection) => void
   setInputKwh: (inputKwh: number) => void
   setInputMoney: (inputMoney: number) => void
-  setActiveLang: (lang: AppLang) => void
   addRecord: (record: Omit<HistoryRecord, 'id' | 'createdAt' | 'snapshot'>) => void
   removeRecord: (id: string) => void
   clearRecords: () => void
@@ -97,8 +92,6 @@ const initialData: LumioState = {
   inputKwh: 0,
   inputMoney: 0,
   records: [],
-  activeLang: 'es',
-  langResolved: false,
 }
 
 export const useLumioStore = create<LumioState & LumioAction>()(
@@ -175,7 +168,6 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         }),
       setInputKwh: (inputKwh) => set({ inputKwh }),
       setInputMoney: (inputMoney) => set({ inputMoney }),
-      setActiveLang: (activeLang) => set({ activeLang, langResolved: true }),
       addRecord: (record) =>
         set((state) => ({
           records: [
@@ -197,23 +189,18 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         set((state) => ({
           ...initialData,
           records: state.records,
-          activeLang: state.activeLang,
-          langResolved: state.langResolved,
         })),
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
       migrate: (persisted) => {
         if (!persisted || typeof persisted !== 'object') return initialData
-        const state = persisted as Partial<LumioState>
-        // Resolve language inside rehydration so it lands with the rest:
-        // stored choice wins, else browser, else default (first visit only).
-        const langResolved = state.langResolved === true
-        const activeLang = langResolved
-          ? (state.activeLang ?? initialData.activeLang)
-          : resolveInitialLang(state.activeLang)
-        return { ...initialData, ...state, activeLang, langResolved: true }
+        // v2 drops the language keys: language now lives in the URL, and the
+        // remaining state (tariff, inputs, history) is language-independent.
+        const { activeLang: _droppedLang, langResolved: _droppedResolved, ...rest } =
+          persisted as Partial<LumioState> & Record<string, unknown>
+        return { ...initialData, ...rest }
       },
       partialize: (state) => ({
         tariffId: state.tariffId,
@@ -230,8 +217,6 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         inputKwh: state.inputKwh,
         inputMoney: state.inputMoney,
         records: state.records,
-        activeLang: state.activeLang,
-        langResolved: state.langResolved,
       }),
     }
   )

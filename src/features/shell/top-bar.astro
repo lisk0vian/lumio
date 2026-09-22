@@ -1,0 +1,42 @@
+---
+import { LanguagePicker } from './language-picker'
+import ThemeToggle from './theme-toggle.astro'
+import type { AppLang } from '../../i18n'
+
+const { lang } = Astro.props as { lang: AppLang };
+
+// Slim utility header for the desktop shell: static brand rendered by Astro,
+// theme toggle with zero JS framework, and the static language picker
+// (plain anchors to the prerendered routes — no hydration needed).
+// The mobile shell keeps its own React header inside MobileTabs.
+---
+
+<div class="flex items-center justify-between gap-3 py-3">
+  <p class="flex min-w-0 items-center gap-2">
+    <span
+      class="flex size-6 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="size-4"
+        aria-hidden="true"
+      >
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+    </span>
+    <span class="truncate text-sm font-medium">Lumio</span>
+  </p>
+  <div class="flex flex-none items-center gap-1">
+    <LanguagePicker lang={lang} />
+    <span class="mx-1 h-4 w-px bg-border" aria-hidden="true"></span>
+    <ThemeToggle />
+  </div>
+</div>

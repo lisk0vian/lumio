@@ -1,30 +1,31 @@
 import { useState, type ReactNode } from 'react'
 import { Calculator, History, Settings, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { SummaryTotal } from './summary-total'
-import { ConversionToggle } from './conversion-toggle'
-import { CountTotal } from './count-total'
-import { ReceiptDetails } from './receipt-details'
-import { HistoryDetails } from './history-details'
-import { GlossaryBlock } from './glossary-block'
-import { HistorySidebar } from './history-sidebar'
-import { MobileSettings, MobileSettingsReset } from './mobile-settings'
-import { ShareReceiptButton } from './share-receipt'
+import { SummaryTotal } from '../calculator/summary-total'
+import { ConversionToggle } from '../calculator/conversion-toggle'
+import { CountTotal } from '../calculator/count-total'
+import { ReceiptDetails } from '../calculator/receipt-details'
+import { HistoryDetails } from '../history/history-details'
+import { GlossaryBlock } from '../glossary/glossary-block'
+import { HistorySidebar } from '../history/history-sidebar'
+import { MobileSettings, MobileSettingsReset } from '../settings/mobile-settings'
+import { ShareReceiptButton } from '../share/share-receipt'
 import { SectionBlock } from './section'
 import { TopBar } from './top-bar'
 import { useLumioStore } from '@/stores/lumio-store'
-import { EnergyScale, LevelHint } from './energy-scale'
+import { EnergyScale, LevelHint } from '../consumption/energy-scale'
 import {
   buildReceipts,
   calculateKwhToMoney,
   calculateMoneyToKwh,
 } from '@/utils/tariffs.utils'
-import { t, useActiveLang } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
+import type { I18nKey } from '@/i18n/utils'
 
 type MobileTab = 'calc' | 'hist' | 'ajustes'
 
-// Nav config builder: resolved per render so it follows the active language.
-function getTabs(): { key: MobileTab; label: string; icon: LucideIcon }[] {
+// Nav config builder: resolved per render from the page language.
+function getTabs(t: (key: I18nKey) => string): { key: MobileTab; label: string; icon: LucideIcon }[] {
   return [
     { key: 'calc', label: t('nav.calculate'), icon: Calculator },
     { key: 'hist', label: t('nav.history'), icon: History },
@@ -40,7 +41,7 @@ function MobileEyebrow({ children }: { children: ReactNode }) {
   )
 }
 
-function CalcPanel() {
+function CalcPanel({ lang }: { lang: AppLang }) {
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const fixedCharge = useLumioStore((state) => state.fixedCharge)
   const publicLightingCharge = useLumioStore(
@@ -58,7 +59,7 @@ function CalcPanel() {
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
-  const activeLang = useLumioStore((state) => state.activeLang)
+  const t = useTranslations(lang)
 
   const inputs = {
     pricePerKwh,
@@ -77,7 +78,7 @@ function CalcPanel() {
   const displayTotal = isKwhMode
     ? calculateKwhToMoney(inputKwh, inputs).total
     : activeKwh
-  const { receipts } = buildReceipts(activeKwh, inputs, activeLang)
+  const { receipts } = buildReceipts(activeKwh, inputs, lang)
 
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
@@ -91,16 +92,17 @@ function CalcPanel() {
             : [t('calculator.estimatedConsumption')]
         }
       />
-      <ShareReceiptButton className="mt-4" />
+      <ShareReceiptButton lang={lang} className="mt-4" />
       <div className="mt-4">
-        <EnergyScale activeKwh={activeKwh} />
+        <EnergyScale lang={lang} activeKwh={activeKwh} />
         <LevelHint
+          lang={lang}
           activeKwh={activeKwh}
           className="mt-2 text-xs text-muted-foreground"
         />
       </div>
-      <ConversionToggle />
-      <CountTotal showResumen />
+      <ConversionToggle lang={lang} />
+      <CountTotal lang={lang} showResumen />
       <div className="mt-6">
         <SectionBlock title={t('receipt.breakdown')}>
           <ReceiptDetails receipts={receipts} />
@@ -110,9 +112,10 @@ function CalcPanel() {
   )
 }
 
-function HistPanel() {
+function HistPanel({ lang }: { lang: AppLang }) {
   const records = useLumioStore((state) => state.records)
   const [sidebarHidden, setSidebarHidden] = useState(false)
+  const t = useTranslations(lang)
 
   if (records.length === 0) {
     return (
@@ -129,10 +132,11 @@ function HistPanel() {
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
       <MobileEyebrow>{t('history.title')} · {records.length}</MobileEyebrow>
       <div className="mt-3.5 mb-6">
-        <HistoryDetails />
+        <HistoryDetails lang={lang} />
       </div>
       <div className="mt-4">
         <HistorySidebar
+          lang={lang}
           hidden={sidebarHidden}
           onHide={() => setSidebarHidden(true)}
           onShow={() => setSidebarHidden(false)}
@@ -142,38 +146,37 @@ function HistPanel() {
   )
 }
 
-function AjustesPanel() {
+function AjustesPanel({ lang }: { lang: AppLang }) {
+  const t = useTranslations(lang)
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
       <MobileEyebrow>{t('nav.settings')}</MobileEyebrow>
-      <MobileSettings />
-      <MobileSettingsReset />
+      <MobileSettings lang={lang} />
+      <MobileSettingsReset lang={lang} />
       <div className="mt-6">
-        <SectionBlock title={t('sections.glossary')}>
-          <GlossaryBlock />
-        </SectionBlock>
+        <GlossaryBlock lang={lang} groupId="glossary-mobile" />
       </div>
     </div>
   )
 }
 
-export const MobileTabs = () => {
+export const MobileTabs = ({ lang }: { lang: AppLang }) => {
   const [tab, setTab] = useState<MobileTab>('calc')
-  useActiveLang()
-  const TABS = getTabs()
+  const t = useTranslations(lang)
+  const TABS = getTabs(t)
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground lg:hidden">
       <div className="flex-none px-5 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <TopBar />
+        <TopBar lang={lang} />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tab === 'calc' ? (
-          <CalcPanel />
+          <CalcPanel lang={lang} />
         ) : tab === 'hist' ? (
-          <HistPanel />
+          <HistPanel lang={lang} />
         ) : (
-          <AjustesPanel />
+          <AjustesPanel lang={lang} />
         )}
       </div>
       <nav className="sticky bottom-0 flex flex-none border-t border-border bg-muted/40 pb-[max(0.875rem,env(safe-area-inset-bottom))]">

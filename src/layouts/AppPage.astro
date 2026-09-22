@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TopBar from '../features/shell/top-bar.astro';
+import { SectionBlock } from '../features/shell/section.tsx';
+import { GlossaryBlock } from '../features/glossary/glossary-block.tsx';
+import { CalculatorBlock } from '../features/calculator/calculator.island.tsx';
+import { ReceiptIsland } from '../features/calculator/receipt.island.tsx';
+import { SavedIsland } from '../features/calculator/saved.island.tsx';
+import { LevelBlock } from '../features/consumption/consumption-level.island.tsx';
+import { SavingTip } from '../features/tips/saving-tip.island.tsx';
+import { SettingsBar } from '../features/settings/settings-bar.island.tsx';
+import { HistoryRail } from '../features/history/history-rail.island.tsx';
+import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx';
+import { useTranslations, type AppLang } from '../i18n';
+
+// Shared page composition, rendered once per language route (`/` = es,
+// `/en/` = en). Astro owns every static element — shell, columns, eyebrows,
+// section titles — and each interactive cohort mounts as an independent React
+// island receiving its language as a prop. Static leaves (SectionBlock,
+// GlossaryBlock, LanguagePicker) render to plain HTML with no hydration.
+const { lang } = Astro.props as { lang: AppLang };
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang}>
+  <div class="min-h-screen w-full bg-background text-foreground">
+    <main class="flex min-h-screen w-full flex-col items-stretch xl:flex-row">
+      <div class="contents max-lg:hidden">
+        <div
+          class="mx-auto flex w-full min-w-0 max-w-9/10 flex-1 flex-col px-6 pt-8 pb-8 md:px-11.5 md:pt-11 md:pb-7.5 2xl:pt-16 2xl:pb-12"
+        >
+          <TopBar lang={lang} />
+          <div
+            class="my-auto flex flex-col items-start gap-8 lg:flex-row lg:gap-11 2xl:gap-16"
+          >
+            <div class="flex min-w-0 flex-1 flex-col">
+              <p
+                class="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase 2xl:mb-4 2xl:text-xs"
+              >
+                {t('calculator.title')}
+              </p>
+              <CalculatorBlock lang={lang} client:only="react" />
+              <div
+                class="mt-6 grid grid-cols-1 items-start gap-8 border-t border-border pt-5 md:grid-cols-2 md:gap-8.5 2xl:mt-10 2xl:gap-12 2xl:pt-8"
+              >
+                <SectionBlock title={t('receipt.breakdown')}>
+                  <ReceiptIsland lang={lang} client:only="react" />
+                </SectionBlock>
+                <SectionBlock title={t('sections.saved')}>
+                  <SavedIsland lang={lang} client:only="react" />
+                </SectionBlock>
+              </div>
+            </div>
+            <div class="flex w-full flex-none flex-col lg:w-90">
+              <SectionBlock title={t('sections.level')}>
+                <LevelBlock lang={lang} client:only="react" />
+              </SectionBlock>
+              <SavingTip lang={lang} client:only="react" />
+              <div class="mt-6 border-t border-border pt-5 2xl:mt-8 2xl:pt-7">
+                <GlossaryBlock lang={lang} />
+              </div>
+            </div>
+          </div>
+
+          <SettingsBar lang={lang} client:only="react" />
+        </div>
+
+        <HistoryRail lang={lang} client:only="react" />
+      </div>
+      <MobileTabs lang={lang} client:only="react" />
+    </main>
+  </div>
+</Layout>

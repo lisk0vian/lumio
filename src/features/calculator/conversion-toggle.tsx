@@ -1,10 +1,11 @@
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
-export const ConversionToggle = () => {
+export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
   const direction = useLumioStore((state) => state.direction)
   const setDirectionWithConversion = useLumioStore((state) => state.setDirectionWithConversion)
+  const t = useTranslations(lang)
 
   return (
     <Tabs

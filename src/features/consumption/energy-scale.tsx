@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 import type { I18nKey } from '@/i18n/utils'
 
 // Approximate reference bands for a Lima household (kWh/month).
@@ -35,12 +35,15 @@ export function getLevelRange(level: ConsumptionLevelKey): string {
 
 /** Big title for the level block: level name with data, `Sin datos` without. */
 export const LevelTitle = ({
+  lang,
   activeKwh,
   className,
 }: {
+  lang: AppLang
   activeKwh?: number | null
   className?: string
 }) => {
+  const t = useTranslations(lang)
   const level = activeKwh == null ? null : getConsumptionLevel(activeKwh)
   return (
     <p className={className}>
@@ -51,12 +54,15 @@ export const LevelTitle = ({
 
 /** Helper under the scale: `20.0 kWh · 70-140` with data, static text without. */
 export const LevelHint = ({
+  lang,
   activeKwh,
   className,
 }: {
+  lang: AppLang
   activeKwh?: number | null
   className?: string
 }) => {
+  const t = useTranslations(lang)
   const level = activeKwh == null ? null : getConsumptionLevel(activeKwh)
   return (
     <p className={className}>
@@ -67,7 +73,7 @@ export const LevelHint = ({
   )
 }
 
-function getEnergyLevels(): (EnergyBandProps & { key: string })[] {
+function getEnergyLevels(t: (key: I18nKey) => string): (EnergyBandProps & { key: string })[] {
   return [
     {
       key: 'low',
@@ -91,9 +97,10 @@ function getEnergyLevels(): (EnergyBandProps & { key: string })[] {
     },
   ]
 }
-export const EnergyScale = ({ activeKwh }: { activeKwh?: number | null }) => {
+export const EnergyScale = ({ lang, activeKwh }: { lang: AppLang; activeKwh?: number | null }) => {
+  const t = useTranslations(lang)
   const level = activeKwh == null ? null : getConsumptionLevel(activeKwh)
-  const energyLevels = getEnergyLevels()
+  const energyLevels = getEnergyLevels(t)
   return (
     <div className="my-3 flex gap-0.5">
       {energyLevels.map(({ key, label, range }) => (

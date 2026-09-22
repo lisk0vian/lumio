@@ -1,10 +1,12 @@
 import { Zap } from 'lucide-react'
 import { LanguagePicker } from './language-picker'
 import { ThemeToggle } from './theme-toggle'
+import type { AppLang } from '@/i18n'
 
-// Slim utility header shared by the desktop and mobile shells:
+// Slim utility header for the mobile shell (inside the MobileTabs island):
 // brand on the left, language + theme controls on the right.
-export const TopBar = () => {
+// The desktop shell uses the static top-bar.astro instead.
+export const TopBar = ({ lang }: { lang: AppLang }) => {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <p className="flex min-w-0 items-center gap-2">
@@ -14,7 +16,7 @@ export const TopBar = () => {
         <span className="truncate text-sm font-medium">Lumio</span>
       </p>
       <div className="flex flex-none items-center gap-1">
-        <LanguagePicker />
+        <LanguagePicker lang={lang} />
         <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
         <ThemeToggle />
       </div>

@@ -1,11 +1,12 @@
 import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
 // Shared segmented control backed by the global tariff period.
-export const PeriodSegment = () => {
+export const PeriodSegment = ({ lang }: { lang: AppLang }) => {
   const period = useLumioStore((state) => state.period)
   const setPeriod = useLumioStore((state) => state.setPeriod)
+  const t = useTranslations(lang)
   const PERIODOS: { key: 'monthly' | 'bimonthly'; label: string }[] = [
     { key: 'monthly', label: t('settings.monthly') },
     { key: 'bimonthly', label: t('settings.bimonthly') },

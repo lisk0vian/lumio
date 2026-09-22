@@ -3,14 +3,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { calculateKwhToMoney } from '@/utils/tariffs.utils'
-import { t, useActiveLang } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 import { savingTips } from '@/data/tips.data'
 
-export const SavingTip = ({ className }: { className?: string }) => {
+export const SavingTip = ({ lang, className }: { lang: AppLang; className?: string }) => {
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const igvRate = useLumioStore((state) => state.igvRate)
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
-  useActiveLang()
+  const t = useTranslations(lang)
   const [index, setIndex] = useState(0)
 
   const tip = savingTips[index]

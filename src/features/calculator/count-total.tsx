@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Input } from './ui/input'
+import { Input } from '@/components/ui/input'
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
@@ -11,7 +11,7 @@ import {
   sanitizeNonNegative,
 } from '@/utils/tariffs.utils'
 
-export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) => {
+export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showResumen?: boolean }) => {
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
@@ -32,6 +32,7 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
   )
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const period = useLumioStore((state) => state.period)
+  const t = useTranslations(lang)
 
   const isKwhMode = direction === 'kwh-to-money'
   const rawValue = isKwhMode ? inputKwh : inputMoney
@@ -126,7 +127,7 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
         <p className="text-xs whitespace-nowrap text-muted-foreground">{t('calculator.enterSaves')}</p>
         {showResumen ? (
           <p className="text-right font-mono text-[0.625rem] text-muted-foreground">
-            S/ {pricePerKwh}/kWh · fijo S/ {fixedCharge} · {isTaxEnabled ? `IGV ${Math.round(igvRate * 100)}%` : t('calculator.withoutIgv')}
+            S/ {pricePerKwh}/kWh · {t('settings.fixedCharge')} S/ {fixedCharge} · {isTaxEnabled ? `IGV ${Math.round(igvRate * 100)}%` : t('calculator.withoutIgv')}
           </p>
         ) : null}
       </div>

@@ -10,9 +10,11 @@ Peru electricity-bill calculator (kWh → S/). Astro 7 static page + React 19 is
 
 ## Architecture
 
-- Entrypoint: `src/pages/index.astro` renders `Layout` + `Main` with `client:load`. All interactive UI is React in `src/components/*.tsx`; `.astro` files are shell only.
-- State: zustand stores at `src/tariff-store.ts` (tariff/fee/price/period) and `src/settings-store.ts` (regulator/tax flags). Static tariff data in `src/data/tariffs.data.ts`; pure helpers in `src/utils/tariffs.utils.ts` (no UI code); shared model in `src/types.ts`.
-- Import alias `@/*` → `src/*` (`tsconfig.json`, `components.json`). `cn()` lives at `src/lib/utils.ts`.
+- Routes: `/` (es) + `/en/` (en), both prerendered static (`prefixDefaultLocale: false` in `astro.config.mjs`). `src/pages/*.astro` are thin; shared composition lives in `src/layouts/AppPage.astro` with a `lang` prop. No server, no SSR at runtime.
+- Astro owns all static output: shell, columns, eyebrows, section titles, glossary (CSS-only radio tabs, zero JS), theme toggle (delegated script in `Layout.astro`), language picker (plain anchors). Static leaves (`section`, `glossary-block`, `language-picker`) are `.tsx` rendered SSR-only with no `client:` directive — zero client JS.
+- React exists only as `*.island.tsx` hydration roots under `src/features/<domain>/` (calculator, consumption, history, settings, share, tips, glossary, shell). Islands receive `lang: AppLang` and use `useTranslations(lang)`; never `t()`/`useActiveLang` (deleted) and never store language (store v2 migration drops it).
+- State: zustand `src/stores/lumio-store.ts` (tariff/inputs/records only; language lives in the URL). Static tariff data in `src/data/tariffs.data.ts`; pure helpers in `src/utils/tariffs.utils.ts` (no UI code); shared model in `src/types.ts`.
+- Import alias `@/*` → `src/*` (`tsconfig.json`, `components.json`). Direct imports, no barrels. `cn()` lives at `src/lib/utils.ts`. `src/components/ui/` is shadcn convention — do not restructure.
 - Styling is Tailwind v4 CSS-first — no `tailwind.config`; theme tokens live in `src/styles/global.css`. shadcn style `base-mira`, lucide icons. Dark mode is a `.dark` class toggled by the inline script in `src/layouts/Layout.astro` (localStorage + prefers-color-scheme).
 
 ## Conventions & gotchas

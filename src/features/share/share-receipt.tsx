@@ -8,7 +8,7 @@ import {
   calculateMoneyToKwh,
   getValueById,
 } from '@/utils/tariffs.utils'
-import { t, useActiveLang, type AppLang } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 import { ReceiptCard, type ReceiptLine } from './receipt-card'
 
 type ShareStatus = 'idle' | 'working' | 'error'
@@ -55,10 +55,11 @@ function formatEmittedAt(date: Date, lang: AppLang): string {
 
 const money = (value: number): string => `S/ ${value.toFixed(2)}`
 
-export const ShareReceiptButton = ({ className }: { className?: string }) => {
+export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; className?: string }) => {
   const nodeRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<ShareStatus>('idle')
   const [emittedAt, setEmittedAt] = useState(() => new Date())
+  const t = useTranslations(lang)
 
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const fixedCharge = useLumioStore((state) => state.fixedCharge)
@@ -78,7 +79,6 @@ export const ShareReceiptButton = ({ className }: { className?: string }) => {
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
   const tariffId = useLumioStore((state) => state.tariffId)
-  const activeLang = useActiveLang()
 
   const inputs = {
     pricePerKwh,
@@ -236,7 +236,7 @@ export const ShareReceiptButton = ({ className }: { className?: string }) => {
             brandName="Lumio"
             projectionTitle={t('share.projection')}
             emittedLabel={t('share.emitted')}
-            emittedAt={formatEmittedAt(emittedAt, activeLang)}
+            emittedAt={formatEmittedAt(emittedAt, lang)}
             kwhValue={activeKwh.toFixed(1)}
             kwhUnit="kWh"
             lines={lines}

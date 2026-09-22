@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from './ui/select'
+} from '@/components/ui/select'
 import {
   getTariffsForRegulator,
   groupTariffsByCode,
@@ -14,14 +14,14 @@ import {
   parseTaxPercent,
 } from '@/utils/tariffs.utils'
 import { Input } from '@base-ui/react'
-import { Toggle } from './ui/toggle'
+import { Toggle } from '@/components/ui/toggle'
 import { cn } from '@/lib/utils'
 import { PeriodSegment } from './period-segment'
 import { Power, PowerOff } from 'lucide-react'
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
-export const SettingOptions = ({ className }: { className?: string }) => {
+export const SettingOptions = ({ lang, className }: { lang: AppLang; className?: string }) => {
   // Canonical state
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const fixedCharge = useLumioStore((state) => state.fixedCharge)
@@ -33,6 +33,7 @@ export const SettingOptions = ({ className }: { className?: string }) => {
     (state) => state.setPublicLightingCharge
   )
   const setIgvRateStore = useLumioStore((state) => state.setIgvRate)
+  const t = useTranslations(lang)
 
   const taxPercent = Math.round(igvRate * 100 * 100) / 100
 
@@ -66,23 +67,23 @@ export const SettingOptions = ({ className }: { className?: string }) => {
       {/* Input for fixed charge */}
       <div className="flex flex-none items-center gap-2">
         <InputSetting
-          label="Fijo S/"
+          label={t('settings.fixedShort')}
           type="number"
           min={0}
           value={fixedCharge}
           onValueChange={(val) => setFee(val)}
         />
-        <ChargeToggle kind="fixed" />
+        <ChargeToggle lang={lang} kind="fixed" />
       </div>
       <div className="flex flex-none items-center gap-2">
         <InputSetting
-          label="Alumbrado S/"
+          label={t('settings.lightingShort')}
           type="number"
           min={0}
           value={publicLightingCharge}
           onValueChange={(val) => setLighting(val)}
         />
-        <ChargeToggle kind="lighting" />
+        <ChargeToggle lang={lang} kind="lighting" />
       </div>
       {/* Input for tax charge + period: wrapped together so they
           wrap as one intentional unit, never leaving Periodo orphaned */}
@@ -98,17 +99,18 @@ export const SettingOptions = ({ className }: { className?: string }) => {
           onValueChange={(val) => setTax(val)}
           value={taxPercent}
         />
-        <TaxToggle />
+        <TaxToggle lang={lang} />
         </div>
-        <PeriodSegment />
+        <PeriodSegment lang={lang} />
       </div>
     </div>
   )
 }
 
-export const TaxToggle = () => {
+export const TaxToggle = ({ lang }: { lang: AppLang }) => {
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const setIsTaxEnabled = useLumioStore((state) => state.setIsTaxEnabled)
+  const t = useTranslations(lang)
 
   return (
     <Toggle
@@ -129,7 +131,7 @@ export const TaxToggle = () => {
   )
 }
 
-export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
+export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'lighting' }) => {
   const isEnabled = useLumioStore((state) =>
     kind === 'fixed' ? state.isFixedChargeEnabled : state.isPublicLightingEnabled
   )
@@ -137,7 +139,9 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
   const setIsLighting = useLumioStore(
     (state) => state.setIsPublicLightingEnabled
   )
-  const chargeLabel = kind === 'fixed' ? 'Cargo fijo' : 'Alumbrado'
+  const t = useTranslations(lang)
+  const chargeLabel = t(kind === 'fixed' ? 'settings.fixedCharge' : 'settings.publicLighting')
+  const stateLabel = t(isEnabled ? 'receipt.included' : 'receipt.excluded')
 
   return (
     <Toggle
@@ -153,8 +157,8 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
         if (kind === 'fixed') setIsFixed(pressed)
         else setIsLighting(pressed)
       }}
-      aria-label={`${chargeLabel} ${isEnabled ? 'incluido' : 'excluido'}`}
-      title={`${chargeLabel} ${isEnabled ? 'incluido' : 'excluido'}`}
+      aria-label={`${chargeLabel} ${stateLabel}`}
+      title={`${chargeLabel} ${stateLabel}`}
     >
       {isEnabled ? (
         <Power className="size-4" aria-hidden="true" />

@@ -1,25 +1,15 @@
 import { Moon, Sun } from 'lucide-react'
 
-// Stateless theme toggle: the icon swaps via pure CSS (.dark variant),
-// so there is no React state to hydrate and no first-paint flash —
+// Stateless theme toggle: markup only, no React state. The icon swaps via
+// pure CSS (.dark variant), and the click is handled by Layout.astro's
+// delegated listener, so this button works before (and without) hydration —
+// including inside MobileTabs, where no Astro component can reach.
 // Layout.astro's inline script already sets the class before paint.
-// Clicking persists localStorage.theme, which opts out of following
-// the OS preference (same behavior as the existing inline script).
 export const ThemeToggle = () => {
-  const toggle = () => {
-    const root = document.documentElement
-    const dark = root.classList.toggle('dark')
-    try {
-      localStorage.theme = dark ? 'dark' : 'light'
-    } catch {
-      // storage unavailable (private mode): theme still applies to the session
-    }
-  }
-
   return (
     <button
       type="button"
-      onClick={toggle}
+      data-theme-toggle
       aria-label="Cambiar tema / Toggle theme"
       title="Cambiar tema / Toggle theme"
       className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"

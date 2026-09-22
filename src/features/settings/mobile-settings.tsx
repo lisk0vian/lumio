@@ -5,7 +5,7 @@ import { PeriodSegment } from './period-segment'
 import { SelectRegulator, SelectTariff, TaxToggle, ChargeToggle } from './setting-options'
 import { parseSettingNumber, parseTaxPercent } from '@/utils/tariffs.utils'
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
 // Ghost trigger: keeps the shadcn select behavior, borderless and
 // right-aligned like a label/control row. Desktop triggers untouched.
@@ -50,7 +50,7 @@ function UnderlineInput({
   )
 }
 
-export const MobileSettings = () => {
+export const MobileSettings = ({ lang }: { lang: AppLang }) => {
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const fixedCharge = useLumioStore((state) => state.fixedCharge)
   const publicLightingCharge = useLumioStore(
@@ -63,6 +63,7 @@ export const MobileSettings = () => {
     (state) => state.setPublicLightingCharge
   )
   const setIgvRate = useLumioStore((state) => state.setIgvRate)
+  const t = useTranslations(lang)
 
   const taxPercent = Math.round(igvRate * 100 * 100) / 100
 
@@ -94,7 +95,7 @@ export const MobileSettings = () => {
           step={0.1}
           onChange={(val) => setFixedCharge(parseSettingNumber(val))}
         />
-        <ChargeToggle kind="fixed" />
+        <ChargeToggle lang={lang} kind="fixed" />
       </SettingRow>
 
       <SettingRow label={t('settings.publicLighting')}>
@@ -105,7 +106,7 @@ export const MobileSettings = () => {
           step={0.1}
           onChange={(val) => setPublicLightingCharge(parseSettingNumber(val))}
         />
-        <ChargeToggle kind="lighting" />
+        <ChargeToggle lang={lang} kind="lighting" />
       </SettingRow>
 
       <SettingRow label={t('settings.igv')}>
@@ -117,18 +118,19 @@ export const MobileSettings = () => {
           onChange={(val) => setIgvRate(parseTaxPercent(val))}
         />
         <span className="font-mono text-xs text-muted-foreground">%</span>
-        <TaxToggle />
+        <TaxToggle lang={lang} />
       </SettingRow>
 
       <SettingRow label={t('settings.period')}>
-        <PeriodSegment />
+        <PeriodSegment lang={lang} />
       </SettingRow>
     </div>
   )
 }
 
-export const MobileSettingsReset = () => {
+export const MobileSettingsReset = ({ lang }: { lang: AppLang }) => {
   const resetAll = useLumioStore((state) => state.resetAll)
+  const t = useTranslations(lang)
 
   return (
     <button
@@ -139,7 +141,7 @@ export const MobileSettingsReset = () => {
       className="mt-6 flex min-h-11 cursor-pointer items-center gap-2 p-0 text-left text-xs text-muted-foreground underline underline-offset-[3px]"
     >
       <RotateCcw className="size-4" aria-hidden="true" />
-      restablecer valores
+      {t('settings.reset')}
     </button>
   )
 }

@@ -9,19 +9,11 @@ export function useTranslations(lang: AppLang) {
 }
 
 /**
- * Recipe-shaped helper kept for a future with localized URLs.
- * Single-URL mode: always resolves to the default language.
+ * Language from a localized URL: `/en/...` is English, everything else is
+ * the default language. Used by shared helpers; Astro pages already know
+ * their language statically from the route.
  */
-export function getLangFromUrl(_url: URL): AppLang {
-  return defaultLang
-}
-
-/** Initial language: stored choice wins, else browser, else default. */
-export function resolveInitialLang(stored: AppLang | undefined): AppLang {
-  if (stored === 'es' || stored === 'en') return stored
-  if (typeof navigator !== 'undefined') {
-    const browser = navigator.language.toLowerCase()
-    if (browser.startsWith('en')) return 'en'
-  }
-  return defaultLang
+export function getLangFromUrl(url: URL): AppLang {
+  const first = url.pathname.split('/').filter(Boolean)[0]
+  return first === 'en' ? 'en' : defaultLang
 }

@@ -1,14 +1,15 @@
 import { MONEY } from '@/types'
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
 type HistoryFieldProps = {
   label: string
   value: string | number
 }
 
-export const HistoryDetails = () => {
+export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   const records = useLumioStore((state) => state.records)
+  const t = useTranslations(lang)
 
   if (records.length === 0) {
     return (

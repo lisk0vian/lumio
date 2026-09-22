@@ -1,17 +1,19 @@
 import { useLumioStore } from '@/stores/lumio-store'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 import { X } from 'lucide-react'
 
 type HistorySidebarProps = {
+  lang: AppLang
   hidden: boolean
   onHide: () => void
   onShow: () => void
 }
 
-export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) => {
+export const HistorySidebar = ({ lang, hidden, onHide, onShow }: HistorySidebarProps) => {
   const records = useLumioStore((state) => state.records)
   const removeRecord = useLumioStore((state) => state.removeRecord)
   const clearRecords = useLumioStore((state) => state.clearRecords)
+  const t = useTranslations(lang)
   if (records.length === 0) return null
 
   if (hidden) {
@@ -65,7 +67,7 @@ export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) 
             <button
               type="button"
               onClick={() => removeRecord(id)}
-              aria-label="Eliminar cálculo"
+              aria-label={t('history.remove')}
               className="cursor-pointer font-mono text-xs text-muted-foreground max-lg:min-h-11 max-lg:px-2"
             >
               <X className="size-4" aria-hidden="true" />

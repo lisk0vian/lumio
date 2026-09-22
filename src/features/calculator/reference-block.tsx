@@ -1,11 +1,11 @@
 import { Fragment } from 'react'
 import { useLumioStore } from '@/stores/lumio-store'
 import { calculateKwhToMoney } from '@/utils/tariffs.utils'
-import { t } from '@/i18n'
+import { useTranslations, type AppLang } from '@/i18n'
 
 const REFERENCE_KWH = [100, 200, 300]
 
-export const ReferenceBlock = () => {
+export const ReferenceBlock = ({ lang }: { lang: AppLang }) => {
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
   const fixedCharge = useLumioStore((state) => state.fixedCharge)
   const publicLightingCharge = useLumioStore(
@@ -20,6 +20,7 @@ export const ReferenceBlock = () => {
   )
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const period = useLumioStore((state) => state.period)
+  const t = useTranslations(lang)
 
   const inputs = {
     pricePerKwh,

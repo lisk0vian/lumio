@@ -1,9 +1,11 @@
 ---
 import "../styles/global.css";
+
+const { lang = "es" } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,6 +33,26 @@ import "../styles/global.css";
             document.documentElement.classList.toggle("dark", e.matches);
           }
         });
+
+      // Single theme-toggle handler for the whole page (delegated, no
+      // framework): every `[data-theme-toggle]` button — the Astro one in
+      // TopBar and the React one inside MobileTabs — works before and
+      // without hydration. Clicking persists localStorage.theme, which opts
+      // out of following the OS preference.
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        const button =
+          target instanceof Element
+            ? target.closest("[data-theme-toggle]")
+            : null;
+        if (!button) return;
+        const dark = document.documentElement.classList.toggle("dark");
+        try {
+          localStorage.theme = dark ? "dark" : "light";
+        } catch {
+          // storage unavailable (private mode): theme still applies to the session
+        }
+      });
     </script>
   </head>
   <body>
