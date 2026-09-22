@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import { ReceiptDetails } from './receipt-details'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useHydrated } from '@/stores/use-hydrated'
 import {
@@ -30,7 +31,24 @@ export const ReceiptIsland: FC<{ lang: AppLang }> = ({ lang }) => {
   const inputMoney = useLumioStore((state) => state.inputMoney)
   const hydrated = useHydrated()
 
-  if (!hydrated) return null
+  // Skeleton con las mismas filas que el desglose real: evita el hueco
+  // negro y el salto de layout mientras rehidrata el store persistido.
+  if (!hydrated)
+    return (
+      <div
+        aria-hidden="true"
+        className="grid grid-cols-[1fr_auto] gap-x-5 gap-y-2"
+      >
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-3/5" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-20" />
+      </div>
+    )
 
   const inputs = {
     pricePerKwh,

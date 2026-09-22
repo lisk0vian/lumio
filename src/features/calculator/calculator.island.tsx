@@ -3,6 +3,7 @@ import { SummaryTotal } from './summary-total'
 import { ConversionToggle } from './conversion-toggle'
 import { CountTotal } from './count-total'
 import { ShareReceiptButton } from '../share/share-receipt'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useHydrated } from '@/stores/use-hydrated'
 import {
@@ -35,7 +36,19 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
   const t = useTranslations(lang)
   const hydrated = useHydrated()
 
-  if (!hydrated) return null
+  // SSR/prerender muestra el skeleton (mismas medidas que el total real)
+  // para no pintar negro ni desplazar el layout antes de hidratar.
+  if (!hydrated)
+    return (
+      <div className="contents" aria-hidden="true">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-20 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="mt-4 h-11 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    )
 
   const inputs = {
     pricePerKwh,

@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import { EnergyScale, LevelHint, LevelTitle } from './energy-scale'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useHydrated } from '@/stores/use-hydrated'
 import { calculateMoneyToKwh } from '@/utils/tariffs.utils'
@@ -28,7 +29,16 @@ export const LevelBlock: FC<{ lang: AppLang }> = ({ lang }) => {
   const inputMoney = useLumioStore((state) => state.inputMoney)
   const hydrated = useHydrated()
 
-  if (!hydrated) return null
+  if (!hydrated)
+    return (
+      <div className="contents" aria-hidden="true">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="mt-2 h-8 w-2/3" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+        </div>
+      </div>
+    )
 
   const inputs = {
     pricePerKwh,

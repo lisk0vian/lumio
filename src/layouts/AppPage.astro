@@ -14,10 +14,18 @@ import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx'
 import { useTranslations, type AppLang } from '../i18n'
 
 // Shared page composition, rendered once per language route (`/` = es,
-// `/en/` = en). Astro owns every static element — shell, columns, eyebrows,
-// section titles — and each interactive cohort mounts as an independent React
-// island receiving its language as a prop. Static leaves (SectionBlock,
-// GlossaryBlock, LanguagePicker) render to plain HTML with no hydration.
+// `/en/` = en). Astro prerenders every island to static HTML at build time
+// (no runtime server, GitHub Pages gratis) and each cohort hydrates only
+// where it is needed:
+// - Critical desktop (calculator, receipt, level, saved, history):
+//   client:media min-1024, nunca se descargan en móvil. Saved y history
+//   usan media y no visible porque sus raíces (display:contents / null sin
+//   registros) no tienen caja e IntersectionObserver jamás dispararía.
+// - Below-fold desktop (tip, settings): client:visible, pintan skeleton
+//   SSR al instante e hidratan al hacer scroll; ocultas en móvil, así que
+//   ahí nunca hidratan.
+// - MobileTabs: client:media max-1023.98, nunca se descarga en desktop.
+// Skeletons (shadcn) ocupan las medidas finales: sin pantalla negra ni CLS.
 const { lang } = Astro.props as { lang: AppLang }
 const t = useTranslations(lang)
 ---
@@ -39,12 +47,12 @@ const t = useTranslations(lang)
               >
                 {t('calculator.title')}
               </p>
-              <CalculatorBlock lang={lang} client:only="react" />
+              <CalculatorBlock lang={lang} client:media="(min-width: 1024px)" />
               <div
                 class="mt-6 grid grid-cols-1 items-start gap-8 border-t border-border pt-5 md:grid-cols-2 md:gap-8.5 2xl:mt-10 2xl:gap-12 2xl:pt-8"
               >
                 <SectionBlock title={t('receipt.breakdown')}>
-                  <ReceiptIsland lang={lang} client:only="react" />
+                  <ReceiptIsland lang={lang} client:media="(min-width: 1024px)" />
                   <p class="mt-3">
                     <a
                       href={lang === 'en' ? '/en/calculation' : '/calculo'}
@@ -55,27 +63,27 @@ const t = useTranslations(lang)
                   </p>
                 </SectionBlock>
                 <SectionBlock title={t('sections.saved')}>
-                  <SavedIsland lang={lang} client:only="react" />
+                  <SavedIsland lang={lang} client:media="(min-width: 1024px)" />
                 </SectionBlock>
               </div>
             </div>
             <div class="flex w-full flex-none flex-col lg:w-90">
               <SectionBlock title={t('sections.level')}>
-                <LevelBlock lang={lang} client:only="react" />
+                <LevelBlock lang={lang} client:media="(min-width: 1024px)" />
               </SectionBlock>
-              <SavingTip lang={lang} client:only="react" />
+              <SavingTip lang={lang} client:visible />
               <div class="mt-6 border-t border-border pt-5 2xl:mt-8 2xl:pt-7">
                 <GlossaryBlock lang={lang} />
               </div>
             </div>
           </div>
 
-          <SettingsBar lang={lang} client:only="react" />
+          <SettingsBar lang={lang} client:visible />
         </div>
 
-        <HistoryRail lang={lang} client:only="react" />
+        <HistoryRail lang={lang} client:media="(min-width: 1024px)" />
       </div>
-      <MobileTabs lang={lang} client:only="react" />
+      <MobileTabs lang={lang} client:media="(max-width: 1023.98px)" />
     </main>
   </div>
 </Layout>
