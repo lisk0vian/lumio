@@ -11,6 +11,7 @@ Peru electricity-bill calculator (kWh → S/). Astro 7 static page + React 19 is
 ## Architecture
 
 - Routes: `/` (es) + `/en/` (en), both prerendered static (`prefixDefaultLocale: false` in `astro.config.mjs`). `src/pages/*.astro` are thin; shared composition lives in `src/layouts/AppPage.astro` with a `lang` prop. No server, no SSR at runtime.
+- Static explainer: `/calculo` + `/en/calculation` share `src/layouts/ExplainerPage.astro` (zero JS/islands; worked example computed at build from the verified tariff). Copy lives in `explainer.*` i18n keys.
 - Astro owns all static output: shell, columns, eyebrows, section titles, glossary (CSS-only radio tabs, zero JS), theme toggle (delegated script in `Layout.astro`), language picker (plain anchors). Static leaves (`section`, `glossary-block`, `language-picker`) are `.tsx` rendered SSR-only with no `client:` directive — zero client JS.
 - React exists only as `*.island.tsx` hydration roots under `src/features/<domain>/` (calculator, consumption, history, settings, share, tips, glossary, shell). Islands receive `lang: AppLang` and use `useTranslations(lang)`; never `t()`/`useActiveLang` (deleted) and never store language (store v2 migration drops it).
 - State: zustand `src/stores/lumio-store.ts` (tariff/inputs/records only; language lives in the URL). Static tariff data in `src/data/tariffs.data.ts`; pure helpers in `src/utils/tariffs.utils.ts` (no UI code); shared model in `src/types.ts`.
