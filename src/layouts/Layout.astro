@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 
-const { lang = "es" } = Astro.props;
+const { lang = "es", title = "Lumio" } = Astro.props;
 ---
 
 <!doctype html>
@@ -12,7 +12,7 @@ const { lang = "es" } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/zap.svg" />
     <link rel="icon" href="/zap.ico" />
     <meta name="generator" content={Astro.generator} />
-    <title>Lumio</title>
+    <title>{title}</title>
     <script is:inline>
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)",

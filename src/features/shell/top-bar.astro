@@ -3,7 +3,10 @@ import { LanguagePicker } from './language-picker'
 import ThemeToggle from './theme-toggle.astro'
 import type { AppLang } from '../../i18n'
 
-const { lang } = Astro.props as { lang: AppLang };
+const { lang, routes } = Astro.props as {
+  lang: AppLang
+  routes?: Record<AppLang, string>
+};
 
 // Slim utility header for the desktop shell: static brand rendered by Astro,
 // theme toggle with zero JS framework, and the static language picker
@@ -35,7 +38,7 @@ const { lang } = Astro.props as { lang: AppLang };
     <span class="truncate text-sm font-medium">Lumio</span>
   </p>
   <div class="flex flex-none items-center gap-1">
-    <LanguagePicker lang={lang} />
+    <LanguagePicker lang={lang} routes={routes} />
     <span class="mx-1 h-4 w-px bg-border" aria-hidden="true"></span>
     <ThemeToggle />
   </div>

@@ -107,6 +107,14 @@ function CalcPanel({ lang }: { lang: AppLang }) {
         <SectionBlock title={t('receipt.breakdown')}>
           <ReceiptDetails receipts={receipts} />
         </SectionBlock>
+        <p className="mt-3">
+          <a
+            href={lang === 'en' ? '/en/calculation' : '/calculo'}
+            className="text-xs text-ember underline underline-offset-[3px]"
+          >
+            {t('explainer.link')}
+          </a>
+        </p>
       </div>
     </div>
   )

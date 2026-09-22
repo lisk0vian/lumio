@@ -1,0 +1,201 @@
+---
+import Layout from './Layout.astro';
+import TopBar from '../features/shell/top-bar.astro';
+import { tariffCategories } from '../data/tariffs.data';
+import {
+  calculateKwhToMoney,
+  calculateMoneyToKwh,
+} from '../utils/tariffs.utils';
+import { useTranslations, type AppLang } from '../i18n';
+
+// Static explainer page: zero JS, zero islands. The worked example is
+// computed at build time from the verified tariff data, so the numbers can
+// never drift from what the calculator actually does.
+const { lang } = Astro.props as { lang: AppLang };
+const t = useTranslations(lang);
+
+const base = tariffCategories.find((tariff) => tariff.verified) ?? tariffCategories[0];
+const inputs = {
+  pricePerKwh: base.pricePerKwh,
+  fixedCharge: base.fixedCharge,
+  publicLightingCharge: base.publicLightingCharge,
+  igvRate: 0.18,
+  isFixedChargeEnabled: true,
+  isPublicLightingEnabled: true,
+  isTaxEnabled: true,
+  period: 'monthly' as const,
+};
+const EXAMPLE_KWH = 100;
+const result = calculateKwhToMoney(EXAMPLE_KWH, inputs);
+const backKwh = calculateMoneyToKwh(result.total, inputs).kwh;
+
+const money = (n: number): string => `S/ ${n.toFixed(2)}`;
+const price = `S/ ${inputs.pricePerKwh.toFixed(4)}`;
+const taxPercent = `${Math.round(inputs.igvRate * 100)} %`;
+
+const steps = [
+  {
+    title: t('explainer.step1.title'),
+    body: t('explainer.step1.body'),
+    formula: `${EXAMPLE_KWH} kWh × ${price} = ${money(result.energy)}`,
+  },
+  {
+    title: t('explainer.step2.title'),
+    body: t('explainer.step2.body'),
+    formula: `+ ${money(result.fixedCharge)}`,
+  },
+  {
+    title: t('explainer.step3.title'),
+    body: t('explainer.step3.body'),
+    formula: `+ ${money(result.publicLightingCharge)}`,
+  },
+  {
+    title: t('explainer.step4.title'),
+    body: t('explainer.step4.body'),
+    formula: `${money(result.energy)} + ${money(result.fixedCharge)} + ${money(result.publicLightingCharge)} = ${money(result.subtotal)}`,
+  },
+  {
+    title: t('explainer.step5.title'),
+    body: t('explainer.step5.body'),
+    formula: `${money(result.subtotal)} × ${taxPercent} = ${money(result.igv)}`,
+  },
+  {
+    title: t('explainer.step6.title'),
+    body: t('explainer.step6.body'),
+    formula: `${money(result.subtotal)} + ${money(result.igv)} = ${money(result.total)}`,
+  },
+];
+
+const receiptRows = [
+  { label: `${t('receipt.energy')} · ${EXAMPLE_KWH} kWh`, money: result.energy },
+  { label: t('receipt.fixedCharge'), money: result.fixedCharge },
+  { label: t('receipt.publicLighting'), money: result.publicLightingCharge },
+  { label: t('receipt.subtotal'), money: result.subtotal },
+  { label: `${t('receipt.igv')} · ${t('receipt.included')}`, money: result.igv },
+  { label: t('receipt.total'), money: result.total },
+];
+
+const backHref = lang === 'en' ? '/en/' : '/';
+const pageTitle = `${t('explainer.title')} · Lumio`;
+---
+
+<Layout lang={lang} title={pageTitle}>
+  <div class="min-h-screen w-full bg-background text-foreground">
+    <main class="mx-auto flex min-h-screen w-full max-w-2xl flex-1 flex-col px-5 pt-4 pb-16 md:px-8 md:pt-8">
+      <TopBar lang={lang} routes={{ es: '/calculo', en: '/en/calculation' }} />
+      <p class="mt-6">
+        <a
+          href={backHref}
+          class="text-xs text-ember underline underline-offset-[3px]"
+        >
+          {t('explainer.back')}
+        </a>
+      </p>
+      <article class="mt-6">
+        <p
+          class="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase"
+        >
+          {t('explainer.eyebrow')}
+        </p>
+        <h1 class="font-serif text-3xl leading-tight font-semibold md:text-4xl">
+          {t('explainer.title')}
+        </h1>
+        <p class="mt-4 text-base leading-relaxed text-foreground">
+          {t('explainer.intro')}
+        </p>
+
+        <div class="mt-8 border-t border-border">
+          {
+            steps.map(({ title, body, formula }) => (
+              <section class="border-b border-border py-5">
+                <h2 class="text-sm font-semibold">{title}</h2>
+                <p class="mt-1.5 text-sm leading-relaxed text-foreground">
+                  {body}
+                </p>
+                <p class="mt-2.5 inline-block rounded-md bg-muted px-3 py-2 font-mono text-[0.8125rem] tabular-nums">
+                  {formula}
+                </p>
+              </section>
+            ))
+          }
+        </div>
+
+        <section class="mt-8">
+          <h2 class="text-sm font-semibold">{t('explainer.example.title')}</h2>
+          <div
+            class="mt-3 grid grid-cols-[1fr_auto] gap-x-5 gap-y-2 font-mono text-[0.8125rem] text-muted-foreground"
+          >
+            {
+              receiptRows.map(({ label, money: value }, idx) => (
+                <>
+                  <p
+                    class={
+                      idx === receiptRows.length - 1
+                        ? 'border-t border-border pt-2 font-medium text-foreground'
+                        : 'capitalize'
+                    }
+                  >
+                    {label}
+                  </p>
+                  <p
+                    class={
+                      idx === receiptRows.length - 1
+                        ? 'border-t border-border pt-2 text-right font-medium text-foreground tabular-nums'
+                        : 'text-right tabular-nums'
+                    }
+                  >
+                    S/ {value.toFixed(2)}
+                  </p>
+                </>
+              ))
+            }
+          </div>
+        </section>
+
+        <section class="mt-8 border-t border-border pt-5">
+          <h2 class="text-sm font-semibold">{t('explainer.inverse.title')}</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-foreground">
+            {t('explainer.inverse.body')}
+          </p>
+          <p class="mt-2.5 text-xs text-muted-foreground">
+            {t('explainer.inverse.caption')}
+          </p>
+          <p
+            class="mt-1.5 inline-block rounded-md bg-muted px-3 py-2 font-mono text-[0.8125rem] tabular-nums"
+          >
+            {money(result.total)} → {backKwh.toFixed(1)} kWh
+          </p>
+        </section>
+
+        <section class="mt-8 border-t border-border pt-5">
+          <h2 class="text-sm font-semibold">{t('explainer.toggles.title')}</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-foreground">
+            {t('explainer.toggles.body')}
+          </p>
+        </section>
+
+        <aside
+          class="mt-8 border-l-2 border-ember bg-accent/60 px-4 py-4"
+        >
+          <p
+            class="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase"
+          >
+            {t('explainer.note.title')}
+          </p>
+          <p class="mt-2 text-sm leading-relaxed">
+            {t('explainer.note.body')}
+          </p>
+        </aside>
+
+        <p class="mt-8">
+          <a
+            href={backHref}
+            class="text-xs text-ember underline underline-offset-[3px]"
+          >
+            {t('explainer.back')}
+          </a>
+        </p>
+      </article>
+    </main>
+  </div>
+</Layout>

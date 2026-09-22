@@ -1,25 +1,25 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import TopBar from '../features/shell/top-bar.astro';
-import { SectionBlock } from '../features/shell/section.tsx';
-import { GlossaryBlock } from '../features/glossary/glossary-block.tsx';
-import { CalculatorBlock } from '../features/calculator/calculator.island.tsx';
-import { ReceiptIsland } from '../features/calculator/receipt.island.tsx';
-import { SavedIsland } from '../features/calculator/saved.island.tsx';
-import { LevelBlock } from '../features/consumption/consumption-level.island.tsx';
-import { SavingTip } from '../features/tips/saving-tip.island.tsx';
-import { SettingsBar } from '../features/settings/settings-bar.island.tsx';
-import { HistoryRail } from '../features/history/history-rail.island.tsx';
-import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx';
-import { useTranslations, type AppLang } from '../i18n';
+import Layout from '../layouts/Layout.astro'
+import TopBar from '../features/shell/top-bar.astro'
+import { SectionBlock } from '../features/shell/section.tsx'
+import { GlossaryBlock } from '../features/glossary/glossary-block.tsx'
+import { CalculatorBlock } from '../features/calculator/calculator.island.tsx'
+import { ReceiptIsland } from '../features/calculator/receipt.island.tsx'
+import { SavedIsland } from '../features/calculator/saved.island.tsx'
+import { LevelBlock } from '../features/consumption/consumption-level.island.tsx'
+import { SavingTip } from '../features/tips/saving-tip.island.tsx'
+import { SettingsBar } from '../features/settings/settings-bar.island.tsx'
+import { HistoryRail } from '../features/history/history-rail.island.tsx'
+import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx'
+import { useTranslations, type AppLang } from '../i18n'
 
 // Shared page composition, rendered once per language route (`/` = es,
 // `/en/` = en). Astro owns every static element — shell, columns, eyebrows,
 // section titles — and each interactive cohort mounts as an independent React
 // island receiving its language as a prop. Static leaves (SectionBlock,
 // GlossaryBlock, LanguagePicker) render to plain HTML with no hydration.
-const { lang } = Astro.props as { lang: AppLang };
-const t = useTranslations(lang);
+const { lang } = Astro.props as { lang: AppLang }
+const t = useTranslations(lang)
 ---
 
 <Layout lang={lang}>
@@ -45,6 +45,14 @@ const t = useTranslations(lang);
               >
                 <SectionBlock title={t('receipt.breakdown')}>
                   <ReceiptIsland lang={lang} client:only="react" />
+                  <p class="mt-3">
+                    <a
+                      href={lang === 'en' ? '/en/calculation' : '/calculo'}
+                      class="text-xs text-ember underline underline-offset-[3px]"
+                    >
+                      {t('explainer.link')}
+                    </a>
+                  </p>
                 </SectionBlock>
                 <SectionBlock title={t('sections.saved')}>
                   <SavedIsland lang={lang} client:only="react" />
