@@ -1,6 +1,15 @@
 export const MONEY = 'S/';
 
+export type ReceiptId =
+  | 'energy'
+  | 'fixed'
+  | 'lighting'
+  | 'subtotal'
+  | 'igv'
+  | 'total'
+
 export type Receipt = {
+  id?: ReceiptId,
   label: string,
   money: number
 }

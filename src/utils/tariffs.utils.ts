@@ -57,6 +57,37 @@ export function groupTariffsByCode(categories: TariffCategory[]): TariffGroup[] 
 }
 
 /**
+ * The four tariff-owned fields: editing any of them diverges from the
+ * selected catalog tariff. IGV rate and enable-toggles are global settings,
+ * not part of the tariff, so they never mark it custom.
+ */
+export type TariffFieldValues = {
+  pricePerKwh: number
+  fixedCharge: number
+  publicLightingCharge: number
+  period: BillingPeriod
+}
+
+/**
+ * True when the live values no longer match the selected catalog tariff
+ * (or it doesn't exist): the UI then shows "Personalizada" instead.
+ * Exact comparison is safe: setTariff copies the catalog numbers verbatim
+ * and every edit funnels through the same parse helpers.
+ */
+export function isCustomTariff(
+  values: TariffFieldValues,
+  tariff: TariffCategory | undefined
+): boolean {
+  if (!tariff) return true
+  return (
+    values.pricePerKwh !== tariff.pricePerKwh ||
+    values.fixedCharge !== tariff.fixedCharge ||
+    values.publicLightingCharge !== tariff.publicLightingCharge ||
+    values.period !== tariff.billingPeriod
+  )
+}
+
+/**
  * Parses a raw settings input into a safe number.
  * Empty or invalid input becomes 0 instead of NaN.
  */
@@ -244,22 +275,23 @@ export function buildReceipts(
 ): { receipts: Receipt[]; total: number } {
   const result = calculateKwhToMoney(kwh, inputs)
   const receipts: Receipt[] = [
-    { label: `${translate(lang, 'receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
+    { id: 'energy', label: `${translate(lang, 'receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
   ]
 
   if (inputs.isFixedChargeEnabled) {
-    receipts.push({ label: translate(lang, 'receipt.fixedCharge'), money: result.fixedCharge })
+    receipts.push({ id: 'fixed', label: translate(lang, 'receipt.fixedCharge'), money: result.fixedCharge })
   }
   if (inputs.isPublicLightingEnabled) {
-    receipts.push({ label: translate(lang, 'receipt.publicLighting'), money: result.publicLightingCharge })
+    receipts.push({ id: 'lighting', label: translate(lang, 'receipt.publicLighting'), money: result.publicLightingCharge })
   }
 
-  receipts.push({ label: translate(lang, 'receipt.subtotal'), money: result.subtotal })
+  receipts.push({ id: 'subtotal', label: translate(lang, 'receipt.subtotal'), money: result.subtotal })
   receipts.push({
+    id: 'igv',
     label: `${translate(lang, 'receipt.igv')} · ${inputs.isTaxEnabled ? translate(lang, 'receipt.included') : translate(lang, 'receipt.excluded')}`,
     money: result.igv,
   })
-  receipts.push({ label: translate(lang, 'receipt.total'), money: result.total })
+  receipts.push({ id: 'total', label: translate(lang, 'receipt.total'), money: result.total })
 
   return { receipts, total: result.total }
 }
