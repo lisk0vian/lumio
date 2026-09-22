@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { Input } from './ui/input'
 import { useLumioStore } from '@/stores/lumio-store'
 import { t } from '@/i18n'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
+  formatEntryText,
+  parseEntryText,
+  sanitizeEntryText,
   sanitizeNonNegative,
 } from '@/utils/tariffs.utils'
 
@@ -32,6 +36,19 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
   const isKwhMode = direction === 'kwh-to-money'
   const rawValue = isKwhMode ? inputKwh : inputMoney
 
+  // El campo guarda el *texto* escrito, no el número: con un input numérico
+  // controlado, teclear "22." se reescribía como 22 y el 5 siguiente acababa
+  // formando "225". El borrador solo se reajusta cuando el valor cambia desde
+  // afuera (cambio de unidad, reset, hidratación), y compara contra el último
+  // valor que empujamos nosotros: nuestro propio 22 (el de "22.") no debe
+  // contar como cambio externo, o el punto se borraría igual.
+  const [draft, setDraft] = useState(() => formatEntryText(rawValue))
+  const [pushed, setPushed] = useState(rawValue)
+  if (rawValue !== pushed) {
+    setPushed(rawValue)
+    setDraft(formatEntryText(rawValue))
+  }
+
   const inputs = {
     pricePerKwh,
     fixedCharge,
@@ -43,7 +60,8 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
     period,
   }
 
-  const handleCommit = () => {    const clean = sanitizeNonNegative(rawValue)
+  const handleCommit = () => {
+    const clean = sanitizeNonNegative(rawValue)
     if (clean <= 0) return
     if (isKwhMode) {
       const { total } = calculateKwhToMoney(clean, inputs)
@@ -79,14 +97,17 @@ export const CountTotal = ({ showResumen = false }: { showResumen?: boolean }) =
         </p>
         <p className="flex min-w-0 flex-1 items-baseline justify-end gap-2">
           <Input
-            type="number"
+            type="text"
+            inputMode="decimal"
             placeholder="0"
-            min={0}
-            value={Number.isFinite(rawValue) && rawValue !== 0 ? rawValue : ''}
+            value={draft}
             onChange={(e) => {
-              const next = e.target.value === '' ? 0 : Number(e.target.value)
-              if (isKwhMode) setInputKwh(next)
-              else setInputMoney(next)
+              const text = sanitizeEntryText(e.target.value)
+              const parsed = parseEntryText(text)
+              setPushed(parsed)
+              setDraft(text)
+              if (isKwhMode) setInputKwh(parsed)
+              else setInputMoney(parsed)
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleCommit()

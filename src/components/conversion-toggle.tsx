@@ -4,13 +4,13 @@ import { t } from '@/i18n'
 
 export const ConversionToggle = () => {
   const direction = useLumioStore((state) => state.direction)
-  const setDirection = useLumioStore((state) => state.setDirection)
+  const setDirectionWithConversion = useLumioStore((state) => state.setDirectionWithConversion)
 
   return (
     <Tabs
       value={direction === 'kwh-to-money' ? 'kwh-s' : 's-kwh'}
       onValueChange={(val) =>
-        setDirection(val === 's-kwh' ? 'money-to-kwh' : 'kwh-to-money')
+        setDirectionWithConversion(val === 's-kwh' ? 'money-to-kwh' : 'kwh-to-money')
       }
     >
       <TabsList

@@ -10,6 +10,10 @@ import { HISTORY_LIMIT, STORAGE_KEY } from '@/types'
 import type { AppLang } from '@/i18n/ui'
 import { regulators, tariffCategories } from '@/data/tariffs.data'
 import { resolveInitialLang } from '@/i18n/utils'
+import {
+  calculateKwhToMoney,
+  calculateMoneyToKwh,
+} from '@/utils/tariffs.utils'
 
 export type LumioState = {
   tariffId: string
@@ -41,7 +45,7 @@ export type LumioAction = {
   setIsTaxEnabled: (enabled: boolean) => void
   setIsFixedChargeEnabled: (enabled: boolean) => void
   setIsPublicLightingEnabled: (enabled: boolean) => void
-  setDirection: (direction: CalculationDirection) => void
+  setDirectionWithConversion: (direction: CalculationDirection) => void
   setInputKwh: (inputKwh: number) => void
   setInputMoney: (inputMoney: number) => void
   setActiveLang: (lang: AppLang) => void
@@ -139,7 +143,36 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         set({ isFixedChargeEnabled }),
       setIsPublicLightingEnabled: (isPublicLightingEnabled) =>
         set({ isPublicLightingEnabled }),
-      setDirection: (direction) => set({ direction }),
+      setDirectionWithConversion: (newDirection) =>
+        set((state) => {
+          if (state.direction === newDirection) return state
+
+          const inputs = {
+            pricePerKwh: state.pricePerKwh,
+            fixedCharge: state.fixedCharge,
+            publicLightingCharge: state.publicLightingCharge,
+            igvRate: state.igvRate,
+            isFixedChargeEnabled: state.isFixedChargeEnabled,
+            isPublicLightingEnabled: state.isPublicLightingEnabled,
+            isTaxEnabled: state.isTaxEnabled,
+            period: state.period,
+          }
+
+          // Sin precio la inversa no existe: cambiar de unidad con un precio
+          // de 0 borraría el importe que la persona escribió.
+          if (inputs.pricePerKwh <= 0) return { direction: newDirection }
+
+          // El lado que se abandona es el ancla: el lado al que se entra se
+          // deriva de él y el ancla se conserva (antes se ponía a 0), así
+          // volver a cambiar devuelve el valor tal como se escribió.
+          if (state.direction === 'kwh-to-money') {
+            const { total } = calculateKwhToMoney(state.inputKwh, inputs)
+            return { direction: newDirection, inputMoney: total }
+          }
+
+          const { kwh } = calculateMoneyToKwh(state.inputMoney, inputs)
+          return { direction: newDirection, inputKwh: kwh }
+        }),
       setInputKwh: (inputKwh) => set({ inputKwh }),
       setInputMoney: (inputMoney) => set({ inputMoney }),
       setActiveLang: (activeLang) => set({ activeLang, langResolved: true }),
