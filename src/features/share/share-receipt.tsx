@@ -418,14 +418,14 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
           onFocus={warmSnapdom}
           disabled={noData || status === 'working'}
           aria-busy={status === 'working'}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-xs text-ember focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember disabled:cursor-not-allowed disabled:opacity-50"
+          className="group inline-flex min-h-11 cursor-pointer items-center gap-2 text-xs text-ember transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {status === 'working' ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Share2 className="size-4" aria-hidden="true" />
+            <Share2 className="size-4 transition-transform group-hover:scale-110" aria-hidden="true" />
           )}
-          <span className="underline underline-offset-[3px]">
+          <span className="link-ember">
             {status === 'working' ? t('share.generating') : t('share.button')}
           </span>
         </button>
