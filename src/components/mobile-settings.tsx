@@ -43,7 +43,7 @@ function UnderlineInput({
       step={step}
       onChange={(e) => onChange(e.target.value)}
       className={cn(
-        'min-h-11 border-b border-foreground/25 bg-transparent text-right font-mono text-base font-medium tabular-nums outline-none focus:border-foreground',
+        'min-h-11 border-b border-border bg-transparent text-right font-mono text-base font-medium tabular-nums outline-none focus:border-ember',
         narrow ? 'w-12' : 'w-20'
       )}
     />

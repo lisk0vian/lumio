@@ -35,10 +35,11 @@ export const GlossaryBlock = () => {
             key={term}
             type="button"
             onClick={() => setSelected(idx)}
+            aria-pressed={selected === idx}
             className={cn(
               'cursor-pointer px-2.5 py-1.5 text-xs',
               selected === idx
-                ? 'bg-foreground font-medium text-background'
+                ? 'bg-accent font-medium text-accent-foreground ring-1 ring-primary/40'
                 : 'bg-muted font-normal text-muted-foreground'
             )}
           >

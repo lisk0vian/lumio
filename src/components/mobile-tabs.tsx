@@ -185,7 +185,7 @@ export const MobileTabs = () => {
             className={cn(
               '-mt-px flex min-h-11 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-t-2 pt-2 pb-1 text-xs',
               tab === key
-                ? 'border-foreground font-medium text-foreground'
+                ? 'border-ember font-medium text-foreground'
                 : 'border-transparent font-normal text-muted-foreground'
             )}
           >

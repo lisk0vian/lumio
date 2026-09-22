@@ -2,6 +2,7 @@ import {
   Building2,
   CalendarClock,
   CalendarDays,
+  HandCoins,
   Lightbulb,
   Percent,
   PlugZap,
@@ -40,12 +41,14 @@ export type ReceiptCardProps = {
 // Capture-safe palette: every visual inside this node is an inline hex/rgb
 // literal. No Tailwind color or font-theme classes here: Tailwind v4 emits
 // oklch()/color-mix(), which DOM-to-image engines cannot re-parse.
-const INK = '#161616'
-const MUTED = '#5c5c5c'
-const PAPER = '#ffffff'
-const HAIRLINE = '#e3e3e3'
-const DASH = '#c9c9c9'
-const ACCENT = '#eab308'
+// Mismos valores en hex del papel cálido / tinta cálida de la app: con los
+// neutros previos el PNG exportado se veía fuera de marca junto a la interfaz.
+const INK = '#191713'
+const MUTED = '#6b6459'
+const PAPER = '#faf9f4'
+const HAIRLINE = '#e1ddd2'
+const DASH = '#c9c2b4'
+const ACCENT = '#ffc61a'
 const MONO = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
 const SANS = "'Inter', system-ui, -apple-system, sans-serif"
 
@@ -53,7 +56,7 @@ const LINE_ICONS: Record<ReceiptLineKind, LucideIcon | null> = {
   energy: PlugZap,
   fixed: Receipt,
   lighting: Lightbulb,
-  subtotal: null,
+  subtotal: HandCoins,
   igv: Percent,
   total: null,
 }

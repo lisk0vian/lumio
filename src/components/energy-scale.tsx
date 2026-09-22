@@ -115,15 +115,34 @@ type EnergyBandProps = {
 }
 
 const EnergyBand = ({ label, range, isActive }: EnergyBandProps) => {
+  // El estado activo no se apoya solo en el color: la banda activa suma
+  // superficie ámbar + ring + peso y opacidad distintos (WCAG 1.4.1).
   return (
     <div
+      aria-current={isActive ? 'true' : undefined}
       className={cn(
         'flex-1 px-1 py-2.5 text-center',
-        isActive ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
+        isActive
+          ? 'bg-accent text-accent-foreground ring-1 ring-primary/40'
+          : 'bg-muted text-muted-foreground'
       )}
     >
-      <p className="text-xs leading-snug font-medium whitespace-nowrap">{label}</p>
-      <p className="mt-0.5 text-[0.625rem] whitespace-nowrap opacity-65">{range}</p>
+      <p
+        className={cn(
+          'text-xs leading-snug whitespace-nowrap',
+          isActive ? 'font-semibold' : 'font-medium'
+        )}
+      >
+        {label}
+      </p>
+      <p
+        className={cn(
+          'mt-0.5 text-[0.625rem] whitespace-nowrap',
+          isActive ? 'opacity-85' : 'opacity-65'
+        )}
+      >
+        {range}
+      </p>
     </div>
   )
 }

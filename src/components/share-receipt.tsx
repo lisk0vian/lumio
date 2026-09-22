@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { Share2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { tariffCategories } from '@/data/tariffs.data'
 import {
@@ -15,7 +14,7 @@ import { ReceiptCard, type ReceiptLine } from './receipt-card'
 type ShareStatus = 'idle' | 'working' | 'error'
 
 type SnapdomApi = {
-  preCapture: () => void
+  preCapture: () => void;
   (
     node: HTMLElement,
     options?: Record<string, unknown>
@@ -99,7 +98,8 @@ export const ShareReceiptButton = ({ className }: { className?: string }) => {
   const noData = !(activeKwh > 0)
 
   const taxPercent = Math.round(igvRate * 100 * 100) / 100
-  const tariffLabel = getValueById(tariffCategories, tariffId, 'label')
+  const tariffLabel =
+    getValueById(tariffCategories, tariffId, 'label') ?? 'Personal'
   const periodLabel = t(
     period === 'bimonthly' ? 'settings.bimonthly' : 'settings.monthly'
   )
@@ -163,7 +163,7 @@ export const ShareReceiptButton = ({ className }: { className?: string }) => {
       const capture = await snapdom(node, {
         scale: 2.5,
         dpr: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#faf9f4',
         embedFonts: 'auto',
       })
       const blob = await capture.toBlob({ format: 'png' })
@@ -211,7 +211,7 @@ export const ShareReceiptButton = ({ className }: { className?: string }) => {
           onFocus={warmSnapdom}
           disabled={noData || status === 'working'}
           aria-busy={status === 'working'}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-xs text-ember focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Share2 className="size-4" aria-hidden="true" />
           <span className="underline underline-offset-[3px]">

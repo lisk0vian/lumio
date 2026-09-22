@@ -114,9 +114,10 @@ export const TaxToggle = () => {
     <Toggle
       className={cn(
         'hover:none',
+        'cursor-pointer',
         'min-h-9 font-medium tracking-wide max-lg:min-h-11',
         'aria-pressed:bg-primary aria-pressed:text-primary-foreground', // isTaxEnabled == true
-        'bg-muted text-foreground' // isTaxEnabled == false
+        'bg-muted text-muted-foreground' // isTaxEnabled == false (atenuado: se lee "apagado")
       )}
       pressed={isTaxEnabled}
       onPressedChange={(pressed) => {
@@ -142,9 +143,10 @@ export const ChargeToggle = ({ kind }: { kind: 'fixed' | 'lighting' }) => {
     <Toggle
       className={cn(
         'hover:none',
+        'cursor-pointer',
         'min-h-9 min-w-9 font-medium tracking-wide max-lg:min-h-11 max-lg:min-w-11',
         'aria-pressed:bg-primary aria-pressed:text-primary-foreground',
-        'bg-muted text-foreground'
+        'bg-muted text-muted-foreground'
       )}
       pressed={isEnabled}
       onPressedChange={(pressed) => {
@@ -242,7 +244,7 @@ const InputSetting = ({
       <span className="ml-auto flex items-center gap-2">
         <Input
           className={cn(
-            'h-7 max-w-16 border-b-2 border-foreground/40 text-right font-mono tabular-nums focus:border-foreground',
+            'h-7 max-w-16 border-b-2 border-border text-right font-mono tabular-nums focus:border-ember',
             className
           )}
           {...props}

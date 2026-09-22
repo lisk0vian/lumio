@@ -30,8 +30,15 @@ export const SavingTip = ({ className }: { className?: string }) => {
     period: 'monthly',
   }).total
 
+  // Rail ámbar + superficie cálida: el bloque de consejos es el único
+  // momento editorial de la página, así que carga el color de marca.
   return (
-    <div className={cn('mt-6 bg-muted px-4 py-4 2xl:mt-8', className)}>
+    <div
+      className={cn(
+        'mt-6 border-l-2 border-ember bg-accent/60 px-4 py-4 2xl:mt-8',
+        className
+      )}
+    >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
           {t('tip.title')}
@@ -41,7 +48,7 @@ export const SavingTip = ({ className }: { className?: string }) => {
             type="button"
             aria-label={t('tip.prev')}
             onClick={goPrev}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-muted-foreground max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -52,7 +59,7 @@ export const SavingTip = ({ className }: { className?: string }) => {
             type="button"
             aria-label={t('tip.next')}
             onClick={goNext}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-muted-foreground max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>

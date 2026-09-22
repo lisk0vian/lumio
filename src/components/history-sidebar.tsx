@@ -16,7 +16,7 @@ export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) 
 
   if (hidden) {
     return (
-      <div className="flex w-full flex-none justify-center bg-muted/50 py-4 xl:w-27.5 xl:py-11">
+      <div className="flex w-full flex-none justify-center bg-muted py-4 xl:w-27.5 xl:py-11">
         <button
           type="button"
           onClick={onShow}
@@ -29,7 +29,7 @@ export const HistorySidebar = ({ hidden, onHide, onShow }: HistorySidebarProps) 
   }
 
   return (
-    <aside className="w-full flex-none bg-muted/50 px-8 py-8 max-lg:bg-transparent max-lg:px-0 max-lg:py-0 xl:w-80 xl:py-11">
+    <aside className="w-full flex-none bg-muted px-8 py-8 max-lg:bg-transparent max-lg:px-0 max-lg:py-0 xl:w-80 xl:py-11">
       <div className="mb-3 flex items-baseline justify-between">
         <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
           {t('history.title')} · {records.length}
