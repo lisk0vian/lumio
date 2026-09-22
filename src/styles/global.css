@@ -4,24 +4,21 @@
 
 /* Fonts
   - Inter (sans): UI y cuerpo de texto — números de consumo, labels, botones.
-  - Source Serif 4 (serif): opcional, para momentos editoriales (explicaciones largas, blog de ahorro energético). No es necesaria en las pantallas de cálculo.
-  - JetBrains Mono (mono): montos, kWh, tarifas — números tabulares que necesitan alinearse.
+    Solo pesos 400/600/700 en global para la carga inicial.
+  - Source Serif 4 (serif): solo ExplainerPage (importada en su frontmatter),
+    para momentos editoriales. No se carga en las pantallas de cálculo.
+  - JetBrains Mono (mono): montos, kWh, tarifas — 400/700.
 */
 
-/* Inter */
+/* Inter — UI y cuerpo. Solo 400/600/700 en la ruta principal para
+   recortar el CSS y los woff2 iniciales. Source Serif 4 vive solo en
+   ExplainerPage (importada en su frontmatter), no aquí. */
 @import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
-@import '@fontsource/inter/800.css';
 
-/* Source Serif 4 */
-@import '@fontsource/source-serif-4/400.css';
-@import '@fontsource/source-serif-4/600.css';
-
-/* JetBrains Mono */
+/* JetBrains Mono — montos, kWh, tarifas. 400/700 bastan. */
 @import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
 @import '@fontsource/jetbrains-mono/700.css';
 
 @custom-variant dark (&:is(.dark *));
