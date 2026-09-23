@@ -1,8 +1,8 @@
 ---
 import Layout from './Layout.astro';
 import TopBar from '../features/shell/top-bar.astro';
-import '@fontsource/source-serif-4/400.css';
-import '@fontsource/source-serif-4/600.css';
+import '@fontsource/source-serif-4/latin-400.css';
+import '@fontsource/source-serif-4/latin-600.css';
 import { tariffCategories } from '../data/tariffs.data';
 import {
   calculateKwhToMoney,
@@ -10,9 +10,16 @@ import {
 } from '../utils/tariffs.utils';
 import { useTranslations, type AppLang } from '../i18n';
 
-// Static explainer page: zero JS, zero islands. The worked example is
-// computed at build time from the verified tariff data, so the numbers can
-// never drift from what the calculator actually does.
+// Static explainer page: zero islands, one bundled script for the anime.js
+// reveals and the scroll progress bar. The worked example is computed at
+// build time from the verified tariff data, so the numbers can never drift
+// from what the calculator does. Every figure is also rendered server-side at
+// its final value; the count-up only rewrites it once the animation is about
+// to run, so the page reads correctly with JS disabled or blocked.
+//
+// Each component of the bill is explained exactly once: what it is and where
+// to find it live in the four-numbers table (section 02), and the arithmetic
+// it contributes lives in the operation column of the example (section 03).
 const { lang } = Astro.props as { lang: AppLang };
 const t = useTranslations(lang);
 
@@ -34,170 +41,494 @@ const backKwh = calculateMoneyToKwh(result.total, inputs).kwh;
 const money = (n: number): string => `S/ ${n.toFixed(2)}`;
 const price = `S/ ${inputs.pricePerKwh.toFixed(4)}`;
 const taxPercent = `${Math.round(inputs.igvRate * 100)} %`;
+const taxFactor = (1 + inputs.igvRate).toFixed(2);
 
-const steps = [
+const billFigures = [
   {
-    title: t('explainer.step1.title'),
-    body: t('explainer.step1.body'),
-    formula: `${EXAMPLE_KWH} kWh × ${price} = ${money(result.energy)}`,
+    label: t('explainer.find.price.label'),
+    where: t('explainer.find.price.where'),
+    value: price,
   },
   {
-    title: t('explainer.step2.title'),
-    body: t('explainer.step2.body'),
-    formula: `+ ${money(result.fixedCharge)}`,
+    label: t('explainer.find.fixed.label'),
+    where: t('explainer.find.fixed.where'),
+    value: money(inputs.fixedCharge),
   },
   {
-    title: t('explainer.step3.title'),
-    body: t('explainer.step3.body'),
-    formula: `+ ${money(result.publicLightingCharge)}`,
+    label: t('explainer.find.lighting.label'),
+    where: t('explainer.find.lighting.where'),
+    value: money(inputs.publicLightingCharge),
   },
   {
-    title: t('explainer.step4.title'),
-    body: t('explainer.step4.body'),
-    formula: `${money(result.energy)} + ${money(result.fixedCharge)} + ${money(result.publicLightingCharge)} = ${money(result.subtotal)}`,
-  },
-  {
-    title: t('explainer.step5.title'),
-    body: t('explainer.step5.body'),
-    formula: `${money(result.subtotal)} × ${taxPercent} = ${money(result.igv)}`,
-  },
-  {
-    title: t('explainer.step6.title'),
-    body: t('explainer.step6.body'),
-    formula: `${money(result.subtotal)} + ${money(result.igv)} = ${money(result.total)}`,
+    label: t('explainer.find.igv.label'),
+    where: t('explainer.find.igv.where'),
+    value: taxPercent,
   },
 ];
 
-const receiptRows = [
-  { label: `${t('receipt.energy')} · ${EXAMPLE_KWH} kWh`, money: result.energy },
-  { label: t('receipt.fixedCharge'), money: result.fixedCharge },
-  { label: t('receipt.publicLighting'), money: result.publicLightingCharge },
-  { label: t('receipt.subtotal'), money: result.subtotal },
-  { label: `${t('receipt.igv')} · ${t('receipt.included')}`, money: result.igv },
-  { label: t('receipt.total'), money: result.total },
+// Split into terms so the script can stagger them in.
+const formulaTerms = [
+  '( kWh',
+  '×',
+  t('explainer.find.price.label'),
+  '+',
+  t('receipt.fixedCharge'),
+  '+',
+  t('receipt.publicLighting'),
+  ')',
+  '×',
+  taxFactor,
+  '=',
+  t('receipt.total'),
+];
+
+// `op` carries the arithmetic that used to live in six separate step blocks.
+const exampleRows = [
+  {
+    label: `${t('receipt.energy')} · ${EXAMPLE_KWH} kWh`,
+    op: `${EXAMPLE_KWH} × ${price}`,
+    value: result.energy,
+    kind: 'charge' as const,
+  },
+  {
+    label: t('receipt.fixedCharge'),
+    op: '+',
+    value: result.fixedCharge,
+    kind: 'charge' as const,
+  },
+  {
+    label: t('receipt.publicLighting'),
+    op: '+',
+    value: result.publicLightingCharge,
+    kind: 'charge' as const,
+  },
+  {
+    label: t('receipt.subtotal'),
+    op: '=',
+    value: result.subtotal,
+    kind: 'subtotal' as const,
+  },
+  {
+    label: `${t('receipt.igv')} · ${t('receipt.included')}`,
+    op: `× ${taxPercent}`,
+    value: result.igv,
+    kind: 'charge' as const,
+  },
+  {
+    label: t('receipt.total'),
+    op: '=',
+    value: result.total,
+    kind: 'total' as const,
+  },
+];
+
+const diySteps = [
+  t('explainer.diy.s1'),
+  t('explainer.diy.s2'),
+  t('explainer.diy.s3'),
+];
+
+const limits = [
+  t('explainer.limits.lighting'),
+  t('explainer.limits.fose'),
+  t('explainer.limits.rounding'),
+  t('explainer.limits.tariff'),
+];
+
+// Primary sources, each checked against the live document rather than quoted
+// from memory. Keep the date in explainer.sources.disclaimer in sync whenever
+// these are revisited.
+const sources = [
+  {
+    href: 'https://www.osinergmin.gob.pe/Paginas/Folletos/folletos/tarifa_electrica_residencial.html',
+    label: t('explainer.sources.osinergmin.label'),
+    note: t('explainer.sources.osinergmin.note'),
+  },
+  {
+    href: 'https://orientacion.sunat.gob.pe/3053-concepto-tasa-y-operaciones-gravadas-igv-empresas',
+    label: t('explainer.sources.sunat.label'),
+    note: t('explainer.sources.sunat.note'),
+  },
+  {
+    href: 'https://faolex.fao.org/docs/pdf/per64203.pdf',
+    label: t('explainer.sources.lce.label'),
+    note: t('explainer.sources.lce.note'),
+  },
 ];
 
 const backHref = lang === 'en' ? '/en/' : '/';
 const pageTitle = `${t('explainer.title')} · Lumio`;
+
+const headingClass = 'flex items-baseline gap-2.5 text-sm font-semibold';
+const indexClass =
+  'font-mono text-[0.625rem] font-normal text-ember tabular-nums';
+const sectionClass = 'mt-12 scroll-mt-8 border-t border-border pt-6';
+const leadClass = 'mt-2 text-sm leading-relaxed text-foreground';
 ---
 
 <Layout lang={lang} title={pageTitle}>
+  <!-- Scroll position for a long read. Driven by JS so it is invisible, not
+       stuck at zero, when the bundle never runs. -->
+  <div
+    aria-hidden="true"
+    class="pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5 origin-left scale-x-0 bg-ember"
+    data-progress
+  >
+  </div>
+
   <div class="min-h-screen w-full bg-background text-foreground">
-    <main class="mx-auto flex min-h-screen w-full max-w-2xl flex-1 flex-col px-5 pt-4 pb-16 md:px-8 md:pt-8">
+    <main
+      class="mx-auto flex min-h-screen w-full max-w-2xl flex-1 flex-col px-5 pt-4 pb-20 md:px-8 md:pt-8"
+    >
       <TopBar lang={lang} routes={{ es: '/calculo', en: '/en/calculation' }} />
       <p class="mt-6">
-        <a
-          href={backHref}
-          class="text-xs text-ember underline underline-offset-[3px]"
-        >
+        <a href={backHref} class="text-xs link-ember text-ember">
           {t('explainer.back')}
         </a>
       </p>
+
       <article class="mt-6">
-        <p
-          class="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase"
-        >
-          {t('explainer.eyebrow')}
-        </p>
-        <h1 class="font-serif text-3xl leading-tight font-semibold md:text-4xl">
-          {t('explainer.title')}
-        </h1>
-        <p class="mt-4 text-base leading-relaxed text-foreground">
-          {t('explainer.intro')}
-        </p>
+        <header data-reveal>
+          <p
+            class="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase"
+          >
+            {t('explainer.eyebrow')}
+          </p>
+          <h1 class="font-serif text-3xl leading-tight font-semibold md:text-4xl">
+            {t('explainer.title')}
+          </h1>
+          <p class="mt-4 text-base leading-relaxed text-foreground">
+            {t('explainer.intro')}
+          </p>
+        </header>
 
-        <div class="mt-8 border-t border-border">
-          {
-            steps.map(({ title, body, formula }) => (
-              <section class="border-b border-border py-5">
-                <h2 class="text-sm font-semibold">{title}</h2>
-                <p class="mt-1.5 text-sm leading-relaxed text-foreground">
-                  {body}
-                </p>
-                <p class="mt-2.5 inline-block rounded-md bg-muted px-3 py-2 font-mono text-[0.8125rem] tabular-nums">
-                  {formula}
-                </p>
-              </section>
-            ))
-          }
-        </div>
-
-        <section class="mt-8">
-          <h2 class="text-sm font-semibold">{t('explainer.example.title')}</h2>
+        <section id="formula" class="mt-10 scroll-mt-8" data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>01</span>
+            {t('explainer.formula.title')}
+          </h2>
           <div
-            class="mt-3 grid grid-cols-[1fr_auto] gap-x-5 gap-y-2 font-mono text-[0.8125rem] text-muted-foreground"
+            data-formula
+            class="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md border border-border bg-muted px-4 py-4 font-mono text-[0.8125rem] leading-relaxed tabular-nums md:text-sm"
           >
             {
-              receiptRows.map(({ label, money: value }, idx) => (
-                <>
-                  <p
-                    class={
-                      idx === receiptRows.length - 1
-                        ? 'border-t border-border pt-2 font-medium text-foreground'
-                        : 'capitalize'
-                    }
-                  >
-                    {label}
-                  </p>
-                  <p
-                    class={
-                      idx === receiptRows.length - 1
-                        ? 'border-t border-border pt-2 text-right font-medium text-foreground tabular-nums'
-                        : 'text-right tabular-nums'
-                    }
-                  >
-                    S/ {value.toFixed(2)}
-                  </p>
-                </>
+              formulaTerms.map((term) => (
+                <span
+                  data-term
+                  class={
+                    term === '=' || term === '×' || term === '+'
+                      ? 'text-ember'
+                      : 'text-foreground'
+                  }
+                >
+                  {term}
+                </span>
               ))
             }
           </div>
+          <p class="mt-2 text-xs text-muted-foreground">
+            {t('explainer.formula.caption')}
+          </p>
         </section>
 
-        <section class="mt-8 border-t border-border pt-5">
-          <h2 class="text-sm font-semibold">{t('explainer.inverse.title')}</h2>
-          <p class="mt-1.5 text-sm leading-relaxed text-foreground">
-            {t('explainer.inverse.body')}
+        <section id="numbers" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>02</span>
+            {t('explainer.find.title')}
+          </h2>
+          <p class={leadClass}>{t('explainer.find.body')}</p>
+          <ul class="mt-4 border-t border-border" data-stagger>
+            {
+              billFigures.map(({ label, where, value }) => (
+                <li class="flex items-baseline justify-between gap-4 border-b border-border py-3.5">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium">{label}</p>
+                    <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {where}
+                    </p>
+                  </div>
+                  <p class="flex-none font-mono text-[0.8125rem] text-ember tabular-nums">
+                    {value}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section id="example" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>03</span>
+            {t('explainer.example.title')} · {EXAMPLE_KWH} kWh
+          </h2>
+          <div class="mt-4 grid grid-cols-[1fr_auto] items-baseline gap-x-5">
+            {
+              exampleRows.map(({ label, op, value, kind }) => {
+                const total = kind === 'total';
+                const rule =
+                  kind === 'subtotal'
+                    ? 'border-t border-border pt-3 mt-1'
+                    : total
+                      ? 'border-t border-ember pt-3 mt-1'
+                      : '';
+                return (
+                  <>
+                    <div class={`pb-3 ${rule}`}>
+                      <p
+                        class={
+                          total
+                            ? 'text-sm font-medium text-foreground'
+                            : 'text-sm text-foreground'
+                        }
+                      >
+                        {label}
+                      </p>
+                      <p class="mt-0.5 font-mono text-[0.6875rem] text-muted-foreground tabular-nums">
+                        {op}
+                      </p>
+                    </div>
+                    <p
+                      class={`pb-3 text-right font-mono tabular-nums ${rule} ${
+                        total
+                          ? 'text-base font-medium text-ember'
+                          : 'text-[0.8125rem] text-foreground'
+                      }`}
+                    >
+                      <span data-count={value.toFixed(2)} data-prefix="S/ ">
+                        S/ {value.toFixed(2)}
+                      </span>
+                    </p>
+                  </>
+                );
+              })
+            }
+          </div>
+          <p class="mt-2 text-xs leading-relaxed text-muted-foreground">
+            {t('explainer.example.caption')}
           </p>
-          <p class="mt-2.5 text-xs text-muted-foreground">
+        </section>
+
+        <section id="check" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>04</span>
+            {t('explainer.diy.title')}
+          </h2>
+          <ol class="mt-4 flex flex-col gap-3" data-stagger>
+            {
+              diySteps.map((step, idx) => (
+                <li class="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    class="mt-px flex size-5 flex-none items-center justify-center rounded-full border border-ember font-mono text-[0.625rem] text-ember tabular-nums"
+                  >
+                    {idx + 1}
+                  </span>
+                  <p class="text-sm leading-relaxed text-foreground">{step}</p>
+                </li>
+              ))
+            }
+          </ol>
+          <p
+            class="mt-4 border-l-2 border-ember bg-accent/60 px-4 py-3 text-sm leading-relaxed"
+          >
+            {t('explainer.diy.check')}
+          </p>
+        </section>
+
+        <section id="inverse" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>05</span>
+            {t('explainer.inverse.title')}
+          </h2>
+          <p class={leadClass}>{t('explainer.inverse.body')}</p>
+          <p class="mt-3 text-xs text-muted-foreground">
             {t('explainer.inverse.caption')}
           </p>
           <p
             class="mt-1.5 inline-block rounded-md bg-muted px-3 py-2 font-mono text-[0.8125rem] tabular-nums"
           >
-            {money(result.total)} → {backKwh.toFixed(1)} kWh
+            {money(result.total)} <span class="text-ember">→</span> {
+              backKwh.toFixed(1)
+            } kWh
           </p>
         </section>
 
-        <section class="mt-8 border-t border-border pt-5">
-          <h2 class="text-sm font-semibold">{t('explainer.toggles.title')}</h2>
-          <p class="mt-1.5 text-sm leading-relaxed text-foreground">
-            {t('explainer.toggles.body')}
+        <section id="switches" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>06</span>
+            {t('explainer.toggles.title')}
+          </h2>
+          <p class={leadClass}>{t('explainer.toggles.body')}</p>
+        </section>
+
+        <!-- Stated plainly rather than buried: this is what makes the page
+             trustworthy when a reader's own bill does not match exactly. -->
+        <section id="limits" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>07</span>
+            {t('explainer.limits.title')}
+          </h2>
+          <ul class="mt-4 flex flex-col gap-3" data-stagger>
+            {
+              limits.map((item) => (
+                <li class="border-l-2 border-border pl-3 text-sm leading-relaxed text-muted-foreground">
+                  {item}
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section id="sources" class={sectionClass} data-reveal>
+          <h2 class={headingClass}>
+            <span aria-hidden="true" class={indexClass}>08</span>
+            {t('explainer.sources.title')}
+          </h2>
+          <p class={leadClass}>{t('explainer.sources.intro')}</p>
+          <ul class="mt-4 border-t border-border" data-stagger>
+            {
+              sources.map(({ href, label, note }) => (
+                <li class="border-b border-border py-3.5">
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-sm link-ember text-ember"
+                  >
+                    {label}
+                  </a>
+                  <p class="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {note}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="mt-3 text-xs leading-relaxed text-muted-foreground">
+            {t('explainer.sources.disclaimer')}
           </p>
         </section>
 
-        <aside
-          class="mt-8 border-l-2 border-ember bg-accent/60 px-4 py-4"
-        >
-          <p
-            class="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase"
-          >
-            {t('explainer.note.title')}
-          </p>
-          <p class="mt-2 text-sm leading-relaxed">
-            {t('explainer.note.body')}
-          </p>
-        </aside>
-
-        <p class="mt-8">
+        <p class="mt-12" data-reveal>
           <a
             href={backHref}
-            class="text-xs text-ember underline underline-offset-[3px]"
+            class="inline-flex min-h-11 items-center gap-2 rounded-md border border-ember px-4 text-sm text-ember transition-colors hover:bg-ember hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
           >
-            {t('explainer.back')}
+            {t('explainer.cta')}
+            <span aria-hidden="true">→</span>
           </a>
         </p>
       </article>
     </main>
   </div>
 </Layout>
+
+<script>
+  import { animate, stagger } from 'animejs';
+
+  // Scroll-driven personality for an otherwise static page. Every starting
+  // state is set from JS right before animating, never in the markup, so a
+  // blocked or failed bundle leaves the page fully readable.
+  const REVEAL_MS = 420;
+  const COUNT_MS = 900;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reading position. Not gated on reduced motion: it only ever follows the
+  // scroll the reader is already making, and it is a wayfinding cue.
+  const progress = document.querySelector<HTMLElement>('[data-progress]');
+  if (progress) {
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const ratio = max > 0 ? window.scrollY / max : 0;
+      progress.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+    };
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update, { passive: true });
+    update();
+  }
+
+  if (!reduced) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          observer.unobserve(entry.target);
+          play(entry.target as HTMLElement);
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
+    );
+
+    function play(section: HTMLElement) {
+      // A section either staggers its own rows or fades in as one block.
+      const rows = section.querySelector('[data-stagger]');
+      const terms = section.querySelector('[data-formula]');
+
+      if (terms) {
+        const parts = Array.from(
+          terms.querySelectorAll<HTMLElement>('[data-term]')
+        );
+        animate(section, { opacity: [0, 1], duration: 240, ease: 'outCubic' });
+        animate(parts, {
+          opacity: [0, 1],
+          y: [8, 0],
+          duration: 380,
+          delay: stagger(60),
+          ease: 'outCubic',
+        });
+      } else if (rows) {
+        const items = Array.from(rows.children) as HTMLElement[];
+        animate(section, { opacity: [0, 1], duration: 240, ease: 'outCubic' });
+        animate(items, {
+          opacity: [0, 1],
+          y: [10, 0],
+          duration: REVEAL_MS,
+          delay: stagger(55),
+          ease: 'outCubic',
+        });
+      } else {
+        animate(section, {
+          opacity: [0, 1],
+          y: [12, 0],
+          duration: REVEAL_MS,
+          ease: 'outCubic',
+        });
+      }
+
+      countUp(section);
+    }
+
+    // Server-rendered value is the final one; it is only replaced once the
+    // tween starts, and restored exactly on the last frame.
+    function countUp(section: HTMLElement) {
+      const targets = section.querySelectorAll<HTMLElement>('[data-count]');
+      for (const el of targets) {
+        const to = Number(el.dataset.count);
+        if (!Number.isFinite(to)) continue;
+        const prefix = el.dataset.prefix ?? '';
+        const state = { value: 0 };
+        el.textContent = `${prefix}0.00`;
+        animate(state, {
+          value: to,
+          duration: COUNT_MS,
+          ease: 'outExpo',
+          onUpdate: () => {
+            el.textContent = `${prefix}${state.value.toFixed(2)}`;
+          },
+          onComplete: () => {
+            el.textContent = `${prefix}${to.toFixed(2)}`;
+          },
+        });
+      }
+    }
+
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-reveal]')
+    );
+    for (const section of sections) {
+      section.style.opacity = '0';
+      observer.observe(section);
+    }
+  }
+</script>
