@@ -70,7 +70,7 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
           ref={(el) => {
             btnRefs.current['kwh-s'] = el
           }}
-          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden"
+          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden max-lg:min-h-11"
           value="kwh-s"
         >
           {kwhLabel}
@@ -79,7 +79,7 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
           ref={(el) => {
             btnRefs.current['s-kwh'] = el
           }}
-          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden"
+          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden max-lg:min-h-11"
           value="s-kwh"
         >
           {moneyLabel}

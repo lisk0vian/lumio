@@ -57,13 +57,14 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
       )}
     >
       <div className="flex min-w-56 flex-1 flex-wrap gap-2 max-lg:flex-col max-lg:items-stretch">
-        <SelectRegulator triggerClassName="min-w-44 flex-1 max-w-60" />
+        <SelectRegulator lang={lang} triggerClassName="min-w-44 flex-1 max-w-60" />
         <SelectTariff lang={lang} triggerClassName="min-w-44 flex-1 max-w-60" />
       </div>
       {/* Input for price per Kwh */}
       <InputSetting
         label="S/"
         unit="/kWh"
+        aria-label={t('settings.price')}
         value={pricePerKwh}
         min={0}
         type="number"
@@ -99,6 +100,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
         <InputSetting
           label="IGV"
           unit="%"
+          aria-label={t('settings.igv')}
           field="tax"
           type="number"
           min={1}
@@ -215,7 +217,14 @@ export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'l
   )
 }
 
-export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: string }) => {
+export const SelectRegulator = ({
+  lang,
+  triggerClassName,
+}: {
+  lang: AppLang
+  triggerClassName?: string
+}) => {
+  const t = useTranslations(lang)
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const setRegulator = useLumioStore((state) => state.setRegulator)
   const nameRef = useRef<HTMLSpanElement | null>(null)
@@ -235,7 +244,11 @@ export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: strin
 
   return (
     <Select value={regulatorId} onValueChange={(id) => id && setRegulator(id)}>
-      <SelectTrigger className={cn('min-w-32', triggerClassName)} aria-controls='regulator-options'>
+      <SelectTrigger
+        className={cn('min-w-32', triggerClassName)}
+        aria-controls="regulator-options"
+        aria-label={t('settings.regulator')}
+      >
         <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
           {name}
         </span>
@@ -297,7 +310,11 @@ export const SelectTariff = ({ lang, triggerClassName }: { lang: AppLang; trigge
       value={tariffId ?? ''}
       onValueChange={(id) => id && setTariff(id)}
     >
-      <SelectTrigger className={cn('min-w-32', triggerClassName)} aria-controls='tariff-options'>
+      <SelectTrigger
+        className={cn('min-w-32', triggerClassName)}
+        aria-controls="tariff-options"
+        aria-label={t('settings.tariff')}
+      >
         <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
           {display}
         </span>
@@ -363,6 +380,7 @@ const InputSetting = ({
       <p className="whitespace-nowrap">{label}</p>
       <span className="relative ml-auto flex items-center gap-2">
         <Input
+          aria-label={[label, unit].filter(Boolean).join(' ')}
           className={cn(
             'h-7 max-w-16 border-b-2 border-border text-right font-mono tabular-nums focus:border-ember disabled:cursor-not-allowed disabled:opacity-50',
             className

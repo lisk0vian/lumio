@@ -34,7 +34,7 @@ const TotalField = ({ receipt }: { receipt: Receipt }) => {
   const display = useAnimatedNumber(Number(receipt.money), 'money')
   return (
     <>
-      <p className={cn('border-t border-border pt-1.5 font-medium capitalize text-foreground')}>
+      <p className={cn('border-t border-border pt-1.5 font-medium text-foreground')}>
         {receipt.label}
       </p>
       <p className={cn('border-t border-border pt-1.5 text-right font-medium tabular-nums text-foreground')}>
@@ -86,7 +86,7 @@ const RowField = ({ receipt }: { receipt: Receipt }) => {
 
   return (
     <>
-      <p ref={labelRef} className="capitalize">
+      <p ref={labelRef}>
         {receipt.label}
       </p>
       <p ref={valueRef} className="text-right tabular-nums">

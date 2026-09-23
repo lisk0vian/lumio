@@ -148,6 +148,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
             type="text"
             inputMode="decimal"
             placeholder="0"
+            aria-label={isKwhMode ? t('calculator.consumption') : t('calculator.amount')}
             value={draft}
             onChange={(e) => {
               const text = sanitizeEntryText(e.target.value)
@@ -170,8 +171,22 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
       <p ref={hintRef} className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
         {hint}
       </p>
-      <div className="flex items-baseline justify-between gap-3 pt-1">
-        <p className="text-xs whitespace-nowrap text-muted-foreground">{t('calculator.enterSaves')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-2">
+        <div className="flex items-center gap-2.5">
+          {/* Enter still commits, but it cannot be the only way in: with
+              inputMode="decimal" iOS renders a numeric pad that has no return
+              key, so this button is the sole save path on much of mobile. */}
+          <button
+            type="button"
+            onClick={handleCommit}
+            className="inline-flex min-h-11 cursor-pointer items-center rounded-md border border-ember px-3 text-xs font-medium text-ember transition-colors hover:bg-ember hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember lg:min-h-8"
+          >
+            {t('calculator.save')}
+          </button>
+          <p className="text-xs whitespace-nowrap text-muted-foreground max-lg:hidden">
+            {t('calculator.enterSaves')}
+          </p>
+        </div>
         {showResumen ? (
           <p className="text-right font-mono text-[0.625rem] text-muted-foreground">
             S/ {pricePerKwh}/kWh · {t('settings.fixedCharge')} S/ {fixedCharge} · {isTaxEnabled ? `IGV ${Math.round(igvRate * 100)}%` : t('calculator.withoutIgv')}

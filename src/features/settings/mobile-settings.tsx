@@ -13,7 +13,7 @@ import { useTranslations, type AppLang } from '@/i18n'
 // Ghost trigger: keeps the shadcn select behavior, borderless and
 // right-aligned like a label/control row. Desktop triggers untouched.
 const GHOST_TRIGGER =
-  'w-auto border-none bg-transparent px-1 font-mono text-[0.8125rem] shadow-none [&_[data-slot=select-value]]:justify-end'
+  'w-auto border-none bg-transparent px-1 font-mono text-[0.8125rem] shadow-none max-lg:min-h-11 [&_[data-slot=select-value]]:justify-end'
 
 function SettingRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -105,7 +105,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
   return (
     <div className="flex flex-col">
       <SettingRow label={t('settings.regulator')}>
-        <SelectRegulator triggerClassName={GHOST_TRIGGER} />
+        <SelectRegulator lang={lang} triggerClassName={GHOST_TRIGGER} />
       </SettingRow>
 
       <SettingRow label={t('settings.tariff')}>
