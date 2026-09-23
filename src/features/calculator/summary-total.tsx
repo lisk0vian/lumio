@@ -32,11 +32,11 @@ export const SummaryTotal = ({ total, unit = 'money', surchages }: SummaryTotalP
     <div>
       <h1
         ref={titleRef}
-        className="font-mono text-[clamp(3.5rem,12vw,5.375rem)] leading-[1.06] font-medium tracking-tight tabular-nums 2xl:text-[7rem]"
+        className="font-mono text-[clamp(3.5rem,12vw,4rem)] leading-[1.06] font-medium tracking-tight tabular-nums lg:text-[clamp(2.5rem,4vw,3.5rem)] 2xl:text-[4rem]"
       >
         {unit === 'money' ? `S/ ${display.toFixed(2)}` : `${display.toFixed(1)} kWh`}
       </h1>
-      <p ref={labelRef} className="font-mono text-sm font-medium text-ember">{label}</p>
+      <p ref={labelRef} className="font-mono text-xs font-medium text-ember">{label}</p>
     </div>
   )
 }

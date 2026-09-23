@@ -139,7 +139,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
 
   return (
     <div ref={rowRef} className="flex flex-col">
-      <div className="flex items-baseline gap-3 border-b border-border py-5 2xl:py-6">
+      <div className="flex items-baseline gap-3 border-b border-border py-2 2xl:py-2">
         <p className="text-xs whitespace-nowrap text-muted-foreground">
           {isKwhMode ? t('calculator.consumption') : t('calculator.amount')}
         </p>
@@ -160,7 +160,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleCommit()
             }}
-            className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-foreground 2xl:text-6xl"
+            className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-foreground lg:text-[clamp(1.75rem,3vw,2rem)] 2xl:text-[2rem]"
           />
           <span ref={unitRef} className="inline-block font-mono text-base text-muted-foreground 2xl:text-lg">
             {isKwhMode ? 'kWh' : 'S/'}
@@ -170,7 +170,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
       <p ref={hintRef} className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
         {hint}
       </p>
-      <div className="flex items-baseline justify-between gap-3 pt-2">
+      <div className="flex items-baseline justify-between gap-3 pt-1">
         <p className="text-xs whitespace-nowrap text-muted-foreground">{t('calculator.enterSaves')}</p>
         {showResumen ? (
           <p className="text-right font-mono text-[0.625rem] text-muted-foreground">

@@ -3,9 +3,9 @@ import { SummaryTotal } from './summary-total'
 import { ConversionToggle } from './conversion-toggle'
 import { CountTotal } from './count-total'
 import { ShareReceiptButton } from '../share/share-receipt'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useLumioStore } from '@/stores/lumio-store'
-import { useHydrated } from '@/stores/use-hydrated'
+import { useEnterAnimation } from '@/hooks/use-enter-animation'
+import { useStoreRehydration } from '@/hooks/use-store-rehydration'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
@@ -34,21 +34,8 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
   const t = useTranslations(lang)
-  const hydrated = useHydrated()
-
-  // SSR/prerender muestra el skeleton (mismas medidas que el total real)
-  // para no pintar negro ni desplazar el layout antes de hidratar.
-  if (!hydrated)
-    return (
-      <div className="contents" aria-hidden="true">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-20 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="mt-4 h-11 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
-      </div>
-    )
+  const enterRef = useEnterAnimation<HTMLDivElement>()
+  useStoreRehydration()
 
   const inputs = {
     pricePerKwh,
@@ -70,7 +57,7 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
 
   return (
     // display:contents keeps a single island root without adding layout.
-    <div className="contents">
+    <div ref={enterRef} className="contents">
       <SummaryTotal
         total={displayTotal}
         unit={isKwhMode ? 'money' : 'kwh'}
@@ -80,7 +67,7 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
             : [t('calculator.estimatedConsumption')]
         }
       />
-      <ShareReceiptButton lang={lang} className="mt-4" />
+      <ShareReceiptButton lang={lang} className="mt-3" />
       <ConversionToggle lang={lang} />
       <CountTotal lang={lang} />
     </div>

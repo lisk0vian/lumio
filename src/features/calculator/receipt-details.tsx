@@ -11,7 +11,7 @@ interface ReceiptDetailsProps {
 
 export const ReceiptDetails = ({ receipts }: ReceiptDetailsProps) => {
   return (
-    <div className="grid grid-cols-[1fr_auto] gap-x-5.5 gap-y-2 font-mono text-[0.8125rem] text-muted-foreground">
+    <div className="grid grid-cols-[1fr_auto] gap-x-5 gap-y-1.5 font-mono text-xs text-muted-foreground">
       {receipts.map((receipt, idx) => (
         <ReceiptField
           key={receipt.id ?? idx}
@@ -34,10 +34,10 @@ const TotalField = ({ receipt }: { receipt: Receipt }) => {
   const display = useAnimatedNumber(Number(receipt.money), 'money')
   return (
     <>
-      <p className={cn('border-t border-border pt-2 font-medium capitalize text-foreground')}>
+      <p className={cn('border-t border-border pt-1.5 font-medium capitalize text-foreground')}>
         {receipt.label}
       </p>
-      <p className={cn('border-t border-border pt-2 text-right font-medium tabular-nums text-foreground')}>
+      <p className={cn('border-t border-border pt-1.5 text-right font-medium tabular-nums text-foreground')}>
         S/ {display.toFixed(2)}
       </p>
     </>

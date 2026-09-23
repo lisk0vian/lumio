@@ -64,13 +64,13 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
     >
       <TabsList
         variant="line"
-        className="relative mt-6.5 w-full justify-start gap-8 border-y border-border py-0 2xl:mt-10"
+        className="relative mt-3 w-full justify-start gap-8 border-y border-border py-0 2xl:mt-4"
       >
         <TabsTrigger
           ref={(el) => {
             btnRefs.current['kwh-s'] = el
           }}
-          className="flex-1 rounded-none py-3 text-xs font-medium after:hidden"
+          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden"
           value="kwh-s"
         >
           {kwhLabel}
@@ -79,7 +79,7 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
           ref={(el) => {
             btnRefs.current['s-kwh'] = el
           }}
-          className="flex-1 rounded-none py-3 text-xs font-medium after:hidden"
+          className="flex-1 rounded-none py-2 text-xs font-medium after:hidden"
           value="s-kwh"
         >
           {moneyLabel}
