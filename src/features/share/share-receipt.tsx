@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import {
   Check,
@@ -6,6 +6,7 @@ import {
   Download,
   Loader2,
   MessageCircle,
+  Send,
   Share2,
 } from 'lucide-react'
 import { useLumioStore } from '@/stores/lumio-store'
@@ -27,7 +28,10 @@ import {
 import { ReceiptCard, type ReceiptLine } from './receipt-card'
 
 type ShareStatus = 'idle' | 'working' | 'error'
-type CopyState = 'idle' | 'copied' | 'text' | 'error'
+// Feedback for the last action taken inside the dialog. Success states clear
+// themselves; errors stay until the next action replaces them.
+type ActionFeedback = 'idle' | 'copied' | 'downloaded' | 'text' | 'error'
+const FEEDBACK_MS = 2400
 
 type SnapdomApi = {
   preCapture: () => void
@@ -60,14 +64,21 @@ let preCaptureArmed = false
 // click captures faster (perceived performance).
 async function ensureSnapdom(): Promise<SnapdomApi> {
   if (!snapdomPromise) {
-    snapdomPromise = import('@zumer/snapdom').then(
+    const pending = import('@zumer/snapdom').then(
       (mod) => mod.snapdom as SnapdomApi
     )
+    snapdomPromise = pending
+    // Drop a rejected import from the cache, or every later attempt replays
+    // the same failure and the "press to retry" in share.error is a lie.
+    // Guarded by identity so a concurrent retry is never cleared.
+    pending.catch(() => {
+      if (snapdomPromise === pending) snapdomPromise = null
+    })
   }
   const snapdom = await snapdomPromise
   if (!preCaptureArmed) {
-    preCaptureArmed = true
     snapdom.preCapture()
+    preCaptureArmed = true
   }
   return snapdom
 }
@@ -135,10 +146,13 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   const nodeRef = useRef<HTMLDivElement>(null)
   const previewUrlRef = useRef<string | null>(null)
   const [status, setStatus] = useState<ShareStatus>('idle')
-  const [copyState, setCopyState] = useState<CopyState>('idle')
+  const [feedback, setFeedback] = useState<ActionFeedback>('idle')
+  const feedbackTimer = useRef<number | null>(null)
   const [open, setOpen] = useState(false)
   const [preview, setPreview] = useState<Preview | null>(null)
-  const [emittedAt, setEmittedAt] = useState(() => new Date())
+  // Null until a capture runs: seeding it with new Date() made the server
+  // and client render different text and tripped React's hydration mismatch.
+  const [emittedAt, setEmittedAt] = useState<Date | null>(null)
   const t = useTranslations(lang)
 
   const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
@@ -164,8 +178,26 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+      if (feedbackTimer.current !== null) {
+        window.clearTimeout(feedbackTimer.current)
+      }
     }
   }, [])
+
+  // "Copiado" used to stay on the button until the dialog closed, so a second
+  // copy gave no sign it had happened. Success now reverts on its own.
+  const flash = (next: ActionFeedback) => {
+    if (feedbackTimer.current !== null) {
+      window.clearTimeout(feedbackTimer.current)
+      feedbackTimer.current = null
+    }
+    setFeedback(next)
+    if (next === 'idle' || next === 'error') return
+    feedbackTimer.current = window.setTimeout(() => {
+      feedbackTimer.current = null
+      setFeedback('idle')
+    }, FEEDBACK_MS)
+  }
 
   const inputs = {
     pricePerKwh,
@@ -234,7 +266,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   // note, blank lines for breathing. No code fence, no dot leaders.
   const whatsappReceipt = [
     `*LUMIO · ${t('share.projection')}*`,
-    `${t('share.emitted')}: ${formatEmittedAt(emittedAt, lang)}`,
+    `${t('share.emitted')}: ${emittedAt ? formatEmittedAt(emittedAt, lang) : ''}`,
     '',
     `*${activeKwh.toFixed(1)} kWh*`,
     '',
@@ -248,10 +280,10 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     `_${t('share.estimateNote')}_`,
   ].join('\n')
 
+  // ensureSnapdom self-heals its cache now, so this only has to swallow the
+  // rejection: warming is best-effort and must never surface an error.
   const warmSnapdom = () => {
-    ensureSnapdom().catch(() => {
-      snapdomPromise = null
-    })
+    ensureSnapdom().catch(() => {})
   }
 
   const captureBlob = async (): Promise<{
@@ -288,7 +320,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     return {
       url: URL.createObjectURL(blob),
       blob,
-      fileName: `lumio-boleta-${Math.round(activeKwh)}kwh.png`,
+      fileName: `lumio-${Math.round(activeKwh)}kwh.png`,
       width,
       height,
     }
@@ -309,7 +341,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     flushSync(() => {
       setEmittedAt(now)
       setStatus('working')
-      setCopyState('idle')
+      flash('idle')
     })
     try {
       const shot = await captureBlob()
@@ -327,7 +359,12 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
 
   const handleDialogChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
-    if (!nextOpen) setCopyState('idle')
+    if (!nextOpen) {
+      flash('idle')
+      // A failed native share left the page-level alert stranded behind the
+      // overlay; clearing on close keeps it from reappearing out of context.
+      if (status === 'error') setStatus('idle')
+    }
   }
 
   const handleDownload = () => {
@@ -338,60 +375,57 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     document.body.appendChild(anchor)
     anchor.click()
     anchor.remove()
+    flash('downloaded')
   }
 
   const handleCopyImage = async () => {
     if (!preview) return
-    setCopyState('idle')
     try {
       if (typeof ClipboardItem === 'undefined') throw new Error('no image clipboard')
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': preview.blob }),
       ])
-      setCopyState('copied')
+      flash('copied')
     } catch {
       // Last resort: copy the text summary so the action never dead-ends.
       try {
         await navigator.clipboard.writeText(summary)
-        setCopyState('text')
+        flash('text')
       } catch {
-        setCopyState('error')
+        flash('error')
       }
     }
   }
 
+  // Guarded by the same flag that disables the button, so this can no longer
+  // be a click that silently does nothing.
   const handleNativeShare = async () => {
-    if (!preview) return
+    if (!preview || !canNativeShare) return
     const file = new File([preview.blob], preview.fileName, {
       type: 'image/png',
     })
-    if (!canShareFile(file)) return
     const outcome = await tryNativeShare(file, summary)
     if (outcome === 'unsupported') setStatus('error')
   }
 
   const handleWhatsApp = async () => {
     if (!preview) return
-    // Mobile: always the image route. The share is attempted even when
-    // canShare is negative, then falls back to download + text so the
-    // receipt is never lost.
-    if (isMobileDevice()) {
+    // window.open after an await loses the user gesture and gets blocked by
+    // popup blockers, so the await only happens on the path that does not need
+    // to open a window: the native sheet, when it is actually available.
+    if (isMobileDevice() && canNativeShare) {
       const file = new File([preview.blob], preview.fileName, {
         type: 'image/png',
       })
       const outcome = await tryNativeShare(file, summary)
-      if (outcome === 'unsupported') {
-        handleDownload()
-        window.open(
-          `https://wa.me/?text=${encodeURIComponent(whatsappReceipt)}`,
-          '_blank',
-          'noopener'
-        )
-      }
+      if (outcome !== 'unsupported') return
+      // Sheet refused the file: keep the receipt rather than chase a popup
+      // that this gesture can no longer open.
+      handleDownload()
       return
     }
-    // Desktop: wa.me only takes text, so the full receipt goes as readable
-    // formatted text with the same information as the image.
+    // wa.me only takes text, so the full receipt goes as readable formatted
+    // text carrying the same information as the image.
     window.open(
       `https://wa.me/?text=${encodeURIComponent(whatsappReceipt)}`,
       '_blank',
@@ -399,11 +433,17 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     )
   }
 
-  const canNativeShare = preview
-    ? canShareFile(
-        new File([preview.blob], preview.fileName, { type: 'image/png' })
-      )
-    : false
+  // Probed once per preview instead of on every render, where it built a
+  // throwaway File each time.
+  const canNativeShare = useMemo(
+    () =>
+      preview
+        ? canShareFile(
+            new File([preview.blob], preview.fileName, { type: 'image/png' })
+          )
+        : false,
+    [preview]
+  )
 
   return (
     <div className={className}>
@@ -430,7 +470,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
           </span>
         </button>
       </span>
-      {status === 'error' ? (
+      {status === 'error' && !open ? (
         <p role="alert" className="mt-2 text-xs text-ember">
           {t('share.error')}
         </p>
@@ -453,45 +493,72 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
               <p className="font-mono text-xs text-muted-foreground">
                 PNG · {preview.width}×{preview.height} · {formatKb(preview.blob.size)}
               </p>
+              {/* The native sheet leads when the browser actually supports
+                  file sharing; where it does not, WhatsApp takes over as the
+                  primary action instead of leaving a dead button on top. */}
               <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  onClick={handleNativeShare}
+                  disabled={!canNativeShare}
+                  variant={canNativeShare ? 'default' : 'secondary'}
+                >
+                  {/* Send, not Share2: the page CTA already owns the
+                      share glyph and this is one destination among four. */}
+                  <Send aria-hidden="true" />
+                  {t('share.nativeShare')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={canNativeShare ? 'secondary' : 'default'}
+                  onClick={handleWhatsApp}
+                >
+                  <MessageCircle aria-hidden="true" />
+                  {t('share.whatsapp')}
+                </Button>
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={handleCopyImage}
                 >
-                  {copyState === 'copied' ? (
+                  {feedback === 'copied' ? (
                     <Check aria-hidden="true" />
                   ) : (
                     <Copy aria-hidden="true" />
                   )}
-                  {copyState === 'copied' ? t('share.copied') : t('share.copyImage')}
-                </Button>
-                <Button type="button" onClick={handleNativeShare}>
-                  <Share2 aria-hidden="true" />
-                  {t('share.nativeShare')}
-                </Button>
-                <Button type="button" variant="secondary" onClick={handleWhatsApp}>
-                  <MessageCircle aria-hidden="true" />
-                  {t('share.whatsapp')}
+                  {feedback === 'copied' ? t('share.copied') : t('share.copyImage')}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleDownload}>
-                  <Download aria-hidden="true" />
-                  {t('share.download')}
+                  {feedback === 'downloaded' ? (
+                    <Check aria-hidden="true" />
+                  ) : (
+                    <Download aria-hidden="true" />
+                  )}
+                  {feedback === 'downloaded'
+                    ? t('share.downloaded')
+                    : t('share.download')}
                 </Button>
               </div>
-              {copyState === 'text' ? (
+              {/* Every outcome reports inside the dialog. The page-level alert
+                  sits behind the overlay, so a failure there was invisible. */}
+              {status === 'error' ? (
+                <p role="alert" className="text-xs text-ember">
+                  {t('share.error')}
+                </p>
+              ) : null}
+              {feedback === 'text' ? (
                 <p role="status" className="text-xs text-muted-foreground">
                   {t('share.copyTextFallback')}
                 </p>
               ) : null}
-              {copyState === 'error' ? (
+              {feedback === 'error' ? (
                 <p role="alert" className="text-xs text-ember">
                   {t('share.copyError')}
                 </p>
               ) : null}
               {canNativeShare ? null : (
-                <p className="text-xs text-muted-foreground">
-                  {t('share.whatsappHint')}
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {t('share.nativeUnsupported')} {t('share.whatsappHint')}
                 </p>
               )}
             </div>
@@ -511,7 +578,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
             brandName="Lumio"
             projectionTitle={t('share.projection')}
             emittedLabel={t('share.emitted')}
-            emittedAt={formatEmittedAt(emittedAt, lang)}
+            emittedAt={emittedAt ? formatEmittedAt(emittedAt, lang) : ''}
             kwhValue={activeKwh.toFixed(1)}
             kwhUnit="kWh"
             lines={lines}
