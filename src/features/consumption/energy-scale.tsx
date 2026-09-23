@@ -128,7 +128,10 @@ const EnergyBand = ({ label, range, isActive }: EnergyBandProps) => {
     <div
       aria-current={isActive ? 'true' : undefined}
       className={cn(
-        'flex-1 px-1 py-1.5 text-center',
+        // min-w-0 is load-bearing: a flex item's automatic minimum size is
+        // its min-content width, so with nowrap text these four bands could
+        // not shrink and set a ~600px floor for the whole mobile shell.
+        'min-w-0 flex-1 px-1 py-1.5 text-center',
         isActive
           ? 'bg-accent text-accent-foreground ring-1 ring-primary/40'
           : 'bg-muted text-muted-foreground'
@@ -136,17 +139,14 @@ const EnergyBand = ({ label, range, isActive }: EnergyBandProps) => {
     >
       <p
         className={cn(
-          'text-xs leading-snug whitespace-nowrap',
+          'text-xs leading-snug',
           isActive ? 'font-semibold' : 'font-medium'
         )}
       >
         {label}
       </p>
       <p
-        className={cn(
-          'mt-0.5 text-[0.625rem] whitespace-nowrap',
-          isActive ? 'opacity-85' : 'opacity-65'
-        )}
+        className="mt-0.5 text-[0.625rem]"
       >
         {range}
       </p>

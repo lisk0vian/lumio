@@ -24,7 +24,7 @@ export const LanguagePicker = ({
           href={routes[code]}
           aria-current={code === lang ? 'true' : undefined}
           className={cn(
-            'flex min-h-9 items-center rounded-md px-2.5 text-xs max-lg:min-h-11',
+            'flex min-h-9 items-center justify-center rounded-md px-2.5 text-xs max-lg:min-h-11 max-lg:min-w-11',
             code === lang
               ? 'bg-primary font-medium text-primary-foreground'
               : 'font-normal text-muted-foreground'

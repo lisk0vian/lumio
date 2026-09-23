@@ -1,7 +1,16 @@
 ---
 import "../styles/global.css";
+import { useTranslations, type AppLang } from "../i18n";
 
-const { lang = "es", title = "Lumio" } = Astro.props;
+const {
+  lang = "es",
+  title = "Lumio",
+  description,
+} = Astro.props as { lang?: AppLang; title?: string; description?: string };
+const t = useTranslations(lang);
+// Lighthouse SEO flagged the missing description on every route; each page can
+// still override it.
+const metaDescription = description ?? t("meta.description");
 ---
 
 <!doctype html>
@@ -13,6 +22,7 @@ const { lang = "es", title = "Lumio" } = Astro.props;
     <link rel="icon" href="/zap.ico" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <meta name="description" content={metaDescription} />
     <script is:inline>
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)",

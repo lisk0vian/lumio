@@ -13,13 +13,13 @@
 /* Inter — UI y cuerpo. Solo 400/600/700 en la ruta principal para
    recortar el CSS y los woff2 iniciales. Source Serif 4 vive solo en
    ExplainerPage (importada en su frontmatter), no aquí. */
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
 
 /* JetBrains Mono — montos, kWh, tarifas. 400/700 bastan. */
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/700.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-700.css';
 
 @custom-variant dark (&:is(.dark *));
 

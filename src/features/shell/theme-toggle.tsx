@@ -12,7 +12,7 @@ export const ThemeToggle = () => {
       data-theme-toggle
       aria-label="Cambiar tema / Toggle theme"
       title="Cambiar tema / Toggle theme"
-      className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+      className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground max-lg:min-h-11 max-lg:min-w-11"
     >
       <Moon className="size-4 dark:hidden" aria-hidden="true" />
       <Sun className="hidden size-4 dark:block" aria-hidden="true" />

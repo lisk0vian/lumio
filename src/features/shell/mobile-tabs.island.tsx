@@ -112,7 +112,7 @@ function CalcPanel({ lang }: { lang: AppLang }) {
         <p className="mt-3">
           <a
             href={lang === 'en' ? '/en/calculation' : '/calculo'}
-            className="text-xs link-ember"
+            className="inline-flex min-h-11 items-center text-xs link-ember"
           >
             {t('explainer.link')}
           </a>
@@ -178,7 +178,12 @@ export const MobileTabs = ({ lang }: { lang: AppLang }) => {
   useStoreRehydration()
 
   return (
-    <div ref={enterRef} className="flex h-dvh flex-col bg-background text-foreground lg:hidden">
+    // min-w-0: this panel is a flex item of <main>, so without it any
+    // unshrinkable descendant widens the entire mobile shell past the viewport.
+    <div
+      ref={enterRef}
+      className="flex h-dvh min-w-0 flex-col bg-background text-foreground lg:hidden"
+    >
       <div className="flex-none px-5 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <TopBar lang={lang} />
       </div>
