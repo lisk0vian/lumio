@@ -202,10 +202,49 @@ export function periodMultiplier(period: BillingPeriod): number {
   return period === 'bimonthly' ? 2 : 1
 }
 
+// Calculation cache: the math is O(1), but every store change recomputes the
+// same inputs once per island (calculator, receipt, level, share, tabs…).
+// The maps dedupe those repeats within a session. LRU cap avoids unbounded
+// growth; copies on the way out so callers can't mutate the cached entry.
+const CALC_CACHE_LIMIT = 200
+const kwhToMoneyCache = new Map<string, KwhToMoneyResult>()
+const moneyToKwhCache = new Map<string, { kwh: number }>()
+
+function calcKey(value: number, inputs: CalculationInputs): string {
+  return [
+    value,
+    inputs.pricePerKwh,
+    inputs.fixedCharge,
+    inputs.publicLightingCharge,
+    inputs.igvRate,
+    inputs.isFixedChargeEnabled ? 1 : 0,
+    inputs.isPublicLightingEnabled ? 1 : 0,
+    inputs.isTaxEnabled ? 1 : 0,
+    inputs.period,
+  ].join('|')
+}
+
+function trimCalcCache<K, V>(cache: Map<K, V>): void {
+  if (cache.size > CALC_CACHE_LIMIT) {
+    const oldest = cache.keys().next()
+    if (!oldest.done) cache.delete(oldest.value)
+  }
+}
+
+/** Empties the calculation memo cache. Only needed for tests. */
+export function clearCalculationCache(): void {
+  kwhToMoneyCache.clear()
+  moneyToKwhCache.clear()
+}
+
 export function calculateKwhToMoney(
   kwh: number,
   inputs: CalculationInputs
 ): KwhToMoneyResult {
+  const key = calcKey(kwh, inputs)
+  const hit = kwhToMoneyCache.get(key)
+  if (hit) return { ...hit }
+
   const safeKwh = sanitizeNonNegative(kwh)
   const price = sanitizeNonNegative(inputs.pricePerKwh)
   const fixed = inputs.isFixedChargeEnabled
@@ -223,7 +262,7 @@ export function calculateKwhToMoney(
   const subtotal = monthlySubtotal * multiplier
   const igv = monthlyIgv * multiplier
 
-  return {
+  const result: KwhToMoneyResult = {
     energy: safeKwh * price * multiplier,
     fixedCharge: fixed * multiplier,
     publicLightingCharge: lighting * multiplier,
@@ -231,15 +270,27 @@ export function calculateKwhToMoney(
     igv,
     total: subtotal + igv,
   }
+  kwhToMoneyCache.set(key, result)
+  trimCalcCache(kwhToMoneyCache)
+  return { ...result }
 }
 
 export function calculateMoneyToKwh(
   total: number,
   inputs: CalculationInputs
 ): { kwh: number } {
+  const key = calcKey(total, inputs)
+  const hit = moneyToKwhCache.get(key)
+  if (hit) return { ...hit }
+
   const safeTotal = sanitizeNonNegative(total)
   const price = sanitizeNonNegative(inputs.pricePerKwh)
-  if (price === 0) return { kwh: 0 }
+  if (price === 0) {
+    const zero = { kwh: 0 }
+    moneyToKwhCache.set(key, zero)
+    trimCalcCache(moneyToKwhCache)
+    return { ...zero }
+  }
 
   const fixed = inputs.isFixedChargeEnabled
     ? sanitizeNonNegative(inputs.fixedCharge)
@@ -263,9 +314,17 @@ export function calculateMoneyToKwh(
   // The guard is the smallest bill this tariff can produce (charges + IGV).
   // Comparing against the charges alone let smaller amounts through and
   // produced a negative consumption.
-  if (monthlyTotal < monthlyCharges * (1 + rate)) return { kwh: 0 }
+  if (monthlyTotal < monthlyCharges * (1 + rate)) {
+    const zero = { kwh: 0 }
+    moneyToKwhCache.set(key, zero)
+    trimCalcCache(moneyToKwhCache)
+    return { ...zero }
+  }
 
-  return { kwh: (monthlyTotal / (1 + rate) - monthlyCharges) / price }
+  const result = { kwh: (monthlyTotal / (1 + rate) - monthlyCharges) / price }
+  moneyToKwhCache.set(key, result)
+  trimCalcCache(moneyToKwhCache)
+  return { ...result }
 }
 
 export function buildReceipts(
