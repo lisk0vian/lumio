@@ -11,7 +11,7 @@ import { regulators, tariffCategories } from '@/data/tariffs.data'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
-} from '@/utils/tariffs.utils'
+} from '@/utils/calculation.utils'
 import type { TariffCategory } from '@/types'
 
 export type LumioState = {

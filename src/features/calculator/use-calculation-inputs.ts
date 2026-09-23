@@ -3,7 +3,7 @@ import { useLumioStore } from '@/stores/lumio-store'
 import {
   calculateMoneyToKwh,
   type CalculationInputs,
-} from '@/utils/tariffs.utils'
+} from '@/utils/calculation.utils'
 import type { I18nKey } from '@/i18n/utils'
 
 // Single source for the tariff snapshot every island derives from.

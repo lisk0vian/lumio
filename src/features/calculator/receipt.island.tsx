@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { ReceiptDetails } from './receipt-details'
 import { useEnterAnimation } from '@/hooks/use-enter-animation'
-import { buildReceipts } from '@/utils/tariffs.utils'
+import { buildReceipts } from '@/utils/receipt-builder'
 import { useActiveKwh, useCalculationInputs } from './use-calculation-inputs'
 import { getReceiptLabels } from './receipt-labels'
 import { useTranslations, type AppLang } from '@/i18n'

@@ -6,7 +6,7 @@ import { ShareReceiptButton } from '../share/share-receipt'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useEnterAnimation } from '@/hooks/use-enter-animation'
 import { useStoreRehydration } from '@/hooks/use-store-rehydration'
-import { calculateKwhToMoney } from '@/utils/tariffs.utils'
+import { calculateKwhToMoney } from '@/utils/calculation.utils'
 import {
   getSummaryContent,
   useActiveKwh,

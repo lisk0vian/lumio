@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { calculateKwhToMoney } from '@/utils/tariffs.utils'
+import { calculateKwhToMoney } from '@/utils/calculation.utils'
 import { formatMoney } from '@/utils/format.utils'
 import { useCalculationInputs } from './use-calculation-inputs'
 import { useTranslations, type AppLang } from '@/i18n'

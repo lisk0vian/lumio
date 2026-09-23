@@ -1,5 +1,5 @@
 import type { I18nKey } from '@/i18n/utils'
-import type { ReceiptLabels } from '@/utils/tariffs.utils'
+import type { ReceiptLabels } from '@/utils/receipt-builder'
 
 // Translated receipt row labels. The pure `buildReceipts` helper receives
 // these instead of importing i18n itself, keeping utils UI-free.

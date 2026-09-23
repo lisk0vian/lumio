@@ -7,11 +7,13 @@ import { isReducedMotion, LUMIO_COMMIT_EVENT } from '@/utils/animated-number.uti
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
+  sanitizeNonNegative,
+} from '@/utils/calculation.utils'
+import {
   formatEntryText,
   parseEntryText,
   sanitizeEntryText,
-  sanitizeNonNegative,
-} from '@/utils/tariffs.utils'
+} from '@/utils/entry-text.utils'
 import { formatKwh, formatMoney } from '@/utils/format.utils'
 import { useCalculationInputs } from './use-calculation-inputs'
 

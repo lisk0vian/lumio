@@ -1,108 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
-import {
-  Check,
-  Copy,
-  Download,
-  Loader2,
-  MessageCircle,
-  Send,
-  Share2,
-} from 'lucide-react'
-import { useLumioStore } from '@/stores/lumio-store'
-import { tariffCategories } from '@/data/tariffs.data'
-import {
-  calculateKwhToMoney,
-  getTariffLabel,
-} from '@/utils/tariffs.utils'
-import {
-  formatKb,
-  formatKwh,
-  formatMoney,
-  formatTaxPercent,
-} from '@/utils/format.utils'
-import {
-  useActiveKwh,
-  useCalculationInputs,
-} from '../calculator/use-calculation-inputs'
+import { Loader2, Share2 } from 'lucide-react'
 import { useTranslations, type AppLang } from '@/i18n'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { ReceiptCard, type ReceiptLine } from './receipt-card'
-
-type ShareStatus = 'idle' | 'working' | 'error'
-// Feedback for the last action taken inside the dialog. Success states clear
-// themselves; errors stay until the next action replaces them.
-type ActionFeedback = 'idle' | 'copied' | 'downloaded' | 'text' | 'error'
-const FEEDBACK_MS = 2400
-
-type SnapdomApi = {
-  preCapture: () => void
-  (
-    node: HTMLElement,
-    options?: Record<string, unknown>
-  ): Promise<{ toBlob: (options?: Record<string, unknown>) => Promise<Blob> }>
-}
-
-type Preview = {
-  url: string
-  blob: Blob
-  fileName: string
-  width: number
-  height: number
-}
-
-// PNG-only capture, escala adaptativa: 2x en desktop (400px card -> 800px,
-// nítido en Retina), 1.5x en móvil donde 2x tardaba lo suyo generando la
-// imagen. Single format keeps copy/share fallbacks predictable, since
-// ClipboardItem and file sharing support PNG everywhere.
-const CAPTURE_SCALE_DESKTOP = 2
-const CAPTURE_SCALE_MOBILE = 1.5
-
-let snapdomPromise: Promise<SnapdomApi> | null = null
-let preCaptureArmed = false
-
-// bundle-conditional: SnapDOM only loads on first share intent, never in the
-// initial bundle. preCapture() warms the engine on hover/focus so the real
-// click captures faster (perceived performance).
-async function ensureSnapdom(): Promise<SnapdomApi> {
-  if (!snapdomPromise) {
-    const pending = import('@zumer/snapdom').then(
-      (mod) => mod.snapdom as SnapdomApi
-    )
-    snapdomPromise = pending
-    // Drop a rejected import from the cache, or every later attempt replays
-    // the same failure and the "press to retry" in share.error is a lie.
-    // Guarded by identity so a concurrent retry is never cleared.
-    pending.catch(() => {
-      if (snapdomPromise === pending) snapdomPromise = null
-    })
-  }
-  const snapdom = await snapdomPromise
-  if (!preCaptureArmed) {
-    snapdom.preCapture()
-    preCaptureArmed = true
-  }
-  return snapdom
-}
-
-function formatEmittedAt(date: Date, lang: AppLang): string {
-  // No timeZone option: Intl uses the device system zone by definition.
-  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  }).format(date)
-}
+import { ReceiptCard } from './receipt-card'
+import { ShareDialog } from './share-dialog'
+import { useShareFeedback, type ShareStatus } from './use-share-feedback'
+import { isMobileDevice, useSnapdomCapture } from './use-snapdom-capture'
+import { formatEmittedAt, useReceiptShareData } from './use-receipt-share-data'
 
 function canShareFile(file: File): boolean {
   return (
@@ -112,20 +16,6 @@ function canShareFile(file: File): boolean {
 }
 
 type ShareOutcome = 'shared' | 'aborted' | 'unsupported'
-
-// Cheap sync check, read before any await: phones/tablets always take the
-// image route, desktops always take the text route.
-function isMobileDevice(): boolean {
-  const uaData = (
-    navigator as Navigator & { userAgentData?: { mobile?: boolean } }
-  ).userAgentData
-  if (typeof uaData?.mobile === 'boolean') return uaData.mobile
-  if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return true
-  return (
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(pointer: coarse)').matches
-  )
-}
 
 // Attempt the native sheet even when canShare is missing or negative:
 // some browsers share files fine without reporting it. Anything that is
@@ -143,173 +33,37 @@ async function tryNativeShare(file: File, text: string): Promise<ShareOutcome> {
   }
 }
 
-export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; className?: string }) => {
-  const nodeRef = useRef<HTMLDivElement>(null)
-  const previewUrlRef = useRef<string | null>(null)
+export const ShareReceiptButton = ({
+  lang,
+  className,
+}: {
+  lang: AppLang
+  className?: string
+}) => {
   const [status, setStatus] = useState<ShareStatus>('idle')
-  const [feedback, setFeedback] = useState<ActionFeedback>('idle')
-  const feedbackTimer = useRef<number | null>(null)
   const [open, setOpen] = useState(false)
-  const [preview, setPreview] = useState<Preview | null>(null)
   // Null until a capture runs: seeding it with new Date() made the server
   // and client render different text and tripped React's hydration mismatch.
   const [emittedAt, setEmittedAt] = useState<Date | null>(null)
   const t = useTranslations(lang)
-
-  const inputs = useCalculationInputs()
-  const activeKwh = useActiveKwh(inputs)
-  const isFixedChargeEnabled = useLumioStore(
-    (state) => state.isFixedChargeEnabled
-  )
-  const isPublicLightingEnabled = useLumioStore(
-    (state) => state.isPublicLightingEnabled
-  )
-  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
-  const period = useLumioStore((state) => state.period)
-  const tariffId = useLumioStore((state) => state.tariffId)
-
-  // Revoke the object URL on unmount; closes/regenerations revoke eagerly.
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
-      if (feedbackTimer.current !== null) {
-        window.clearTimeout(feedbackTimer.current)
-      }
-    }
-  }, [])
-
-  // "Copiado" used to stay on the button until the dialog closed, so a second
-  // copy gave no sign it had happened. Success now reverts on its own.
-  const flash = (next: ActionFeedback) => {
-    if (feedbackTimer.current !== null) {
-      window.clearTimeout(feedbackTimer.current)
-      feedbackTimer.current = null
-    }
-    setFeedback(next)
-    if (next === 'idle' || next === 'error') return
-    feedbackTimer.current = window.setTimeout(() => {
-      feedbackTimer.current = null
-      setFeedback('idle')
-    }, FEEDBACK_MS)
-  }
-
-  const result = calculateKwhToMoney(activeKwh, inputs)
-  const noData = !(activeKwh > 0)
-
-  const taxPercent = formatTaxPercent(inputs.igvRate)
-  const tariffLabel = getTariffLabel(tariffCategories, tariffId) ?? 'Personal'
-  const periodLabel = t(
-    period === 'bimonthly' ? 'settings.bimonthly' : 'settings.monthly'
-  )
-
-  const lines: ReceiptLine[] = [
-    {
-      kind: 'energy',
-      label: `${t('receipt.energy')} · ${formatKwh(activeKwh)}`,
-      money: formatMoney(result.energy),
-    },
-  ]
-  if (isFixedChargeEnabled) {
-    lines.push({
-      kind: 'fixed',
-      label: t('receipt.fixedCharge'),
-      money: formatMoney(result.fixedCharge),
-    })
-  }
-  if (isPublicLightingEnabled) {
-    lines.push({
-      kind: 'lighting',
-      label: t('receipt.publicLighting'),
-      money: formatMoney(result.publicLightingCharge),
-    })
-  }
-  lines.push({
-    kind: 'subtotal',
-    label: t('receipt.subtotal'),
-    money: formatMoney(result.subtotal),
-  })
-  lines.push({
-    kind: 'igv',
-    label: `${t('receipt.igv')} ${taxPercent} % · ${t(isTaxEnabled ? 'receipt.included' : 'receipt.excluded')}`,
-    money: formatMoney(result.igv),
-  })
-  lines.push({
-    kind: 'total',
-    label: t('receipt.total'),
-    money: formatMoney(result.total),
-  })
-
-  const summary = `Lumio · ${formatKwh(activeKwh)} → ${formatMoney(result.total)} (${t('receipt.total')}) · ${tariffLabel} · ${periodLabel}. ${t('share.estimateNote')}`
-
-  // Readable WhatsApp text (desktop route): bold headers and total, italic
-  // note, blank lines for breathing. No code fence, no dot leaders.
-  const whatsappReceipt = [
-    `*LUMIO · ${t('share.projection')}*`,
-    `${t('share.emitted')}: ${emittedAt ? formatEmittedAt(emittedAt, lang) : ''}`,
-    '',
-    `*${formatKwh(activeKwh)}*`,
-    '',
-    ...lines.map((line) =>
-      line.kind === 'total'
-        ? `*${line.label} — ${line.money}*`
-        : `${line.label} — ${line.money}`
-    ),
-    '',
-    `${tariffLabel} · ${periodLabel}`,
-    `_${t('share.estimateNote')}_`,
-  ].join('\n')
-
-  // ensureSnapdom self-heals its cache now, so this only has to swallow the
-  // rejection: warming is best-effort and must never surface an error.
-  const warmSnapdom = () => {
-    ensureSnapdom().catch(() => {})
-  }
-
-  const captureBlob = async (): Promise<{
-    blob: Blob
-    width: number
-    height: number
-  }> => {
-    const node = nodeRef.current
-    if (!node) throw new Error('missing receipt node')
-    await document.fonts.ready
-    // Cheap sync check before the async import: móvil captura a 1.5x para
-    // no bloquear el hilo principal con el 2x completo.
-    const scale = isMobileDevice() ? CAPTURE_SCALE_MOBILE : CAPTURE_SCALE_DESKTOP
-    const snapdom = await ensureSnapdom()
-    const capture = await snapdom(node, {
-      scale,
-      dpr: 1,
-      backgroundColor: '#faf9f4',
-      embedFonts: 'auto',
-    })
-    const blob = await capture.toBlob({ format: 'png' })
-    return {
-      blob,
-      width: Math.round(node.offsetWidth * scale),
-      height: Math.round(node.offsetHeight * scale),
-    }
-  }
-
-  const buildPreview = (
-    blob: Blob,
-    width: number,
-    height: number
-  ): Preview => {
-    return {
-      url: URL.createObjectURL(blob),
-      blob,
-      fileName: `lumio-${Math.round(activeKwh)}kwh.png`,
-      width,
-      height,
-    }
-  }
-
-  const replacePreview = (next: Preview) => {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
-    previewUrlRef.current = next.url
-    setPreview(next)
-  }
+  const { feedback, flash } = useShareFeedback()
+  const {
+    activeKwh,
+    noData,
+    tariffLabel,
+    periodLabel,
+    lines,
+    summary,
+    whatsappReceipt,
+  } = useReceiptShareData(lang, emittedAt)
+  const {
+    nodeRef,
+    preview,
+    warmSnapdom,
+    captureBlob,
+    buildPreview,
+    replacePreview,
+  } = useSnapdomCapture(activeKwh)
 
   const handleGenerate = async () => {
     if (noData || status === 'working') return
@@ -360,7 +114,8 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   const handleCopyImage = async () => {
     if (!preview) return
     try {
-      if (typeof ClipboardItem === 'undefined') throw new Error('no image clipboard')
+      if (typeof ClipboardItem === 'undefined')
+        throw new Error('no image clipboard')
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': preview.blob }),
       ])
@@ -442,7 +197,10 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
           {status === 'working' ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Share2 className="size-4 transition-transform group-hover:scale-110" aria-hidden="true" />
+            <Share2
+              className="size-4 transition-transform group-hover:scale-110"
+              aria-hidden="true"
+            />
           )}
           <span className="link-ember">
             {status === 'working' ? t('share.generating') : t('share.button')}
@@ -455,95 +213,19 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
         </p>
       ) : null}
 
-      <Dialog open={open} onOpenChange={handleDialogChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('share.previewTitle')}</DialogTitle>
-            <DialogDescription>{t('share.previewDescription')}</DialogDescription>
-          </DialogHeader>
-
-          {preview ? (
-            <div className="flex flex-col gap-3">
-              <img
-                src={preview.url}
-                alt={t('share.previewTitle')}
-                className="h-auto w-full rounded-md border border-border"
-              />
-              <p className="font-mono text-xs text-muted-foreground">
-                PNG · {preview.width}×{preview.height} · {formatKb(preview.blob.size)}
-              </p>
-              {/* The native sheet leads when the browser actually supports
-                  file sharing; where it does not, WhatsApp takes over as the
-                  primary action instead of leaving a dead button on top. */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  onClick={handleNativeShare}
-                  disabled={!canNativeShare}
-                  variant={canNativeShare ? 'default' : 'secondary'}
-                >
-                  {/* Send, not Share2: the page CTA already owns the
-                      share glyph and this is one destination among four. */}
-                  <Send aria-hidden="true" />
-                  {t('share.nativeShare')}
-                </Button>
-                <Button
-                  type="button"
-                  variant={canNativeShare ? 'secondary' : 'default'}
-                  onClick={handleWhatsApp}
-                >
-                  <MessageCircle aria-hidden="true" />
-                  {t('share.whatsapp')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCopyImage}
-                >
-                  {feedback === 'copied' ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    <Copy aria-hidden="true" />
-                  )}
-                  {feedback === 'copied' ? t('share.copied') : t('share.copyImage')}
-                </Button>
-                <Button type="button" variant="outline" onClick={handleDownload}>
-                  {feedback === 'downloaded' ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    <Download aria-hidden="true" />
-                  )}
-                  {feedback === 'downloaded'
-                    ? t('share.downloaded')
-                    : t('share.download')}
-                </Button>
-              </div>
-              {/* Every outcome reports inside the dialog. The page-level alert
-                  sits behind the overlay, so a failure there was invisible. */}
-              {status === 'error' ? (
-                <p role="alert" className="text-xs text-ember">
-                  {t('share.error')}
-                </p>
-              ) : null}
-              {feedback === 'text' ? (
-                <p role="status" className="text-xs text-muted-foreground">
-                  {t('share.copyTextFallback')}
-                </p>
-              ) : null}
-              {feedback === 'error' ? (
-                <p role="alert" className="text-xs text-ember">
-                  {t('share.copyError')}
-                </p>
-              ) : null}
-              {canNativeShare ? null : (
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {t('share.nativeUnsupported')} {t('share.whatsappHint')}
-                </p>
-              )}
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <ShareDialog
+        lang={lang}
+        open={open}
+        onOpenChange={handleDialogChange}
+        preview={preview}
+        status={status}
+        feedback={feedback}
+        canNativeShare={canNativeShare}
+        onNativeShare={handleNativeShare}
+        onWhatsApp={handleWhatsApp}
+        onCopyImage={handleCopyImage}
+        onDownload={handleDownload}
+      />
 
       {/* Capture source: rendered off-screen (never display:none, or SnapDOM
           would capture an empty box). Zero Tailwind color/font classes inside:
