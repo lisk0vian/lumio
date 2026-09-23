@@ -52,11 +52,11 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
   return (
     <div
       className={cn(
-        'mt-auto flex w-full flex-wrap items-center gap-x-3 gap-y-3 border-t border-border pt-7 pb-2 text-xs text-muted-foreground 2xl:pt-10',
+        'mt-auto flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3 pb-2 text-xs text-muted-foreground 2xl:pt-4',
         className
       )}
     >
-      <div className="flex min-w-56 flex-1 flex-wrap gap-3 max-lg:flex-col max-lg:items-stretch">
+      <div className="flex min-w-56 flex-1 flex-wrap gap-2 max-lg:flex-col max-lg:items-stretch">
         <SelectRegulator triggerClassName="min-w-44 flex-1 max-w-60" />
         <SelectTariff lang={lang} triggerClassName="min-w-44 flex-1 max-w-60" />
       </div>
@@ -94,7 +94,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
       </div>
       {/* Input for tax charge + period: wrapped together so they
           wrap as one intentional unit, never leaving Periodo orphaned */}
-      <div className="flex min-w-0 flex-wrap items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 max-lg:w-full">
         <InputSetting
           label="IGV"
@@ -138,7 +138,7 @@ export const TaxToggle = ({ lang }: { lang: AppLang }) => {
       className={cn(
         'hover:none',
         'cursor-pointer',
-        'min-h-9 font-medium tracking-wide max-lg:min-h-11',
+        'min-h-8 font-medium tracking-wide max-lg:min-h-11',
         'aria-pressed:bg-primary aria-pressed:text-primary-foreground', // isTaxEnabled == true
         'bg-muted text-muted-foreground' // isTaxEnabled == false (atenuado: se lee "apagado")
       )}
@@ -187,7 +187,7 @@ export const ChargeToggle = ({ lang, kind }: { lang: AppLang; kind: 'fixed' | 'l
       className={cn(
         'hover:none',
         'cursor-pointer',
-        'min-h-9 min-w-9 font-medium tracking-wide max-lg:min-h-11 max-lg:min-w-11',
+        'min-h-8 min-w-8 font-medium tracking-wide max-lg:min-h-11 max-lg:min-w-11',
         'aria-pressed:bg-primary aria-pressed:text-primary-foreground',
         'bg-muted text-muted-foreground'
       )}
@@ -235,12 +235,12 @@ export const SelectRegulator = ({ triggerClassName }: { triggerClassName?: strin
 
   return (
     <Select value={regulatorId} onValueChange={(id) => id && setRegulator(id)}>
-      <SelectTrigger className={cn('min-w-32', triggerClassName)}>
+      <SelectTrigger className={cn('min-w-32', triggerClassName)} aria-controls='regulator-options'>
         <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
           {name}
         </span>
       </SelectTrigger>
-      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
+      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]" id="regulator-options">
         {regulators.map((regulator, idx) => (
           <SelectGroup key={regulator.countryCode}>
             <SelectLabel>{regulator.countryCode}</SelectLabel>
@@ -297,12 +297,12 @@ export const SelectTariff = ({ lang, triggerClassName }: { lang: AppLang; trigge
       value={tariffId ?? ''}
       onValueChange={(id) => id && setTariff(id)}
     >
-      <SelectTrigger className={cn('min-w-32', triggerClassName)}>
+      <SelectTrigger className={cn('min-w-32', triggerClassName)} aria-controls='tariff-options'>
         <span ref={nameRef} className="flex min-w-0 flex-1 truncate text-left">
           {display}
         </span>
       </SelectTrigger>
-      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]">
+      <SelectContent alignItemWithTrigger={false} className="min-w-60 max-w-[92vw]" id='tariff-options'>
         {regulatorId &&
           groupTariffsByCode(
             getTariffsForRegulator(regulatorId, tariffCategories)
