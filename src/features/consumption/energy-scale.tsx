@@ -102,7 +102,7 @@ export const EnergyScale = ({ lang, activeKwh }: { lang: AppLang; activeKwh?: nu
   const level = activeKwh == null ? null : getConsumptionLevel(activeKwh)
   const energyLevels = getEnergyLevels(t)
   return (
-    <div className="my-3 flex gap-0.5">
+    <div className="my-1.5 flex gap-0.5">
       {energyLevels.map(({ key, label, range }) => (
         <EnergyBand
           key={key}
@@ -128,7 +128,7 @@ const EnergyBand = ({ label, range, isActive }: EnergyBandProps) => {
     <div
       aria-current={isActive ? 'true' : undefined}
       className={cn(
-        'flex-1 px-1 py-2.5 text-center',
+        'flex-1 px-1 py-1.5 text-center',
         isActive
           ? 'bg-accent text-accent-foreground ring-1 ring-primary/40'
           : 'bg-muted text-muted-foreground'

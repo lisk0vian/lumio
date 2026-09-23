@@ -6,6 +6,7 @@ import { useLumioStore } from '@/stores/lumio-store'
 import { calculateKwhToMoney } from '@/utils/tariffs.utils'
 import { isReducedMotion } from '@/utils/animated-number.utils'
 import { useTranslations, type AppLang } from '@/i18n'
+import { useEnterAnimation } from '@/hooks/use-enter-animation'
 import { savingTips } from '@/data/tips.data'
 
 const AUTOPLAY_MS = 6000
@@ -17,6 +18,7 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const t = useTranslations(lang)
   const [index, setIndex] = useState(0)
+  const enterRef = useEnterAnimation<HTMLDivElement>()
 
   const rootRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
@@ -143,11 +145,12 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
     <div
       ref={rootRef}
       className={cn(
-        'mt-6 border-l-2 border-ember bg-accent/60 px-4 py-4 2xl:mt-8',
+        'mt-4 border-l-2 border-ember bg-accent/60 px-4 py-2 2xl:mt-6',
         className
       )}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div ref={enterRef}>
+        <div className="flex items-center justify-between gap-3">
         <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
           {t('tip.title')}
         </p>
@@ -156,7 +159,7 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
             type="button"
             aria-label={t('tip.prev')}
             onClick={goPrev}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-8 min-w-8 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -167,14 +170,14 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
             type="button"
             aria-label={t('tip.next')}
             onClick={goNext}
-            className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
+            className="flex min-h-8 min-w-8 cursor-pointer items-center justify-center text-foreground transition-transform active:scale-90 max-lg:min-h-11 max-lg:min-w-11"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
       </div>
       <div ref={contentRef}>
-        <p className="mt-2 min-h-11 text-base leading-snug 2xl:text-lg">
+        <p className="mt-2 line-clamp-2 min-h-10 text-base leading-snug text-balance 2xl:text-lg">
           {t(tip.textKey)}
         </p>
         <p className="mt-1.5 font-mono text-xs tabular-nums text-ember">
@@ -182,8 +185,9 @@ export const SavingTip = ({ lang, className }: { lang: AppLang; className?: stri
           {t('tip.perMonth')}
         </p>
       </div>
-      <div aria-hidden="true" className="mt-3 h-0.5 overflow-hidden rounded-full bg-ember/15">
+      <div aria-hidden="true" className="mt-2 h-0.5 overflow-hidden rounded-full bg-ember/15">
         <div ref={barRef} style={{ transform: 'scaleX(0)' }} className="h-full w-full origin-left bg-ember" />
+      </div>
       </div>
     </div>
   )

@@ -21,6 +21,8 @@ import {
 } from '@/utils/tariffs.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 import type { I18nKey } from '@/i18n/utils'
+import { useEnterAnimation } from '@/hooks/use-enter-animation'
+import { useStoreRehydration } from '@/hooks/use-store-rehydration'
 
 type MobileTab = 'calc' | 'hist' | 'ajustes'
 
@@ -172,9 +174,11 @@ export const MobileTabs = ({ lang }: { lang: AppLang }) => {
   const [tab, setTab] = useState<MobileTab>('calc')
   const t = useTranslations(lang)
   const TABS = getTabs(t)
+  const enterRef = useEnterAnimation<HTMLDivElement>()
+  useStoreRehydration()
 
   return (
-    <div className="flex h-dvh flex-col bg-background text-foreground lg:hidden">
+    <div ref={enterRef} className="flex h-dvh flex-col bg-background text-foreground lg:hidden">
       <div className="flex-none px-5 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <TopBar lang={lang} />
       </div>

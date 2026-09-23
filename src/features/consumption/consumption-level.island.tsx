@@ -1,8 +1,7 @@
 import type { FC } from 'react'
 import { EnergyScale, LevelHint, LevelTitle } from './energy-scale'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useLumioStore } from '@/stores/lumio-store'
-import { useHydrated } from '@/stores/use-hydrated'
+import { useEnterAnimation } from '@/hooks/use-enter-animation'
 import { calculateMoneyToKwh } from '@/utils/tariffs.utils'
 import type { AppLang } from '@/i18n'
 
@@ -27,18 +26,7 @@ export const LevelBlock: FC<{ lang: AppLang }> = ({ lang }) => {
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
-  const hydrated = useHydrated()
-
-  if (!hydrated)
-    return (
-      <div className="contents" aria-hidden="true">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="mt-2 h-8 w-2/3" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-4/5" />
-        </div>
-      </div>
-    )
+  const enterRef = useEnterAnimation<HTMLDivElement>()
 
   const inputs = {
     pricePerKwh,
@@ -57,17 +45,17 @@ export const LevelBlock: FC<{ lang: AppLang }> = ({ lang }) => {
 
   return (
     // display:contents keeps a single island root without adding layout.
-    <div className="contents">
+    <div ref={enterRef} className="contents">
       <LevelTitle
         lang={lang}
         activeKwh={activeKwh}
-        className="mt-2 mb-3 text-[1.75rem] leading-tight 2xl:text-[2.25rem]"
+        className="mt-1 mb-2 text-[1.25rem] leading-tight 2xl:text-[1.5rem]"
       />
       <EnergyScale lang={lang} activeKwh={activeKwh} />
       <LevelHint
         lang={lang}
         activeKwh={activeKwh}
-        className="mt-2 text-xs leading-relaxed text-muted-foreground"
+        className="mt-1 text-xs leading-relaxed text-muted-foreground"
       />
     </div>
   )

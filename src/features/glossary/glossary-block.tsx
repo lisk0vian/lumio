@@ -60,7 +60,7 @@ export const GlossaryBlock = ({ lang, groupId = 'glossary' }: { lang: AppLang; g
               data-glossary-panel
               className="order-2 w-full basis-full"
             >
-              <p className="mt-2 min-h-19 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-2 line-clamp-4 min-h-16 text-xs leading-relaxed text-muted-foreground">
                 {def}
               </p>
             </div>

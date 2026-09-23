@@ -282,9 +282,10 @@
   }
 }
 
-/* History drawer rows: new records slide in on mount (keyed by id, so only
-   fresh rows play it); the trigger count pops when records.length changes.
-   CSS-only, instant under reduced motion. */
+/* History rows: .record-enter is applied per row by HistoryRecordList, which
+   diffs ids against the previous render, so only genuinely new records play it
+   -- reopening the drawer or deleting a row animates nothing. The trigger count
+   pops when records.length changes. CSS-only, instant under reduced motion. */
 @keyframes record-enter {
   from {
     opacity: 0;
@@ -317,5 +318,29 @@
   .record-enter,
   .count-pop {
     animation: none;
+  }
+}
+
+/* Desktop app-shell (ver AppPage.astro): en lg+ la página mide exactamente
+   100dvh sin scroll de body ni scroll interno — todo el aire está
+   presupuestado para que quepa. En móvil y en las páginas explicativas
+   no se usa: ahí el scroll de página se mantiene. Solo en viewports muy
+   bajos se rehabilita el scroll de página como fallback. */
+@media (min-width: 64rem) {
+  .lumio-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+@media (min-width: 64rem) and (max-height: 44rem) {
+  .lumio-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .lumio-shell main {
+    height: auto;
+    overflow: visible;
   }
 }

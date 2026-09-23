@@ -9,7 +9,6 @@ import { SavedIsland } from '../features/calculator/saved.island.tsx'
 import { LevelBlock } from '../features/consumption/consumption-level.island.tsx'
 import { SavingTip } from '../features/tips/saving-tip.island.tsx'
 import { SettingsBar } from '../features/settings/settings-bar.island.tsx'
-import { HistoryRail } from '../features/history/history-rail.island.tsx'
 import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx'
 import { useTranslations, type AppLang } from '../i18n'
 
@@ -17,43 +16,65 @@ import { useTranslations, type AppLang } from '../i18n'
 // `/en/` = en). Astro prerenders every island to static HTML at build time
 // (no runtime server, GitHub Pages gratis) and each cohort hydrates only
 // where it is needed:
-// - Critical desktop (calculator, receipt, level, saved, history):
-//   client:media min-1024, nunca se descargan en móvil. Saved y history
-//   usan media y no visible porque sus raíces (display:contents / null sin
-//   registros) no tienen caja e IntersectionObserver jamás dispararía.
-// - Below-fold desktop (tip, settings): client:visible, pintan skeleton
-//   SSR al instante e hidratan al hacer scroll; ocultas en móvil, así que
-//   ahí nunca hidratan.
+// - Critical desktop (calculator, receipt, level, saved):
+//   client:media min-1024, nunca se descargan en móvil. Saved usa media y
+//   no visible porque su raíz (display:contents) no tiene caja e
+//   IntersectionObserver jamás dispararía.
+// - HistoryRail: sin client:* (Astro no tiene client:hover). Un script
+//   empaquetado lo monta bajo demanda en cuanto existe el primer registro,
+//   guardado en esta visita o rehidratado de localStorage. Sin registros no
+//   se descarga el chunk ni se renderiza nada.
+// - Below-fold desktop (tip, settings): client:visible. El shell desktop
+//   mide 100dvh sin scroll (ni de página ni interno): todo el aire está
+//   presupuestado para que quepa. Solo en viewports muy bajos hay fallback
+//   a scroll de página (ver global.css).
 // - MobileTabs: client:media max-1023.98, nunca se descarga en desktop.
-// Skeletons (shadcn) ocupan las medidas finales: sin pantalla negra ni CLS.
+// min-h por slot (reserva de espacio sin skeletons): evita CLS en primer paint
+// mientras las islas hidratan. Valores aproximados medidos en build.
 const { lang } = Astro.props as { lang: AppLang }
 const t = useTranslations(lang)
 ---
 
 <Layout lang={lang}>
-  <div class="min-h-screen w-full bg-background text-foreground">
-    <main class="flex min-h-screen w-full flex-col items-stretch xl:flex-row">
+  <div
+    class="lumio-shell min-h-dvh w-full bg-background text-foreground lg:h-dvh lg:overflow-hidden"
+  >
+    <main
+      class="flex min-h-dvh w-full flex-col items-stretch lg:h-full lg:min-h-0 lg:overflow-hidden xl:flex-row"
+    >
       <div class="contents max-lg:hidden">
         <div
-          class="mx-auto flex w-full min-w-0 max-w-9/10 flex-1 flex-col px-6 pt-8 pb-8 md:px-11.5 md:pt-11 md:pb-7.5 2xl:pt-16 2xl:pb-12"
+          class="mx-auto flex min-h-0 w-full min-w-0 max-w-9/10 flex-1 flex-col px-6 pt-8 pb-8 md:px-11.5 md:pt-11 md:pb-7.5 lg:px-8 lg:pt-4 lg:pb-4 2xl:pt-6 2xl:pb-6"
         >
-          <TopBar lang={lang} />
+          <div class="flex-none">
+            <TopBar lang={lang} />
+          </div>
           <div
-            class="my-auto flex flex-col items-start gap-8 lg:flex-row lg:gap-11 2xl:gap-16"
+            class="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-6 2xl:gap-8 my-20"
           >
-            <div class="flex min-w-0 flex-1 flex-col">
+            <div class="flex h-full flex-1 flex-col items-stretch">
               <p
-                class="mb-3 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase 2xl:mb-4 2xl:text-xs"
+                class="mb-2 text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase 2xl:mb-2 2xl:text-xs"
               >
                 {t('calculator.title')}
               </p>
-              <CalculatorBlock lang={lang} client:media="(min-width: 1024px)" />
+              <div style="min-height: 13rem">
+                <CalculatorBlock
+                  lang={lang}
+                  client:media="(min-width: 1024px)"
+                />
+              </div>
               <div
-                class="mt-6 grid grid-cols-1 items-start gap-8 border-t border-border pt-5 md:grid-cols-2 md:gap-8.5 2xl:mt-10 2xl:gap-12 2xl:pt-8"
+                class="mt-3 grid grid-cols-1 items-start gap-4 border-t border-border pt-3 md:grid-cols-2 lg:mt-4 lg:gap-6 2xl:mt-4 2xl:gap-8 2xl:pt-4"
               >
                 <SectionBlock title={t('receipt.breakdown')}>
-                  <ReceiptIsland lang={lang} client:media="(min-width: 1024px)" />
-                  <p class="mt-3">
+                  <div style="min-height: 11rem">
+                    <ReceiptIsland
+                      lang={lang}
+                      client:media="(min-width: 1024px)"
+                    />
+                  </div>
+                  <p class="mt-2">
                     <a
                       href={lang === 'en' ? '/en/calculation' : '/calculo'}
                       class="text-xs link-ember"
@@ -63,27 +84,43 @@ const t = useTranslations(lang)
                   </p>
                 </SectionBlock>
                 <SectionBlock title={t('sections.saved')}>
-                  <SavedIsland lang={lang} client:media="(min-width: 1024px)" />
+                  <div style="min-height: 5rem">
+                    <SavedIsland
+                      lang={lang}
+                      client:media="(min-width: 1024px)"
+                    />
+                  </div>
                 </SectionBlock>
               </div>
             </div>
-            <div class="flex w-full flex-none flex-col lg:w-90">
+            <div class="flex min-h-0 w-full flex-none flex-col lg:w-90">
               <SectionBlock title={t('sections.level')}>
-                <LevelBlock lang={lang} client:media="(min-width: 1024px)" />
+                <div style="min-height: 6.25rem">
+                  <LevelBlock lang={lang} client:media="(min-width: 1024px)" />
+                </div>
               </SectionBlock>
-              <SavingTip lang={lang} client:visible />
-              <div class="mt-6 border-t border-border pt-5 2xl:mt-8 2xl:pt-7">
+              <div style="min-height: 8.75rem">
+                <SavingTip lang={lang} client:visible />
+              </div>
+              <div class="mt-3 border-t border-border pt-3 2xl:mt-4 2xl:pt-4">
                 <GlossaryBlock lang={lang} />
               </div>
             </div>
           </div>
 
-          <SettingsBar lang={lang} client:visible />
+          <div class="flex-none" style="min-height: 3.75rem">
+            <SettingsBar lang={lang} client:visible />
+          </div>
         </div>
 
-        <HistoryRail lang={lang} client:media="(min-width: 1024px)" />
+        <div id="history-rail-root" class="contents"></div>
       </div>
       <MobileTabs lang={lang} client:media="(max-width: 1023.98px)" />
     </main>
   </div>
 </Layout>
+
+<script>
+  import { initHistoryRailLoader } from '../features/history/history-rail.loader.ts'
+  initHistoryRailLoader(document.documentElement.lang)
+</script>

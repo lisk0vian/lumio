@@ -54,6 +54,23 @@ const { lang = "es", title = "Lumio" } = Astro.props;
         }
       });
     </script>
+    <script is:inline>
+      // Service worker (public/sw.js): cache-first para assets con hash y
+      // stale-while-revalidate para navegaciones. Solo en producción: en
+      // `astro dev` rompería el HMR sirviendo copias viejas.
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          const hostname = window.location.hostname;
+          const isLocal =
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname === "[::1]";
+          if (!isLocal) {
+            navigator.serviceWorker.register("/sw.js").catch(() => {});
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <slot />
