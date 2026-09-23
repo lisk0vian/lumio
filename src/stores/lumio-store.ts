@@ -194,6 +194,11 @@ export const useLumioStore = create<LumioState & LumioAction>()(
     {
       name: STORAGE_KEY,
       version: 2,
+      // Rehydration is deferred to useStoreRehydration, which runs it from an
+      // effect after the first commit. Reading localStorage at module scope
+      // instead would make every island render values the prerendered HTML
+      // never had, so React would discard the subtree and repaint it.
+      skipHydration: true,
       migrate: (persisted) => {
         if (!persisted || typeof persisted !== 'object') return initialData
         // v2 drops the language keys: language now lives in the URL, and the

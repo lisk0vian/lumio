@@ -40,6 +40,8 @@
   "history.clear": "borrar todo",
   "history.hide": "ocultar",
   "history.remove": "Eliminar cálculo",
+  "history.clearConfirm": "¿seguro?",
+  "history.open": "Abrir historial",
   "history.avgExpense": "Gasto Promedio",
   "history.avgConsumption": "Consumo Promedio",
   "history.minExpense": "Gasto Minimo",

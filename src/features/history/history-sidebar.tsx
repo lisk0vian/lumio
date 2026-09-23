@@ -1,6 +1,7 @@
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
-import { X } from 'lucide-react'
+import { HistoryClearButton } from './history-clear-button'
+import { HistoryRecordList } from './history-record-list'
 
 type HistorySidebarProps = {
   lang: AppLang
@@ -9,10 +10,11 @@ type HistorySidebarProps = {
   onShow: () => void
 }
 
+// Inline (non-drawer) history, used only by the mobile tab. The rows and the
+// clear button are the shared components, so this surface and the desktop
+// drawer stay in sync by construction.
 export const HistorySidebar = ({ lang, hidden, onHide, onShow }: HistorySidebarProps) => {
   const records = useLumioStore((state) => state.records)
-  const removeRecord = useLumioStore((state) => state.removeRecord)
-  const clearRecords = useLumioStore((state) => state.clearRecords)
   const t = useTranslations(lang)
   if (records.length === 0) return null
 
@@ -22,7 +24,7 @@ export const HistorySidebar = ({ lang, hidden, onHide, onShow }: HistorySidebarP
         <button
           type="button"
           onClick={onShow}
-          className="cursor-pointer text-xs tracking-[0.14em] text-muted-foreground uppercase xl:[writing-mode:vertical-rl]"
+          className="cursor-pointer text-xs tracking-[0.14em] text-muted-foreground uppercase max-lg:min-h-11 max-lg:px-4 xl:[writing-mode:vertical-rl]"
         >
           {t('history.title')} · {records.length}
         </button>
@@ -37,44 +39,17 @@ export const HistorySidebar = ({ lang, hidden, onHide, onShow }: HistorySidebarP
           {t('history.title')} · {records.length}
         </p>
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={clearRecords}
-            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]"
-          >
-            {t('history.clear')}
-          </button>
+          <HistoryClearButton lang={lang} />
           <button
             type="button"
             onClick={onHide}
-            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]"
+            className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px] max-lg:min-h-11 max-lg:px-2"
           >
             {t('history.hide')}
           </button>
         </div>
       </div>
-      {records.map(({ id, resultKwh, resultMoney }) => (
-        <div key={id} className="border-b border-border py-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {resultKwh.toFixed(1)} kWh
-            </span>
-            <span className="font-mono text-base font-medium tabular-nums">
-              S/ {resultMoney.toFixed(2)}
-            </span>
-          </div>
-          <div className="mt-1 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => removeRecord(id)}
-              aria-label={t('history.remove')}
-              className="cursor-pointer font-mono text-xs text-muted-foreground max-lg:min-h-11 max-lg:px-2"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      ))}
+      <HistoryRecordList lang={lang} />
     </aside>
   )
 }

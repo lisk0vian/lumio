@@ -40,6 +40,8 @@
   "history.clear": "clear all",
   "history.hide": "hide",
   "history.remove": "Remove calculation",
+  "history.clearConfirm": "sure?",
+  "history.open": "Open history",
   "history.avgExpense": "Average expense",
   "history.avgConsumption": "Average consumption",
   "history.minExpense": "Min expense",

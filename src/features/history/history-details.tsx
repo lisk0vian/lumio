@@ -1,5 +1,6 @@
 import { MONEY } from '@/types'
 import { useLumioStore } from '@/stores/lumio-store'
+import { useEnterAnimation } from '@/hooks/use-enter-animation'
 import { useTranslations, type AppLang } from '@/i18n'
 
 type HistoryFieldProps = {
@@ -10,6 +11,10 @@ type HistoryFieldProps = {
 export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   const records = useLumioStore((state) => state.records)
   const t = useTranslations(lang)
+  // Callback ref: fires when this container attaches, so the stats block
+  // enters smoothly the moment the first record lands (not on an earlier
+  // empty commit). Shared by desktop saved section and mobile hist tab.
+  const enterRef = useEnterAnimation<HTMLDivElement>()
 
   if (records.length === 0) {
     return (
@@ -39,7 +44,7 @@ export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   }
 
   return (
-    <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-xs text-muted-foreground">
+    <div ref={enterRef} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-xs text-muted-foreground">
       {Object.entries(historyMapper).map(([label, value], idx) => (
         <HistoryField key={idx} label={label} value={value} />
       ))}
