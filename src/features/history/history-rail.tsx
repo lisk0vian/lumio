@@ -58,7 +58,7 @@ export const HistoryRail: FC<{ lang: AppLang }> = ({ lang }) => {
         <DrawerTrigger
           aria-label={`${t('history.open')} · ${records.length}`}
           className={cn(
-            'group pointer-events-auto flex w-10 cursor-pointer items-center justify-center gap-2.5 py-4',
+            'group pointer-events-auto flex w-10 cursor-pointer items-center justify-center gap-2.5 p-4',
             'rounded-l-lg border border-r-0 border-border bg-muted',
             'text-[0.625rem] tracking-[0.14em] text-muted-foreground uppercase [writing-mode:vertical-rl]',
             'outline-none transition-colors duration-200 ease-out motion-reduce:transition-none',

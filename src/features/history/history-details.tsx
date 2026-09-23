@@ -5,7 +5,7 @@ import { useTranslations, type AppLang } from '@/i18n'
 
 type HistoryFieldProps = {
   label: string
-  value: string | number
+  value: string
 }
 
 export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
@@ -37,10 +37,10 @@ export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   const maxPrice = Math.max(...moneyArr)
 
   const historyMapper = {
-    [t('history.avgExpense')]: avgs['money'],
-    [t('history.avgConsumption')]: `${avgs['kwh']} kwh`,
-    [t('history.minExpense')]: minPrice,
-    [t('history.maxExpense')]: maxPrice,
+    [t('history.avgExpense')]: `${MONEY} ${avgs.money}`,
+    [t('history.avgConsumption')]: `${avgs.kwh} kWh`,
+    [t('history.minExpense')]: `${MONEY} ${minPrice.toFixed(2)}`,
+    [t('history.maxExpense')]: `${MONEY} ${maxPrice.toFixed(2)}`,
   }
 
   return (
@@ -54,9 +54,7 @@ export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
 
 const HistoryField = ({ label, value }: HistoryFieldProps) => (
   <>
-    <p className="capitalize">{label}</p>
-    <p className="text-right font-mono tabular-nums text-foreground">
-      {typeof value === 'number' ? `${MONEY} ${value.toFixed(2)}` : `${value}`}
-    </p>
+    <p>{label}</p>
+    <p className="text-right font-mono tabular-nums text-foreground">{value}</p>
   </>
 )
