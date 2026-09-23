@@ -6,7 +6,7 @@
 // To update: check https://www.osinergmin.gob.pe for the current pliego
 // tarifario of the relevant electrical system (e.g. Lima Norte, Lima Sur).
 
-import type { Regulator, TariffCategory } from "../types";
+import type { Regulator, TariffCategory } from '@/types'
 
 export const regulators: Regulator[] = [
   {

@@ -31,7 +31,7 @@ const ReceiptField = ({ receipt, isTotal }: { receipt: Receipt; isTotal: boolean
 // The total tweens like SummaryTotal (same delta-aware curve); the commit
 // flash is skipped here (no element to pulse, the value already moves).
 const TotalField = ({ receipt }: { receipt: Receipt }) => {
-  const display = useAnimatedNumber(Number(receipt.money), 'money')
+  const display = useAnimatedNumber(receipt.money, 'money')
   return (
     <>
       <p className={cn('border-t border-border pt-1.5 font-medium text-foreground')}>
@@ -47,7 +47,7 @@ const TotalField = ({ receipt }: { receipt: Receipt }) => {
 // Breakdown rows update instantly with a subtle flash only when their value
 // changed. Newly mounted rows (optional charges toggled on) slide in instead.
 const RowField = ({ receipt }: { receipt: Receipt }) => {
-  const money = Number(receipt.money)
+  const money = receipt.money
   const labelRef = useRef<HTMLParagraphElement | null>(null)
   const valueRef = useRef<HTMLParagraphElement | null>(null)
   const animRef = useRef<ReturnType<typeof animate> | null>(null)

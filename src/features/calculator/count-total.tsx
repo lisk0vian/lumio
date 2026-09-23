@@ -12,6 +12,8 @@ import {
   sanitizeEntryText,
   sanitizeNonNegative,
 } from '@/utils/tariffs.utils'
+import { formatKwh, formatMoney } from '@/utils/format.utils'
+import { useCalculationInputs } from './use-calculation-inputs'
 
 export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showResumen?: boolean }) => {
   const direction = useLumioStore((state) => state.direction)
@@ -20,20 +22,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
   const setInputKwh = useLumioStore((state) => state.setInputKwh)
   const setInputMoney = useLumioStore((state) => state.setInputMoney)
   const addRecord = useLumioStore((state) => state.addRecord)
-  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
-  const fixedCharge = useLumioStore((state) => state.fixedCharge)
-  const publicLightingCharge = useLumioStore(
-    (state) => state.publicLightingCharge
-  )
-  const igvRate = useLumioStore((state) => state.igvRate)
-  const isFixedChargeEnabled = useLumioStore(
-    (state) => state.isFixedChargeEnabled
-  )
-  const isPublicLightingEnabled = useLumioStore(
-    (state) => state.isPublicLightingEnabled
-  )
-  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
-  const period = useLumioStore((state) => state.period)
+  const inputs = useCalculationInputs()
   const t = useTranslations(lang)
 
   const rowRef = useRef<HTMLDivElement | null>(null)
@@ -57,17 +46,6 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
   if (rawValue !== pushed) {
     setPushed(rawValue)
     setDraft(formatEntryText(rawValue))
-  }
-
-  const inputs = {
-    pricePerKwh,
-    fixedCharge,
-    publicLightingCharge,
-    igvRate,
-    isFixedChargeEnabled,
-    isPublicLightingEnabled,
-    isTaxEnabled,
-    period,
   }
 
   const shakeRow = () => {
@@ -107,8 +85,8 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
 
   // Derived counterpart shown as a hint under the input.
   const hint = isKwhMode
-    ? `≈ S/ ${calculateKwhToMoney(rawValue, inputs).total.toFixed(2)}`
-    : `≈ ${calculateMoneyToKwh(rawValue, inputs).kwh.toFixed(1)} kWh`
+    ? `≈ ${formatMoney(calculateKwhToMoney(rawValue, inputs).total)}`
+    : `≈ ${formatKwh(calculateMoneyToKwh(rawValue, inputs).kwh)}`
 
   // Unit fades/slides when the conversion direction flips (rare event).
   useEffect(() => {
@@ -189,7 +167,7 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
         </div>
         {showResumen ? (
           <p className="text-right font-mono text-[0.625rem] text-muted-foreground">
-            S/ {pricePerKwh}/kWh · {t('settings.fixedCharge')} S/ {fixedCharge} · {isTaxEnabled ? `IGV ${Math.round(igvRate * 100)}%` : t('calculator.withoutIgv')}
+            S/ {inputs.pricePerKwh}/kWh · {t('settings.fixedCharge')} S/ {inputs.fixedCharge} · {inputs.isTaxEnabled ? `IGV ${Math.round(inputs.igvRate * 100)}%` : t('calculator.withoutIgv')}
           </p>
         ) : null}
       </div>

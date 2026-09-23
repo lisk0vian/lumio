@@ -2,33 +2,34 @@
 // No React/UI code here on purpose -- these can be unit tested in isolation
 // and reused by whatever component ends up consuming them.
 
-import type { BillingPeriod, KwhToMoneyResult, Receipt, Regulator, TariffCategory, TariffGroup, VoltageLevel } from "../types";
-import { ui, defaultLang, type AppLang } from "../i18n/ui";
-
-function translate(lang: AppLang | undefined, key: keyof typeof ui.es): string {
-  const active = lang ?? defaultLang
-  return ui[active][key] ?? ui[defaultLang][key]
-}
+import type {
+  BillingPeriod,
+  KwhToMoneyResult,
+  Receipt,
+  TariffCategory,
+  TariffGroup,
+  VoltageLevel,
+} from '@/types'
 
 /**
  * Human-readable labels for each voltage level, based on IEC 60038.
  * Used for group headings in the UI (e.g. "BT5B – Low voltage").
  */
 export const voltageLevelLabels: Record<VoltageLevel, string> = {
-    low: "Low voltage",
-    medium: "Medium voltage",
-    high: "High voltage",
-    "extra-high": "Extra-high voltage",
-};
+  low: 'Low voltage',
+  medium: 'Medium voltage',
+  high: 'High voltage',
+  'extra-high': 'Extra-high voltage',
+}
 
 /**
  * Returns all tariff categories that belong to a given regulator.
  */
 export function getTariffsForRegulator(
-    regulatorId: string,
-    categories: TariffCategory[]
+  regulatorId: string,
+  categories: TariffCategory[]
 ): TariffCategory[] {
-    return categories.filter((c) => c.regulatorId === regulatorId);
+  return categories.filter((c) => c.regulatorId === regulatorId)
 }
 
 /**
@@ -36,24 +37,24 @@ export function getTariffsForRegulator(
  * e.g. all "BT5B" segments (residential, commercial, rural) become one group.
  */
 export function groupTariffsByCode(categories: TariffCategory[]): TariffGroup[] {
-    const groups = new Map<string, TariffGroup>();
+  const groups = new Map<string, TariffGroup>()
 
-    for (const category of categories) {
-        const key = `${category.code}-${category.voltageLevel}`;
-        const existing = groups.get(key);
+  for (const category of categories) {
+    const key = `${category.code}-${category.voltageLevel}`
+    const existing = groups.get(key)
 
-        if (existing) {
-            existing.items.push(category);
-        } else {
-            groups.set(key, {
-                code: category.code,
-                voltageLevel: category.voltageLevel,
-                items: [category],
-            });
-        }
+    if (existing) {
+      existing.items.push(category)
+    } else {
+      groups.set(key, {
+        code: category.code,
+        voltageLevel: category.voltageLevel,
+        items: [category],
+      })
     }
+  }
 
-    return Array.from(groups.values());
+  return Array.from(groups.values())
 }
 
 /**
@@ -92,8 +93,8 @@ export function isCustomTariff(
  * Empty or invalid input becomes 0 instead of NaN.
  */
 export function parseSettingNumber(val: string): number {
-    const parsed = parseFloat(val);
-    return Number.isNaN(parsed) ? 0 : parsed;
+  const parsed = parseFloat(val)
+  return Number.isNaN(parsed) ? 0 : parsed
 }
 
 /**
@@ -101,8 +102,8 @@ export function parseSettingNumber(val: string): number {
  * rounded to two decimals before dividing.
  */
 export function parseTaxPercent(val: string): number {
-    const safe = parseSettingNumber(val);
-    return Math.round(safe * 100) / 100 / 100;
+  const safe = parseSettingNumber(val)
+  return Math.round(safe * 100) / 100 / 100
 }
 
 /**
@@ -115,19 +116,19 @@ export function parseTaxPercent(val: string): number {
  * lands in the wrong place ("22.5" became "225").
  */
 export function sanitizeEntryText(text: string): string {
-    let sanitized = '';
-    let hasSeparator = false;
+  let sanitized = ''
+  let hasSeparator = false
 
-    for (const char of text.replace(/,/g, '.')) {
-        if (char >= '0' && char <= '9') {
-            sanitized += char;
-        } else if (char === '.' && !hasSeparator) {
-            hasSeparator = true;
-            sanitized += char;
-        }
+  for (const char of text.replace(/,/g, '.')) {
+    if (char >= '0' && char <= '9') {
+      sanitized += char
+    } else if (char === '.' && !hasSeparator) {
+      hasSeparator = true
+      sanitized += char
     }
+  }
 
-    return sanitized;
+  return sanitized
 }
 
 /**
@@ -137,8 +138,8 @@ export function sanitizeEntryText(text: string): string {
  * this field only accepts non-negative values.
  */
 export function parseEntryText(text: string): number {
-    const parsed = Number.parseFloat(sanitizeEntryText(text));
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  const parsed = Number.parseFloat(sanitizeEntryText(text))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
 
 /**
@@ -149,37 +150,16 @@ export function parseEntryText(text: string): number {
  * "22.000000000000007".
  */
 export function formatEntryText(value: number): string {
-    if (!Number.isFinite(value) || value <= 0) return '';
-    return String(Number(value.toFixed(2)));
+  if (!Number.isFinite(value) || value <= 0) return ''
+  return String(Number(value.toFixed(2)))
 }
-export function getValueById<T extends { id: string }>(
-  items: T[],
-  id: string | undefined,
-  key: keyof T
+
+/** Human-readable segment label for the selected catalog tariff. */
+export function getTariffLabel(
+  categories: TariffCategory[],
+  id: string | undefined
 ): string | undefined {
-  return items.find((item) => item.id === id)?.[key] as string | undefined;
-}
-
-/**
- * Builds the receipt breakdown rows (plus Total) from the active tariff
- * settings. Placeholder values until the real calculation is wired;
- * shared by the desktop layout and the mobile tabs so both show the same.
- * @deprecated Use buildReceipts with canonical inputs instead.
- */
-export function buildReceiptBreakdown(
-    fee: number,
-    hasTax: boolean,
-    tax: number
-): { receipts: Receipt[]; total: number } {
-    const base: Receipt[] = [
-        { label: "Energía · 14 kWh", money: 13.2 },
-        { label: "Cargo Fijo · Mensual", money: fee },
-        { label: "Sub Total · Sin IGV", money: 13 },
-        { label: `IGV · ${hasTax ? "Incluido" : "Excluido"}`, money: tax },
-    ];
-    const total = base.reduce((acc, { money }) => acc + money, 0);
-
-    return { receipts: [...base, { label: 'Total', money: total }], total };
+  return categories.find((item) => item.id === id)?.label
 }
 
 export type CalculationInputs = {
@@ -237,6 +217,28 @@ export function clearCalculationCache(): void {
   moneyToKwhCache.clear()
 }
 
+type ResolvedCharges = {
+  price: number
+  fixed: number
+  lighting: number
+  rate: number
+}
+
+// The fixed/lighting/rate trio is resolved identically by both directions:
+// toggles off mean zero, everything is clamped to non-negative.
+function resolveCharges(inputs: CalculationInputs): ResolvedCharges {
+  return {
+    price: sanitizeNonNegative(inputs.pricePerKwh),
+    fixed: inputs.isFixedChargeEnabled
+      ? sanitizeNonNegative(inputs.fixedCharge)
+      : 0,
+    lighting: inputs.isPublicLightingEnabled
+      ? sanitizeNonNegative(inputs.publicLightingCharge)
+      : 0,
+    rate: inputs.isTaxEnabled ? sanitizeNonNegative(inputs.igvRate) : 0,
+  }
+}
+
 export function calculateKwhToMoney(
   kwh: number,
   inputs: CalculationInputs
@@ -246,14 +248,7 @@ export function calculateKwhToMoney(
   if (hit) return { ...hit }
 
   const safeKwh = sanitizeNonNegative(kwh)
-  const price = sanitizeNonNegative(inputs.pricePerKwh)
-  const fixed = inputs.isFixedChargeEnabled
-    ? sanitizeNonNegative(inputs.fixedCharge)
-    : 0
-  const lighting = inputs.isPublicLightingEnabled
-    ? sanitizeNonNegative(inputs.publicLightingCharge)
-    : 0
-  const rate = inputs.isTaxEnabled ? sanitizeNonNegative(inputs.igvRate) : 0
+  const { price, fixed, lighting, rate } = resolveCharges(inputs)
 
   const monthlySubtotal = safeKwh * price + fixed + lighting
   const monthlyIgv = monthlySubtotal * rate
@@ -284,7 +279,7 @@ export function calculateMoneyToKwh(
   if (hit) return { ...hit }
 
   const safeTotal = sanitizeNonNegative(total)
-  const price = sanitizeNonNegative(inputs.pricePerKwh)
+  const { price, fixed, lighting, rate } = resolveCharges(inputs)
   if (price === 0) {
     const zero = { kwh: 0 }
     moneyToKwhCache.set(key, zero)
@@ -292,13 +287,6 @@ export function calculateMoneyToKwh(
     return { ...zero }
   }
 
-  const fixed = inputs.isFixedChargeEnabled
-    ? sanitizeNonNegative(inputs.fixedCharge)
-    : 0
-  const lighting = inputs.isPublicLightingEnabled
-    ? sanitizeNonNegative(inputs.publicLightingCharge)
-    : 0
-  const rate = inputs.isTaxEnabled ? sanitizeNonNegative(inputs.igvRate) : 0
   const multiplier = periodMultiplier(inputs.period)
 
   const monthlyTotal = safeTotal / multiplier
@@ -327,30 +315,55 @@ export function calculateMoneyToKwh(
   return { ...result }
 }
 
+/** Translated row labels for `buildReceipts`. Supplied by the caller so this
+ *  pure module never imports i18n. */
+export type ReceiptLabels = {
+  energy: string
+  fixedCharge: string
+  publicLighting: string
+  subtotal: string
+  igv: string
+  included: string
+  excluded: string
+  total: string
+}
+
 export function buildReceipts(
   kwh: number,
   inputs: CalculationInputs,
-  lang?: AppLang
+  labels: ReceiptLabels
 ): { receipts: Receipt[]; total: number } {
   const result = calculateKwhToMoney(kwh, inputs)
   const receipts: Receipt[] = [
-    { id: 'energy', label: `${translate(lang, 'receipt.energy')} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`, money: result.energy },
+    {
+      id: 'energy',
+      label: `${labels.energy} · ${sanitizeNonNegative(kwh).toFixed(1)} kWh`,
+      money: result.energy,
+    },
   ]
 
   if (inputs.isFixedChargeEnabled) {
-    receipts.push({ id: 'fixed', label: translate(lang, 'receipt.fixedCharge'), money: result.fixedCharge })
+    receipts.push({
+      id: 'fixed',
+      label: labels.fixedCharge,
+      money: result.fixedCharge,
+    })
   }
   if (inputs.isPublicLightingEnabled) {
-    receipts.push({ id: 'lighting', label: translate(lang, 'receipt.publicLighting'), money: result.publicLightingCharge })
+    receipts.push({
+      id: 'lighting',
+      label: labels.publicLighting,
+      money: result.publicLightingCharge,
+    })
   }
 
-  receipts.push({ id: 'subtotal', label: translate(lang, 'receipt.subtotal'), money: result.subtotal })
+  receipts.push({ id: 'subtotal', label: labels.subtotal, money: result.subtotal })
   receipts.push({
     id: 'igv',
-    label: `${translate(lang, 'receipt.igv')} · ${inputs.isTaxEnabled ? translate(lang, 'receipt.included') : translate(lang, 'receipt.excluded')}`,
+    label: `${labels.igv} · ${inputs.isTaxEnabled ? labels.included : labels.excluded}`,
     money: result.igv,
   })
-  receipts.push({ id: 'total', label: translate(lang, 'receipt.total'), money: result.total })
+  receipts.push({ id: 'total', label: labels.total, money: result.total })
 
   return { receipts, total: result.total }
 }

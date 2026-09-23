@@ -17,8 +17,13 @@ import { EnergyScale, LevelHint } from '../consumption/energy-scale'
 import {
   buildReceipts,
   calculateKwhToMoney,
-  calculateMoneyToKwh,
 } from '@/utils/tariffs.utils'
+import {
+  getSummaryContent,
+  useActiveKwh,
+  useCalculationInputs,
+} from '../calculator/use-calculation-inputs'
+import { getReceiptLabels } from '../calculator/receipt-labels'
 import { useTranslations, type AppLang } from '@/i18n'
 import type { I18nKey } from '@/i18n/utils'
 import { useEnterAnimation } from '@/hooks/use-enter-animation'
@@ -44,55 +49,31 @@ function MobileEyebrow({ children }: { children: ReactNode }) {
 }
 
 function CalcPanel({ lang }: { lang: AppLang }) {
-  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
-  const fixedCharge = useLumioStore((state) => state.fixedCharge)
-  const publicLightingCharge = useLumioStore(
-    (state) => state.publicLightingCharge
-  )
-  const igvRate = useLumioStore((state) => state.igvRate)
-  const isFixedChargeEnabled = useLumioStore(
-    (state) => state.isFixedChargeEnabled
-  )
-  const isPublicLightingEnabled = useLumioStore(
-    (state) => state.isPublicLightingEnabled
-  )
-  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
-  const period = useLumioStore((state) => state.period)
+  const inputs = useCalculationInputs()
+  const activeKwh = useActiveKwh(inputs)
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
-  const inputMoney = useLumioStore((state) => state.inputMoney)
+  const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const t = useTranslations(lang)
 
-  const inputs = {
-    pricePerKwh,
-    fixedCharge,
-    publicLightingCharge,
-    igvRate,
-    isFixedChargeEnabled,
-    isPublicLightingEnabled,
-    isTaxEnabled,
-    period,
-  }
   const isKwhMode = direction === 'kwh-to-money'
-  const activeKwh = isKwhMode
-    ? inputKwh
-    : calculateMoneyToKwh(inputMoney, inputs).kwh
   const displayTotal = isKwhMode
     ? calculateKwhToMoney(inputKwh, inputs).total
     : activeKwh
-  const { receipts } = buildReceipts(activeKwh, inputs, lang)
+  const { receipts } = buildReceipts(activeKwh, inputs, getReceiptLabels(t))
+  const { unit, surcharges } = getSummaryContent({
+    isKwhMode,
+    isTaxEnabled,
+    t,
+  })
 
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-4">
       <MobileEyebrow>{t('calculator.title')}</MobileEyebrow>
       <SummaryTotal
         total={displayTotal}
-        unit={isKwhMode ? 'money' : 'kwh'}
-        surchages={
-          isKwhMode
-            ? [t(isTaxEnabled ? 'calculator.withIgv' : 'calculator.withoutIgv'), t('calculator.netAmount')]
-            : [t('calculator.estimatedConsumption')]
-        }
+        unit={unit}
+        surcharges={surcharges}
       />
       <ShareReceiptButton lang={lang} className="mt-4" />
       <div className="mt-4">

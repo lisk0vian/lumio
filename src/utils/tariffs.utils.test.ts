@@ -9,6 +9,7 @@ import {
   parseEntryText,
   sanitizeEntryText,
   type CalculationInputs,
+  type ReceiptLabels,
 } from './tariffs.utils'
 
 // Tarifa del seed, la misma del recibo verificado de junio 2026 (Lima Norte):
@@ -152,8 +153,19 @@ describe('formatEntryText', () => {
 })
 
 describe('buildReceipts', () => {
+  const labels: ReceiptLabels = {
+    energy: 'Energía',
+    fixedCharge: 'Cargo fijo',
+    publicLighting: 'Alumbrado público',
+    subtotal: 'Subtotal',
+    igv: 'IGV',
+    included: 'Incluido',
+    excluded: 'Excluido',
+    total: 'Total',
+  }
+
   it('asigna ids estables en orden con todos los cargos', () => {
-    const { receipts, total } = buildReceipts(22, baseInputs)
+    const { receipts, total } = buildReceipts(22, baseInputs, labels)
     expect(receipts.map((r) => r.id)).toEqual([
       'energy',
       'fixed',
@@ -166,11 +178,15 @@ describe('buildReceipts', () => {
   })
 
   it('omite los ids opcionales cuando sus cargos están apagados', () => {
-    const { receipts } = buildReceipts(22, {
-      ...baseInputs,
-      isFixedChargeEnabled: false,
-      isPublicLightingEnabled: false,
-    })
+    const { receipts } = buildReceipts(
+      22,
+      {
+        ...baseInputs,
+        isFixedChargeEnabled: false,
+        isPublicLightingEnabled: false,
+      },
+      labels
+    )
     expect(receipts.map((r) => r.id)).toEqual(['energy', 'subtotal', 'igv', 'total'])
   })
 })

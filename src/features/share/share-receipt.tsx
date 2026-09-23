@@ -13,9 +13,18 @@ import { useLumioStore } from '@/stores/lumio-store'
 import { tariffCategories } from '@/data/tariffs.data'
 import {
   calculateKwhToMoney,
-  calculateMoneyToKwh,
-  getValueById,
+  getTariffLabel,
 } from '@/utils/tariffs.utils'
+import {
+  formatKb,
+  formatKwh,
+  formatMoney,
+  formatTaxPercent,
+} from '@/utils/format.utils'
+import {
+  useActiveKwh,
+  useCalculationInputs,
+} from '../calculator/use-calculation-inputs'
 import { useTranslations, type AppLang } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -95,19 +104,11 @@ function formatEmittedAt(date: Date, lang: AppLang): string {
   }).format(date)
 }
 
-const money = (value: number): string => `S/ ${value.toFixed(2)}`
-
 function canShareFile(file: File): boolean {
   return (
     typeof navigator.canShare === 'function' &&
     navigator.canShare({ files: [file] })
   )
-}
-
-function formatKb(bytes: number): string {
-  return bytes < 10240
-    ? `${(bytes / 1024).toFixed(1)} KB`
-    : `${Math.round(bytes / 1024)} KB`
 }
 
 type ShareOutcome = 'shared' | 'aborted' | 'unsupported'
@@ -155,12 +156,8 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   const [emittedAt, setEmittedAt] = useState<Date | null>(null)
   const t = useTranslations(lang)
 
-  const pricePerKwh = useLumioStore((state) => state.pricePerKwh)
-  const fixedCharge = useLumioStore((state) => state.fixedCharge)
-  const publicLightingCharge = useLumioStore(
-    (state) => state.publicLightingCharge
-  )
-  const igvRate = useLumioStore((state) => state.igvRate)
+  const inputs = useCalculationInputs()
+  const activeKwh = useActiveKwh(inputs)
   const isFixedChargeEnabled = useLumioStore(
     (state) => state.isFixedChargeEnabled
   )
@@ -169,9 +166,6 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   )
   const isTaxEnabled = useLumioStore((state) => state.isTaxEnabled)
   const period = useLumioStore((state) => state.period)
-  const direction = useLumioStore((state) => state.direction)
-  const inputKwh = useLumioStore((state) => state.inputKwh)
-  const inputMoney = useLumioStore((state) => state.inputMoney)
   const tariffId = useLumioStore((state) => state.tariffId)
 
   // Revoke the object URL on unmount; closes/regenerations revoke eagerly.
@@ -199,26 +193,11 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     }, FEEDBACK_MS)
   }
 
-  const inputs = {
-    pricePerKwh,
-    fixedCharge,
-    publicLightingCharge,
-    igvRate,
-    isFixedChargeEnabled,
-    isPublicLightingEnabled,
-    isTaxEnabled,
-    period,
-  }
-  const isKwhMode = direction === 'kwh-to-money'
-  const activeKwh = isKwhMode
-    ? inputKwh
-    : calculateMoneyToKwh(inputMoney, inputs).kwh
   const result = calculateKwhToMoney(activeKwh, inputs)
   const noData = !(activeKwh > 0)
 
-  const taxPercent = Math.round(igvRate * 100 * 100) / 100
-  const tariffLabel =
-    getValueById(tariffCategories, tariffId, 'label') ?? 'Personal'
+  const taxPercent = formatTaxPercent(inputs.igvRate)
+  const tariffLabel = getTariffLabel(tariffCategories, tariffId) ?? 'Personal'
   const periodLabel = t(
     period === 'bimonthly' ? 'settings.bimonthly' : 'settings.monthly'
   )
@@ -226,41 +205,41 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
   const lines: ReceiptLine[] = [
     {
       kind: 'energy',
-      label: `${t('receipt.energy')} · ${activeKwh.toFixed(1)} kWh`,
-      money: money(result.energy),
+      label: `${t('receipt.energy')} · ${formatKwh(activeKwh)}`,
+      money: formatMoney(result.energy),
     },
   ]
   if (isFixedChargeEnabled) {
     lines.push({
       kind: 'fixed',
       label: t('receipt.fixedCharge'),
-      money: money(result.fixedCharge),
+      money: formatMoney(result.fixedCharge),
     })
   }
   if (isPublicLightingEnabled) {
     lines.push({
       kind: 'lighting',
       label: t('receipt.publicLighting'),
-      money: money(result.publicLightingCharge),
+      money: formatMoney(result.publicLightingCharge),
     })
   }
   lines.push({
     kind: 'subtotal',
     label: t('receipt.subtotal'),
-    money: money(result.subtotal),
+    money: formatMoney(result.subtotal),
   })
   lines.push({
     kind: 'igv',
     label: `${t('receipt.igv')} ${taxPercent} % · ${t(isTaxEnabled ? 'receipt.included' : 'receipt.excluded')}`,
-    money: money(result.igv),
+    money: formatMoney(result.igv),
   })
   lines.push({
     kind: 'total',
     label: t('receipt.total'),
-    money: money(result.total),
+    money: formatMoney(result.total),
   })
 
-  const summary = `Lumio · ${activeKwh.toFixed(1)} kWh → ${money(result.total)} (${t('receipt.total')}) · ${tariffLabel} · ${periodLabel}. ${t('share.estimateNote')}`
+  const summary = `Lumio · ${formatKwh(activeKwh)} → ${formatMoney(result.total)} (${t('receipt.total')}) · ${tariffLabel} · ${periodLabel}. ${t('share.estimateNote')}`
 
   // Readable WhatsApp text (desktop route): bold headers and total, italic
   // note, blank lines for breathing. No code fence, no dot leaders.
@@ -268,7 +247,7 @@ export const ShareReceiptButton = ({ lang, className }: { lang: AppLang; classNa
     `*LUMIO · ${t('share.projection')}*`,
     `${t('share.emitted')}: ${emittedAt ? formatEmittedAt(emittedAt, lang) : ''}`,
     '',
-    `*${activeKwh.toFixed(1)} kWh*`,
+    `*${formatKwh(activeKwh)}*`,
     '',
     ...lines.map((line) =>
       line.kind === 'total'

@@ -16,6 +16,7 @@ import {
   parseSettingNumber,
   parseTaxPercent,
 } from '@/utils/tariffs.utils'
+import { formatTaxPercent } from '@/utils/format.utils'
 import { isReducedMotion, LUMIO_SETTING_EVENT, type SettingFieldId } from '@/utils/animated-number.utils'
 import { FieldSweep, useFieldFeedback } from './field-feedback'
 import { Input } from '@base-ui/react'
@@ -40,7 +41,7 @@ export const SettingOptions = ({ lang, className }: { lang: AppLang; className?:
   const setIgvRateStore = useLumioStore((state) => state.setIgvRate)
   const t = useTranslations(lang)
 
-  const taxPercent = Math.round(igvRate * 100 * 100) / 100
+  const taxPercent = formatTaxPercent(igvRate)
 
   // Wrappers que parsean el string del input antes de guardarlo
   const setPrice = (val: string) => setPricePerKwhStore(parseSettingNumber(val))

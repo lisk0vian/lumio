@@ -70,14 +70,13 @@ export const HISTORY_LIMIT = 100
  * This is the one part of the model that is genuinely reusable across countries,
  * since it comes from physics, not from a specific regulator's naming scheme.
  */
-export type VoltageLevel = "low" | "medium" | "high" | "extra-high";
+export type VoltageLevel = 'low' | 'medium' | 'high' | 'extra-high'
 
 /**
- * Voltage levels are based on the IEC 60038 international standard.
- * This is the one part of the model that is genuinely reusable across countries,
- * since it comes from physics, not from a specific regulator's naming scheme.
+ * Billing period for fixed charges: monthly bills charge the fee once,
+ * bimonthly bills double every line (energy + charges + IGV).
  */
-export type BillingPeriod = "monthly" | "bimonthly";
+export type BillingPeriod = 'monthly' | 'bimonthly'
 
 /**
  * Usage segment for a tariff category.

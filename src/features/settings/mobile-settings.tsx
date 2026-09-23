@@ -6,6 +6,7 @@ import { FieldSweep, useFieldFeedback } from './field-feedback'
 import { PeriodSegment } from './period-segment'
 import { SelectRegulator, SelectTariff, TaxToggle, ChargeToggle } from './setting-options'
 import { parseSettingNumber, parseTaxPercent } from '@/utils/tariffs.utils'
+import { formatTaxPercent } from '@/utils/format.utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import type { SettingFieldId } from '@/utils/animated-number.utils'
 import { useTranslations, type AppLang } from '@/i18n'
@@ -100,7 +101,7 @@ export const MobileSettings = ({ lang }: { lang: AppLang }) => {
   const setIgvRate = useLumioStore((state) => state.setIgvRate)
   const t = useTranslations(lang)
 
-  const taxPercent = Math.round(igvRate * 100 * 100) / 100
+  const taxPercent = formatTaxPercent(igvRate)
 
   return (
     <div className="flex flex-col">

@@ -12,6 +12,7 @@ import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
 } from '@/utils/tariffs.utils'
+import type { TariffCategory } from '@/types'
 
 export type LumioState = {
   tariffId: string
@@ -77,6 +78,39 @@ function createId(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
 }
 
+// Single source for the six fields a catalog tariff owns. Both setTariff
+// and setRegulator resolve a category first, then apply the same patch.
+function tariffPatch(tariff: TariffCategory | undefined) {
+  if (!tariff) return null
+  return {
+    tariffId: tariff.id,
+    regulatorId: tariff.regulatorId,
+    pricePerKwh: tariff.pricePerKwh,
+    fixedCharge: tariff.fixedCharge,
+    publicLightingCharge: tariff.publicLightingCharge,
+    period: tariff.billingPeriod,
+  }
+}
+
+// Single source for what gets persisted. Adding a field only requires
+// listing it here, in LumioState and in initialData.
+const PERSISTED_KEYS = [
+  'tariffId',
+  'regulatorId',
+  'pricePerKwh',
+  'fixedCharge',
+  'publicLightingCharge',
+  'period',
+  'igvRate',
+  'isTaxEnabled',
+  'isFixedChargeEnabled',
+  'isPublicLightingEnabled',
+  'direction',
+  'inputKwh',
+  'inputMoney',
+  'records',
+] as const satisfies readonly (keyof LumioState)[]
+
 const initialData: LumioState = {
   tariffId: baseTariff.id,
   regulatorId: baseTariff.regulatorId,
@@ -105,30 +139,14 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         set({ publicLightingCharge }),
       setPeriod: (period) => set({ period }),
       setTariff: (id) => {
-        const tariff = tariffCategories.find((t) => t.id === id)
-        if (tariff) {
-          set({
-            tariffId: tariff.id,
-            regulatorId: tariff.regulatorId,
-            pricePerKwh: tariff.pricePerKwh,
-            fixedCharge: tariff.fixedCharge,
-            publicLightingCharge: tariff.publicLightingCharge,
-            period: tariff.billingPeriod,
-          })
-        }
+        const patch = tariffPatch(tariffCategories.find((t) => t.id === id))
+        if (patch) set(patch)
       },
       setRegulator: (id) => {
-        const tariff = tariffCategories.find((t) => t.regulatorId === id)
-        if (tariff) {
-          set({
-            tariffId: tariff.id,
-            regulatorId: tariff.regulatorId,
-            pricePerKwh: tariff.pricePerKwh,
-            fixedCharge: tariff.fixedCharge,
-            publicLightingCharge: tariff.publicLightingCharge,
-            period: tariff.billingPeriod,
-          })
-        }
+        const patch = tariffPatch(
+          tariffCategories.find((t) => t.regulatorId === id)
+        )
+        if (patch) set(patch)
       },
       setIgvRate: (igvRate) => set({ igvRate }),
       setIsTaxEnabled: (isTaxEnabled) => set({ isTaxEnabled }),
@@ -207,22 +225,10 @@ export const useLumioStore = create<LumioState & LumioAction>()(
           persisted as Partial<LumioState> & Record<string, unknown>
         return { ...initialData, ...rest }
       },
-      partialize: (state) => ({
-        tariffId: state.tariffId,
-        regulatorId: state.regulatorId,
-        pricePerKwh: state.pricePerKwh,
-        fixedCharge: state.fixedCharge,
-        publicLightingCharge: state.publicLightingCharge,
-        period: state.period,
-        igvRate: state.igvRate,
-        isTaxEnabled: state.isTaxEnabled,
-        isFixedChargeEnabled: state.isFixedChargeEnabled,
-        isPublicLightingEnabled: state.isPublicLightingEnabled,
-        direction: state.direction,
-        inputKwh: state.inputKwh,
-        inputMoney: state.inputMoney,
-        records: state.records,
-      }),
+      partialize: (state) =>
+        Object.fromEntries(
+          PERSISTED_KEYS.map((key) => [key, state[key]])
+        ) as Pick<LumioState, (typeof PERSISTED_KEYS)[number]>,
     }
   )
 )
