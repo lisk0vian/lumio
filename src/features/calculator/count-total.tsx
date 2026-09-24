@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { animate } from 'animejs'
 import { Input } from '@/components/ui/input'
 import { useLumioStore } from '@/stores/lumio-store'
@@ -13,13 +13,10 @@ import {
   calculateMoneyToKwh,
   sanitizeNonNegative,
 } from '@/utils/calculation.utils'
-import {
-  formatEntryText,
-  parseEntryText,
-  sanitizeEntryText,
-} from '@/utils/entry-text.utils'
+import { parseEntryText, sanitizeEntryText } from '@/utils/entry-text.utils'
 import { formatKwh, formatMoney } from '@/utils/format.utils'
 import { useCalculationInputs } from './use-calculation-inputs'
+import { useEntryDraft } from './use-entry-draft'
 
 export const CountTotal = ({
   lang,
@@ -46,18 +43,8 @@ export const CountTotal = ({
   const isKwhMode = direction === 'kwh-to-money'
   const rawValue = isKwhMode ? inputKwh : inputMoney
 
-  // El campo guarda el *texto* escrito, no el número: con un input numérico
-  // controlado, teclear "22." se reescribía como 22 y el 5 siguiente acababa
-  // formando "225". El borrador solo se reajusta cuando el valor cambia desde
-  // afuera (cambio de unidad, reset, hidratación), y compara contra el último
-  // valor que empujamos nosotros: nuestro propio 22 (el de "22.") no debe
-  // contar como cambio externo, o el punto se borraría igual.
-  const [draft, setDraft] = useState(() => formatEntryText(rawValue))
-  const [pushed, setPushed] = useState(rawValue)
-  if (rawValue !== pushed) {
-    setPushed(rawValue)
-    setDraft(formatEntryText(rawValue))
-  }
+  // El campo guarda el *texto* escrito, no el número (ver use-entry-draft).
+  const { draft, setDraft, setPushed } = useEntryDraft(rawValue)
 
   const shakeRow = () => {
     const el = rowRef.current

@@ -1,4 +1,5 @@
 import { Moon, Sun } from 'lucide-react'
+import { THEME_TOGGLE_CLASS, THEME_TOGGLE_LABEL } from './header-classes'
 
 // Stateless theme toggle: markup only, no React state. The icon swaps via
 // pure CSS (.dark variant), and the click is handled by Layout.astro's
@@ -10,9 +11,9 @@ export const ThemeToggle = () => {
     <button
       type="button"
       data-theme-toggle
-      aria-label="Cambiar tema / Toggle theme"
-      title="Cambiar tema / Toggle theme"
-      className="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground max-lg:min-h-11 max-lg:min-w-11"
+      aria-label={THEME_TOGGLE_LABEL}
+      title={THEME_TOGGLE_LABEL}
+      className={THEME_TOGGLE_CLASS}
     >
       <Moon className="size-4 dark:hidden" aria-hidden="true" />
       <Sun className="hidden size-4 dark:block" aria-hidden="true" />

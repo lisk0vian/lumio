@@ -11,6 +11,7 @@ import { regulators, tariffCategories } from '@/data/tariffs.data'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
+  type CalculationInputs,
 } from '@/utils/calculation.utils'
 import type { TariffCategory } from '@/types'
 
@@ -142,6 +143,21 @@ export function migratePersistedState(persisted: unknown): LumioState {
   return { ...initialData, ...rest }
 }
 
+// Tariff snapshot the math derives from. Single source shared by the
+// converter action and the snapshot builder below.
+export function selectCalculationInputs(state: LumioState): CalculationInputs {
+  return {
+    pricePerKwh: state.pricePerKwh,
+    fixedCharge: state.fixedCharge,
+    publicLightingCharge: state.publicLightingCharge,
+    igvRate: state.igvRate,
+    isFixedChargeEnabled: state.isFixedChargeEnabled,
+    isPublicLightingEnabled: state.isPublicLightingEnabled,
+    isTaxEnabled: state.isTaxEnabled,
+    period: state.period,
+  }
+}
+
 export const useLumioStore = create<LumioState & LumioAction>()(
   persist(
     (set) => ({
@@ -172,16 +188,7 @@ export const useLumioStore = create<LumioState & LumioAction>()(
         set((state) => {
           if (state.direction === newDirection) return state
 
-          const inputs = {
-            pricePerKwh: state.pricePerKwh,
-            fixedCharge: state.fixedCharge,
-            publicLightingCharge: state.publicLightingCharge,
-            igvRate: state.igvRate,
-            isFixedChargeEnabled: state.isFixedChargeEnabled,
-            isPublicLightingEnabled: state.isPublicLightingEnabled,
-            isTaxEnabled: state.isTaxEnabled,
-            period: state.period,
-          }
+          const inputs = selectCalculationInputs(state)
 
           // Sin precio la inversa no existe: cambiar de unidad con un precio
           // de 0 borraría el importe que la persona escribió.

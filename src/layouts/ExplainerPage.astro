@@ -10,6 +10,7 @@ import {
 } from '../utils/calculation.utils';
 import { useTranslations, type AppLang } from '../i18n'
 import { CALCULATION_ROUTES, homePath } from '../constants/routes'
+import { formatMoney } from '../utils/format.utils'
 
 // Static explainer page: zero islands, one bundled script for the anime.js
 // reveals and the scroll progress bar. The worked example is computed at
@@ -39,7 +40,6 @@ const EXAMPLE_KWH = 100;
 const result = calculateKwhToMoney(EXAMPLE_KWH, inputs);
 const backKwh = calculateMoneyToKwh(result.total, inputs).kwh;
 
-const money = (n: number): string => `S/ ${n.toFixed(2)}`;
 const price = `S/ ${inputs.pricePerKwh.toFixed(4)}`;
 const taxPercent = `${Math.round(inputs.igvRate * 100)} %`;
 const taxFactor = (1 + inputs.igvRate).toFixed(2);
@@ -53,12 +53,12 @@ const billFigures = [
   {
     label: t('explainer.find.fixed.label'),
     where: t('explainer.find.fixed.where'),
-    value: money(inputs.fixedCharge),
+    value: formatMoney(inputs.fixedCharge),
   },
   {
     label: t('explainer.find.lighting.label'),
     where: t('explainer.find.lighting.where'),
-    value: money(inputs.publicLightingCharge),
+    value: formatMoney(inputs.publicLightingCharge),
   },
   {
     label: t('explainer.find.igv.label'),
@@ -348,7 +348,7 @@ const leadClass = 'mt-2 text-sm leading-relaxed text-foreground';
           <p
             class="mt-1.5 inline-block rounded-md bg-muted px-3 py-2 font-mono text-[0.8125rem] tabular-nums"
           >
-            {money(result.total)} <span class="text-ember">→</span> {
+            {formatMoney(result.total)} <span class="text-ember">→</span> {
               backKwh.toFixed(1)
             } kWh
           </p>

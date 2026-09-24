@@ -4,9 +4,9 @@ import { useRef } from 'react'
 // because it wires onChange manually.
 import { Input } from '@base-ui/react'
 import { FieldSweep, useFieldFeedback } from './field-feedback'
+import { useChargeEnabled } from './use-charge-enabled'
 import type { SettingFieldId } from '@/utils/animated-number.utils'
 import { cn } from '@/lib/utils'
-import { useLumioStore } from '@/stores/lumio-store'
 
 type InputSettingProps = React.ComponentProps<typeof Input> & {
   label: string
@@ -27,17 +27,7 @@ export const InputSetting = ({
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const { sweepRef, sweep, setHover, prime, settle, commit } =
     useFieldFeedback(field)
-  const fixedOn = useLumioStore((state) => state.isFixedChargeEnabled)
-  const lightingOn = useLumioStore((state) => state.isPublicLightingEnabled)
-  const taxOn = useLumioStore((state) => state.isTaxEnabled)
-  const enabled =
-    field === 'fixed'
-      ? fixedOn
-      : field === 'lighting'
-        ? lightingOn
-        : field === 'tax'
-          ? taxOn
-          : true
+  const enabled = useChargeEnabled(field)
 
   return (
     <div

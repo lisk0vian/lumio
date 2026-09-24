@@ -1,6 +1,13 @@
 ---
 import { LanguagePicker } from './language-picker'
 import ThemeToggle from './theme-toggle.astro'
+import {
+  BRAND_BADGE_CLASS,
+  BRAND_NAME_CLASS,
+  BRAND_ROW_CLASS,
+  HEADER_CONTROLS_CLASS,
+  HEADER_DIVIDER_CLASS,
+} from './header-classes'
 import type { AppLang } from '../../i18n'
 
 const { lang, routes } = Astro.props as {
@@ -11,14 +18,13 @@ const { lang, routes } = Astro.props as {
 // Slim utility header for the desktop shell: static brand rendered by Astro,
 // theme toggle with zero JS framework, and the static language picker
 // (plain anchors to the prerendered routes — no hydration needed).
-// The mobile shell keeps its own React header inside MobileTabs.
+// The mobile shell keeps its own React header inside MobileTabs; shared
+// class strings live in header-classes.ts.
 ---
 
 <div class="flex items-center justify-between gap-3 py-2">
-  <p class="flex min-w-0 items-center gap-2">
-    <span
-      class="flex size-6 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground"
-    >
+  <p class={BRAND_ROW_CLASS}>
+    <span class={BRAND_BADGE_CLASS}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -35,11 +41,11 @@ const { lang, routes } = Astro.props as {
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
       </svg>
     </span>
-    <span class="truncate text-sm font-medium">Lumio</span>
+    <span class={BRAND_NAME_CLASS}>Lumio</span>
   </p>
-  <div class="flex flex-none items-center gap-1">
+  <div class={HEADER_CONTROLS_CLASS}>
     <LanguagePicker lang={lang} routes={routes} />
-    <span class="mx-1 h-4 w-px bg-border" aria-hidden="true"></span>
+    <span class={HEADER_DIVIDER_CLASS} aria-hidden="true"></span>
     <ThemeToggle />
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
-import { HistoryClearButton } from './history-clear-button'
+import { HistoryHeader } from './history-header'
 import { HistoryRecordList } from './history-record-list'
 
 type HistorySidebarProps = {
@@ -39,12 +39,14 @@ export const HistorySidebar = ({
 
   return (
     <aside className="w-full flex-none bg-muted px-8 py-8 max-lg:bg-transparent max-lg:px-0 max-lg:py-0 xl:w-80 xl:py-11">
-      <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-          {t('history.title')} · {records.length}
-        </p>
-        <div className="flex gap-3">
-          <HistoryClearButton lang={lang} />
+      <HistoryHeader
+        lang={lang}
+        title={
+          <p className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+            {t('history.title')} · {records.length}
+          </p>
+        }
+        close={
           <button
             type="button"
             onClick={onHide}
@@ -52,8 +54,8 @@ export const HistorySidebar = ({
           >
             {t('history.hide')}
           </button>
-        </div>
-      </div>
+        }
+      />
       <HistoryRecordList lang={lang} />
     </aside>
   )

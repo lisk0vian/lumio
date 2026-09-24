@@ -3,6 +3,7 @@ import { useRef } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FieldSweep, useFieldFeedback } from './field-feedback'
+import { useChargeEnabled } from './use-charge-enabled'
 import { PeriodSegment } from './period-segment'
 import { SelectRegulator } from './select-regulator'
 import { SelectTariff } from './select-tariff'
@@ -57,17 +58,7 @@ function UnderlineInput({
   const wrapRef = useRef<HTMLSpanElement | null>(null)
   const { sweepRef, sweep, setHover, prime, settle, commit } =
     useFieldFeedback(field)
-  const fixedOn = useLumioStore((state) => state.isFixedChargeEnabled)
-  const lightingOn = useLumioStore((state) => state.isPublicLightingEnabled)
-  const taxOn = useLumioStore((state) => state.isTaxEnabled)
-  const enabled =
-    field === 'fixed'
-      ? fixedOn
-      : field === 'lighting'
-        ? lightingOn
-        : field === 'tax'
-          ? taxOn
-          : true
+  const enabled = useChargeEnabled(field)
 
   return (
     <span

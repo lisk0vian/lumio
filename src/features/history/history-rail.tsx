@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { useEnterAnimation } from '@/hooks/use-enter-animation'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
-import { HistoryClearButton } from './history-clear-button'
+import { HistoryHeader } from './history-header'
 import { HistoryRecordList } from './history-record-list'
 
 // Desktop history rail: a compact tab pinned to the right edge whenever there
@@ -82,17 +82,19 @@ export const HistoryRail: FC<{ lang: AppLang }> = ({ lang }) => {
         </DrawerTrigger>
         <DrawerContent className="bg-muted">
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-8 py-8">
-            <div className="mb-3 flex items-baseline justify-between">
-              <DrawerTitle className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                {t('history.title')} · {records.length}
-              </DrawerTitle>
-              <div className="flex gap-3">
-                <HistoryClearButton lang={lang} />
+            <HistoryHeader
+              lang={lang}
+              title={
+                <DrawerTitle className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                  {t('history.title')} · {records.length}
+                </DrawerTitle>
+              }
+              close={
                 <DrawerClose className="cursor-pointer text-xs text-muted-foreground underline underline-offset-[3px]">
                   {t('history.hide')}
                 </DrawerClose>
-              </div>
-            </div>
+              }
+            />
             {records.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 {t('history.empty')}

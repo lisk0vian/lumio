@@ -1,4 +1,6 @@
 ---
+import { THEME_TOGGLE_CLASS, THEME_TOGGLE_LABEL } from './header-classes'
+
 // Stateless theme toggle: zero React. The icon swaps via pure CSS (.dark
 // variant), and the click is handled by the delegated listener in
 // Layout.astro, so this button works before (and without) hydration.
@@ -7,9 +9,9 @@
 <button
   type="button"
   data-theme-toggle
-  aria-label="Cambiar tema / Toggle theme"
-  title="Cambiar tema / Toggle theme"
-  class="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground max-lg:min-h-11 max-lg:min-w-11"
+  aria-label={THEME_TOGGLE_LABEL}
+  title={THEME_TOGGLE_LABEL}
+  class={THEME_TOGGLE_CLASS}
 >
   <svg
     xmlns="http://www.w3.org/2000/svg"

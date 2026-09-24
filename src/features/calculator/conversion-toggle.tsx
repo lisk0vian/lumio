@@ -3,6 +3,7 @@ import { animate } from 'animejs'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLumioStore } from '@/stores/lumio-store'
 import { isReducedMotion } from '@/utils/animated-number.utils'
+import { whenFontsReady } from '@/utils/fonts.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 
 export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
@@ -50,7 +51,7 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
     firstRef.current = false
     const onResize = () => place(true)
     window.addEventListener('resize', onResize)
-    document.fonts?.ready.then(() => place(true)).catch(() => {})
+    whenFontsReady(() => place(true))
     return () => {
       window.removeEventListener('resize', onResize)
       barAnimRef.current?.cancel()
