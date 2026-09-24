@@ -11,6 +11,11 @@ const t = useTranslations(lang);
 // Lighthouse SEO flagged the missing description on every route; each page can
 // still override it.
 const metaDescription = description ?? t("meta.description");
+// Base-aware asset URLs: `/` in dev, `/lumio/` in the GitHub Pages build.
+// Favicons go through it at render time; the inline service-worker script
+// below reads it back from `document.body.dataset.base` (is:inline scripts
+// are emitted as-is, so import.meta.env is not available inside them).
+const base = import.meta.env.BASE_URL ?? '/';
 ---
 
 <!doctype html>
@@ -18,8 +23,8 @@ const metaDescription = description ?? t("meta.description");
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/zap.svg" />
-    <link rel="icon" href="/zap.ico" />
+    <link rel="icon" type="image/svg+xml" href={`${base}zap.svg`} />
+    <link rel="icon" href={`${base}zap.ico`} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={metaDescription} />
@@ -68,6 +73,10 @@ const metaDescription = description ?? t("meta.description");
       // Service worker (public/sw.js): cache-first para assets con hash y
       // stale-while-revalidate para navegaciones. Solo en producción: en
       // `astro dev` rompería el HMR sirviendo copias viejas.
+      // Base-aware: el SW vive bajo el base path en Pages (/lumio/sw.js con
+      // scope /lumio/), y en la raíz en dev (/sw.js). Se lee desde
+      // document.body.dataset.base, que Layout renderiza desde
+      // import.meta.env.BASE_URL.
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           const hostname = window.location.hostname;
@@ -76,13 +85,18 @@ const metaDescription = description ?? t("meta.description");
             hostname === "127.0.0.1" ||
             hostname === "[::1]";
           if (!isLocal) {
-            navigator.serviceWorker.register("/sw.js").catch(() => {});
+            const rawBase =
+              document.body?.dataset.base || "/";
+            const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+            navigator.serviceWorker
+              .register(`${base}sw.js`, { scope: base })
+              .catch(() => {});
           }
         });
       }
     </script>
   </head>
-  <body>
+  <body data-base={base}>
     <slot />
   </body>
 </html>

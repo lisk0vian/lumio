@@ -2,7 +2,8 @@
 // app shell y los assets desde la caché del navegador.
 //
 // Estrategia:
-// - Navegaciones (/, /en/, /calculo, /en/calculation): stale-while-revalidate.
+// - Navegaciones ({base}, {base}en/, {base}calculo, {base}en/calculation):
+//   stale-while-revalidate.
 //   La primera recarga responde al instante desde caché y actualiza la copia
 //   en segundo plano, así un despliegue nuevo nunca deja HTML viejo.
 // - Assets mismos-origen (_astro/*.js|css, woff2, svg, ico): cache-first.
@@ -15,7 +16,11 @@
 // no necesitan bump: entran solos por su URL nueva.
 
 const CACHE = 'lumio-v1'
-const PRECACHE = ['/', '/en/']
+// Base-aware: el SW se sirve en /sw.js en dev y en /lumio/sw.js en Pages.
+// Derivar el base del propio URL evita hardcodear el nombre del repo y
+// mantiene localhost funcionando sin cambios.
+const BASE = new URL('./', self.location.href).pathname
+const PRECACHE = [BASE, `${BASE}en/`]
 const RUNTIME_LIMIT = 200
 
 self.addEventListener('install', (event) => {
@@ -45,8 +50,8 @@ self.addEventListener('activate', (event) => {
 
 function isStaticAsset(url) {
   return (
-    url.pathname.startsWith('/_astro/') ||
-    url.pathname === '/sw.js' ||
+    url.pathname.startsWith(`${BASE}_astro/`) ||
+    url.pathname === `${BASE}sw.js` ||
     /\.(js|css|woff2?|ico|svg|avif|webp|png)$/.test(url.pathname)
   )
 }
