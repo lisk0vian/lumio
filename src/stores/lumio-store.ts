@@ -128,6 +128,15 @@ const initialData: LumioState = {
   records: [],
 }
 
+export function migratePersistedState(persisted: unknown): LumioState {
+  if (!persisted || typeof persisted !== 'object') return initialData
+  // v2 drops the language keys: language now lives in the URL, and the
+  // remaining state (tariff, inputs, history) is language-independent.
+  const { activeLang: _droppedLang, langResolved: _droppedResolved, ...rest } =
+    persisted as Partial<LumioState> & Record<string, unknown>
+  return { ...initialData, ...rest }
+}
+
 export const useLumioStore = create<LumioState & LumioAction>()(
   persist(
     (set) => ({
@@ -217,14 +226,7 @@ export const useLumioStore = create<LumioState & LumioAction>()(
       // instead would make every island render values the prerendered HTML
       // never had, so React would discard the subtree and repaint it.
       skipHydration: true,
-      migrate: (persisted) => {
-        if (!persisted || typeof persisted !== 'object') return initialData
-        // v2 drops the language keys: language now lives in the URL, and the
-        // remaining state (tariff, inputs, history) is language-independent.
-        const { activeLang: _droppedLang, langResolved: _droppedResolved, ...rest } =
-          persisted as Partial<LumioState> & Record<string, unknown>
-        return { ...initialData, ...rest }
-      },
+      migrate: (persisted) => migratePersistedState(persisted),
       partialize: (state) =>
         Object.fromEntries(
           PERSISTED_KEYS.map((key) => [key, state[key]])
