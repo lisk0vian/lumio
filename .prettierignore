@@ -1,0 +1,4 @@
+# shadcn primitives keep their upstream style (see AGENTS.md: do not restructure ui/)
+src/components/ui
+# prettier has no astro parser
+*.astro
