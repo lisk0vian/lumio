@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-id="scene-1" data-composition-duration="5">
+  <head>
+    <meta charset="UTF-8">
+    <title>Scene 1 — Convert</title>
+  </head>
+  <body>
+    <template>
+      <div data-hf-id="hf-whug" id="s1-root" data-composition-id="scene-1" data-duration="5" data-fps="30" data-width="1280" data-height="720">
+        <style>
+          #s1-root { position: absolute; inset: 0; overflow: hidden; padding: 100px 72px 96px; display: grid; grid-template-columns: 1fr 460px; gap: 72px; align-items: center; color: #191713; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+          .s1-eyebrow { font-size: 18px; font-weight: 700; letter-spacing: 0.16em; color: #a44c1d; margin-bottom: 20px; }
+          .s1-lines { font-weight: 800; letter-spacing: -0.035em; font-size: 56px; line-height: 1.04; }
+          .s1-lines span { display: block; }
+          .s1-lines .s1-hl { color: #a44c1d; }
+          .s1-caption { font-size: 22px; line-height: 1.5; color: #66635a; margin-top: 24px; max-width: 520px; }
+          .s1-card { background: #fff; border: 1px solid #e0dbce; border-radius: 20px; padding: 32px; box-shadow: 0 24px 48px -12px rgba(25,23,19,.14); }
+          .s1-label { font-size: 16px; font-weight: 600; color: #66635a; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+          .s1-input { display: flex; align-items: center; gap: 4px; height: 72px; padding: 0 20px; border-radius: 12px; border: 2px solid #e0dbce; background: #faf9f4; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
+          .s1-caret { width: 3px; height: 38px; background: #191713; }
+          .s1-unit { margin-left: auto; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 22px; font-weight: 600; color: #66635a; }
+          .s1-divider { height: 1px; background: #e0dbce; margin: 28px 0 24px; }
+          .s1-pill { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: #191713; background: #ffc61a; border-radius: 999px; padding: 4px 12px; }
+          .s1-total { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 68px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+          .s1-meta { font-size: 16px; color: #66635a; margin-top: 12px; }
+        </style>
+        <div data-hf-id="hf-cc2d" id="s1-copy">
+          <div data-hf-id="hf-58fq" class="s1-eyebrow s1-rv">PERU ELECTRICITY BILL</div>
+          <div data-hf-id="hf-2b0i" class="s1-lines" id="s1-hero"><span data-hf-id="hf-qv48">Type your kWh.</span><span data-hf-id="hf-jrs8" class="s1-hl">See your bill in soles.</span></div>
+          <div data-hf-id="hf-8jpv" class="s1-caption s1-rv">No spreadsheets, no guessing. IGV, fixed charge and public lighting included.</div>
+        </div>
+        <div data-hf-id="hf-u3mm" class="s1-card" id="s1-card">
+          <div data-hf-id="hf-rpjj" class="s1-label">Monthly consumption</div>
+          <div data-hf-id="hf-ncge" class="s1-input" id="s1-input"><span data-hf-id="hf-xajh" id="s1-typed"></span><span data-hf-id="hf-gohv" class="s1-caret" id="s1-caret"></span><span data-hf-id="hf-okqu" class="s1-unit">kWh</span></div>
+          <div data-hf-id="hf-e79s" class="s1-divider"></div>
+          <div data-hf-id="hf-0lfd" class="s1-label">Estimated total <span data-hf-id="hf-7j9p" class="s1-pill">INCL. IGV</span></div>
+          <div data-hf-id="hf-5d63" class="s1-total" id="s1-total">S/ 0.00</div>
+          <div data-hf-id="hf-8jpw" class="s1-meta">Residential BT5B · S/ 0.6144 per kWh</div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+        <script>
+          (function () {
+            'use strict';
+            var FPS = 30;
+            // Seek-safe count-up: one tl.set per frame, no onUpdate state.
+            function countUp(tl, el, to, at, dur, fmt) {
+              var last = Math.max(1, Math.round(dur * FPS));
+              var ease = gsap.parseEase('power3.out');
+              for (var f = 0; f <= last; f += 1) {
+                tl.set(el, { textContent: fmt(to * ease(f / last)) }, at + dur * (f / last));
+              }
+            }
+            var totalEl = document.getElementById('s1-total');
+            var typedEl = document.getElementById('s1-typed');
+
+            gsap.set('#s1-hero span', { opacity: 0, y: 36 });
+            gsap.set('#s1-root .s1-rv', { opacity: 0, y: 16 });
+            gsap.set('#s1-card', { opacity: 0, y: 40, scale: 0.97 });
+            gsap.set('#s1-caret', { opacity: 0 });
+
+            var tl = gsap.timeline({ paused: true });
+            tl.to('#s1-root .s1-eyebrow', { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.15);
+            tl.to('#s1-hero span', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.14 }, 0.25);
+            tl.to('#s1-root .s1-caption', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0.7);
+            tl.to('#s1-card', { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'power3.out' }, 0.45);
+
+            // Focus the field, then type 1 → 12 → 120 like a user would.
+            tl.to('#s1-input', { borderColor: '#ffc61a', boxShadow: '0 0 0 4px rgba(255,198,26,.28)', duration: 0.25, ease: 'power1.out' }, 1.05);
+            tl.set('#s1-caret', { opacity: 1 }, 1.05);
+            ['1', '12', '120'].forEach(function (txt, i) {
+              tl.set(typedEl, { textContent: txt }, 1.3 + i * 0.16);
+            });
+            // Caret blinks only while the field is focused, and stops once the result lands.
+            [1.9, 2.3, 2.7].forEach(function (t) {
+              tl.set('#s1-caret', { opacity: 0 }, t);
+              tl.set('#s1-caret', { opacity: 1 }, t + 0.2);
+            });
+
+            // Result reacts immediately to the input: count up to the real tariff total.
+            countUp(tl, totalEl, 89.88, 1.7, 1.1, function (v) { return 'S/ ' + v.toFixed(2); });
+            tl.fromTo('#s1-total', { scale: 1 }, { scale: 1.06, duration: 0.14, ease: 'power2.out', transformOrigin: 'left center' }, 2.8);
+            tl.to('#s1-total', { scale: 1, duration: 0.24, ease: 'power2.inOut' }, 2.94);
+            tl.to('#s1-card', { y: -6, duration: 1.4, ease: 'sine.inOut' }, 3.0);
+
+            // Exit: lift and fade so the cut into the receipt never feels abrupt.
+            tl.to('#s1-copy, #s1-card', { opacity: 0, y: -24, duration: 0.4, ease: 'power2.in', stagger: 0.05 }, 4.5);
+            tl.seek(0);
+            window.__timelines = window.__timelines || {};
+            window.__timelines['scene-1'] = tl;
+          })();
+        </script>
+      </div>
+    </template>
+  </body>
+</html>

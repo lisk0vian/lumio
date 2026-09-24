@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, height=720">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; background: #faf9f4; }
+      #root {
+        width: 100%; height: 100%; position: relative; overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: #191713; background: #faf9f4;
+      }
+      .scene-host { position: absolute; inset: 0; }
+      /* Persistent chrome: brand mark + chapter progress keep the viewer oriented across cuts. */
+      #brand { position: absolute; left: 72px; top: 36px; display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+      #brand-dot { width: 28px; height: 28px; border-radius: 8px; background: #ffc61a; display: grid; place-items: center; }
+      #chapters { position: absolute; left: 72px; right: 72px; bottom: 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .ch { display: grid; gap: 8px; }
+      .ch-track { height: 4px; border-radius: 2px; background: #e0dbce; overflow: hidden; }
+      .ch-fill { height: 100%; width: 100%; background: #191713; transform-origin: left center; transform: scaleX(0); }
+      .ch-label { font-size: 15px; font-weight: 600; color: #66635a; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-ondt" id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1280" data-height="720">
+      <div data-hf-id="hf-h7qy" id="host-s1" class="scene-host clip" data-composition-id="host-s1" data-composition-src="compositions/scene-1.html" data-start="0" data-duration="5" data-track-index="0"></div>
+      <div data-hf-id="hf-1ffz" id="host-s2" class="scene-host clip" data-composition-id="host-s2" data-composition-src="compositions/scene-2.html" data-start="5" data-duration="5" data-track-index="1"></div>
+      <div data-hf-id="hf-mpmf" id="host-s3" class="scene-host clip" data-composition-id="host-s3" data-composition-src="compositions/scene-3.html" data-start="10" data-duration="5" data-track-index="2"></div>
+      <div data-hf-id="hf-dute" id="host-s4" class="scene-host clip" data-composition-id="host-s4" data-composition-src="compositions/scene-4.html" data-start="15" data-duration="5" data-track-index="3"></div>
+      <div data-hf-id="hf-br4n" id="brand">
+        <div data-hf-id="hf-ciby" id="brand-dot"><svg data-hf-id="hf-o4ih" width="16" height="16" viewBox="0 0 24 24" fill="#191713"><path data-hf-id="hf-gy5o" d="M13 2 4 14h7l-1 8 9-12h-7z" /></svg></div>
+        <span data-hf-id="hf-x9d1">Lumio</span>
+      </div>
+      <div data-hf-id="hf-8b3u" id="chapters">
+        <div data-hf-id="hf-dwy1" class="ch"><div data-hf-id="hf-8yff" class="ch-track"><div data-hf-id="hf-fic5" class="ch-fill"></div></div><span data-hf-id="hf-lid8" class="ch-label">Convert</span></div>
+        <div data-hf-id="hf-cf7h" class="ch"><div data-hf-id="hf-zq97" class="ch-track"><div data-hf-id="hf-gpft" class="ch-fill"></div></div><span data-hf-id="hf-mb60" class="ch-label">Breakdown</span></div>
+        <div data-hf-id="hf-dm4k" class="ch"><div data-hf-id="hf-zby6" class="ch-track"><div data-hf-id="hf-hwcw" class="ch-fill"></div></div><span data-hf-id="hf-uak1" class="ch-label">Level</span></div>
+        <div data-hf-id="hf-d7tj" class="ch"><div data-hf-id="hf-yxn5" class="ch-track"><div data-hf-id="hf-hi1v" class="ch-fill"></div></div><span data-hf-id="hf-6dj0" class="ch-label">Share</span></div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        'use strict';
+        var fills = gsap.utils.toArray('#chapters .ch-fill');
+        var labels = gsap.utils.toArray('#chapters .ch-label');
+        gsap.set('#brand, #chapters', { opacity: 0, y: 8 });
+        var tl = gsap.timeline({ paused: true });
+        tl.to('#brand, #chapters', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.08 }, 0.05);
+        // Each chapter fills linearly over its 5s scene; the active label darkens.
+        fills.forEach(function (fill, i) {
+          tl.to(fill, { scaleX: 1, duration: 5, ease: 'none' }, i * 5);
+          tl.to(labels[i], { color: '#191713', duration: 0.3, ease: 'power1.out' }, i * 5);
+        });
+        tl.to('#brand', { opacity: 0, duration: 0.3, ease: 'power1.in' }, 17.85);
+        tl.seek(0);
+        window.__timelines = window.__timelines || {};
+        window.__timelines['main'] = tl;
+      })();
+    </script>
+  </body>
+</html>

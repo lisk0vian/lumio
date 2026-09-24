@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-id="scene-2" data-composition-duration="5">
+  <head>
+    <meta charset="UTF-8">
+    <title>Scene 2 — Breakdown</title>
+  </head>
+  <body>
+    <template>
+      <div data-hf-id="hf-hi3c" id="s2-root" data-composition-id="scene-2" data-duration="5" data-fps="30" data-width="1280" data-height="720">
+        <style>
+          #s2-root { position: absolute; inset: 0; overflow: hidden; padding: 100px 72px 96px; display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; color: #191713; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+          .s2-eyebrow { font-size: 18px; font-weight: 700; letter-spacing: 0.16em; color: #a44c1d; margin-bottom: 20px; }
+          .s2-head { font-size: 60px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.04; }
+          .s2-caption { font-size: 22px; line-height: 1.5; color: #66635a; margin-top: 24px; max-width: 500px; }
+          .s2-toggle-row { display: flex; align-items: center; gap: 14px; margin-top: 32px; font-size: 20px; font-weight: 600; }
+          .s2-switch { width: 56px; height: 32px; border-radius: 999px; background: #191713; position: relative; }
+          .s2-knob { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: #ffc61a; }
+          .s2-card { background: #fff; border: 1px solid #e0dbce; border-radius: 20px; padding: 16px 28px 20px; box-shadow: 0 24px 48px -12px rgba(25,23,19,.14); }
+          .s2-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 21px; padding: 13px 0; border-bottom: 1px dashed #e0dbce; }
+          .s2-row small { font-size: 15px; color: #66635a; margin-left: 8px; }
+          .s2-row.s2-sub { color: #66635a; border-bottom-style: solid; }
+          .s2-mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+          .s2-total { display: flex; justify-content: space-between; align-items: center; margin: 14px -12px 0; padding: 14px 12px; border-radius: 12px; background: #fcf0cf; font-weight: 800; font-size: 28px; }
+        </style>
+        <div data-hf-id="hf-zeok" id="s2-copy">
+          <div data-hf-id="hf-zeol" class="s2-eyebrow s2-rv">RECEIPT BREAKDOWN</div>
+          <div data-hf-id="hf-zeom" class="s2-head s2-rv">Every sol,<br data-hf-id="hf-x5px">itemized.</div>
+          <div data-hf-id="hf-8nwh" class="s2-caption s2-rv">See exactly where your money goes, then switch charges on or off.</div>
+          <div data-hf-id="hf-tg01" class="s2-toggle-row s2-rv"><div data-hf-id="hf-0jsm" class="s2-switch" id="s2-switch"><div data-hf-id="hf-njki" class="s2-knob" id="s2-knob"></div></div><span data-hf-id="hf-hvu0" id="s2-toggle-label">IGV 18% on</span></div>
+        </div>
+        <div data-hf-id="hf-09fq" class="s2-card" id="s2-card">
+          <div data-hf-id="hf-svbo" class="s2-row s2-line"><span data-hf-id="hf-gom9">Energy<small data-hf-id="hf-g31h">120 kWh × 0.6144</small></span><span data-hf-id="hf-tbxa" class="s2-mono">S/ 73.73</span></div>
+          <div data-hf-id="hf-c6uk" class="s2-row s2-line"><span data-hf-id="hf-im8v">Fixed charge</span><span data-hf-id="hf-p7n3" class="s2-mono">S/ 2.34</span></div>
+          <div data-hf-id="hf-azxh" class="s2-row s2-line"><span data-hf-id="hf-8x9s">Public lighting</span><span data-hf-id="hf-1jar" class="s2-mono">S/ 0.10</span></div>
+          <div data-hf-id="hf-sb01" class="s2-row s2-sub s2-line"><span data-hf-id="hf-2ss1">Subtotal</span><span data-hf-id="hf-7a3l" class="s2-mono">S/ 76.17</span></div>
+          <div data-hf-id="hf-be8i" class="s2-row s2-line" id="s2-igv" style="border-bottom: none"><span data-hf-id="hf-31cg">IGV · 18%</span><span data-hf-id="hf-i3rm" class="s2-mono">S/ 13.71</span></div>
+          <div data-hf-id="hf-0fd2" class="s2-total s2-line"><span data-hf-id="hf-7qep">Total</span><span data-hf-id="hf-o3rz" class="s2-mono" id="s2-total">S/ 89.88</span></div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+        <script>
+          (function () {
+            'use strict';
+            var FPS = 30;
+            // Seek-safe tween between two money values, one tl.set per frame.
+            function countBetween(tl, el, from, to, at, dur) {
+              var last = Math.max(1, Math.round(dur * FPS));
+              var ease = gsap.parseEase('power2.inOut');
+              for (var f = 0; f <= last; f += 1) {
+                tl.set(el, { textContent: 'S/ ' + (from + (to - from) * ease(f / last)).toFixed(2) }, at + dur * (f / last));
+              }
+            }
+            var totalEl = document.getElementById('s2-total');
+            var labelEl = document.getElementById('s2-toggle-label');
+
+            gsap.set('#s2-root .s2-rv', { opacity: 0, y: 20 });
+            gsap.set('#s2-card', { opacity: 0, x: 40 });
+            gsap.set('#s2-knob', { x: 24 });
+            gsap.set('#s2-root .s2-line', { opacity: 0, y: 12 });
+
+            var tl = gsap.timeline({ paused: true });
+            tl.to('#s2-root .s2-rv', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.1 }, 0.15);
+            tl.to('#s2-card', { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }, 0.25);
+            // Rows print top to bottom like a receipt, the total lands last.
+            tl.to('#s2-root .s2-line', { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', stagger: 0.14 }, 0.55);
+
+            // Demonstrate the toggle: IGV off → total drops to the subtotal, then back on.
+            tl.to('#s2-knob', { x: 0, duration: 0.25, ease: 'power2.inOut' }, 2.3);
+            tl.to('#s2-switch', { backgroundColor: '#e0dbce', duration: 0.25 }, 2.3);
+            tl.set(labelEl, { textContent: 'IGV 18% off' }, 2.35);
+            tl.to('#s2-igv', { color: '#66635a', textDecoration: 'line-through', duration: 0.25 }, 2.3);
+            countBetween(tl, totalEl, 89.88, 76.17, 2.35, 0.45);
+
+            tl.to('#s2-knob', { x: 24, duration: 0.25, ease: 'power2.inOut' }, 3.5);
+            tl.to('#s2-switch', { backgroundColor: '#191713', duration: 0.25 }, 3.5);
+            tl.set(labelEl, { textContent: 'IGV 18% on' }, 3.55);
+            tl.to('#s2-igv', { color: '#191713', textDecoration: 'none', duration: 0.25 }, 3.5);
+            countBetween(tl, totalEl, 76.17, 89.88, 3.55, 0.45);
+
+            tl.to('#s2-copy, #s2-card', { opacity: 0, y: -24, duration: 0.4, ease: 'power2.in', stagger: 0.05 }, 4.5);
+            tl.seek(0);
+            window.__timelines = window.__timelines || {};
+            window.__timelines['scene-2'] = tl;
+          })();
+        </script>
+      </div>
+    </template>
+  </body>
+</html>

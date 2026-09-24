@@ -7,6 +7,12 @@
       "skillPath": "skills/productivity/grilling/SKILL.md",
       "computedHash": "4dd886b0196bf43729d954ae326016f2bd9f5f79d892500b407c33a753362f14"
     },
+    "hyperframes-cli": {
+      "source": "heygen-com/hyperframes",
+      "sourceType": "github",
+      "skillPath": "skills/hyperframes-cli/SKILL.md",
+      "computedHash": "8129f0a1545f29c0717d4c138bfd5031dfa5fe1702b9cac16c2be7e926d1ce3b"
+    },
     "refactor": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

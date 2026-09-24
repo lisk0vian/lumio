@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-composition-id="scene-4" data-composition-duration="5">
+  <head>
+    <meta charset="UTF-8">
+    <title>Scene 4 — Share</title>
+  </head>
+  <body>
+    <template>
+      <div data-hf-id="hf-zow0" id="s4-root" data-composition-id="scene-4" data-duration="5" data-fps="30" data-width="1280" data-height="720">
+        <style>
+          #s4-root { position: absolute; inset: 0; overflow: hidden; color: #191713; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+          #s4-main { position: absolute; inset: 0; padding: 100px 72px 96px; display: grid; grid-template-columns: 1fr 460px; gap: 72px; align-items: center; }
+          .s4-eyebrow { font-size: 18px; font-weight: 700; letter-spacing: 0.16em; color: #a44c1d; margin-bottom: 20px; }
+          .s4-head { font-size: 60px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.04; }
+          .s4-caption { font-size: 22px; line-height: 1.5; color: #66635a; margin-top: 24px; max-width: 520px; }
+          .s4-receipt { background: #fff; border: 1px solid #e0dbce; border-radius: 20px; padding: 28px; box-shadow: 0 24px 48px -12px rgba(25,23,19,.14); }
+          .s4-rhead { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 600; color: #66635a; }
+          .s4-big { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 56px; font-weight: 700; letter-spacing: -0.04em; margin: 14px 0 4px; font-variant-numeric: tabular-nums; }
+          .s4-sub { font-size: 17px; color: #66635a; }
+          .s4-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px; }
+          .s4-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 12px; border: 1px solid #e0dbce; background: #faf9f4; font-size: 17px; font-weight: 600; }
+          .s4-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+          .s4-btn.s4-primary { background: #ffc61a; border-color: #ffc61a; }
+          .s4-toast { position: absolute; left: 50%; bottom: 112px; display: flex; align-items: center; gap: 10px; background: #191713; color: #faf9f4; font-size: 18px; font-weight: 600; padding: 12px 20px; border-radius: 999px; }
+          .s4-toast svg { width: 20px; height: 20px; fill: none; stroke: #ffc61a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+          #s4-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; background: #faf9f4; }
+          .s4-logo { display: flex; align-items: center; gap: 16px; font-size: 76px; font-weight: 800; letter-spacing: -0.04em; }
+          .s4-mark { width: 76px; height: 76px; border-radius: 20px; background: #ffc61a; display: grid; place-items: center; }
+          .s4-tag { font-size: 26px; color: #66635a; font-weight: 500; }
+          .s4-tag b { color: #191713; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+        </style>
+        <div data-hf-id="hf-qanv" id="s4-main">
+          <div data-hf-id="hf-2boj">
+            <div data-hf-id="hf-2boa" class="s4-eyebrow s4-rv">SHARE THE RECEIPT</div>
+            <div data-hf-id="hf-2bob" class="s4-head s4-rv">Send it to your family in one tap.</div>
+            <div data-hf-id="hf-vsx7" class="s4-caption s4-rv">Copy the text, download a PNG, or open WhatsApp. Light and dark.</div>
+          </div>
+          <div data-hf-id="hf-gc86" id="s4-panel">
+            <div data-hf-id="hf-pnti" class="s4-receipt" id="s4-receipt">
+              <div data-hf-id="hf-onwn" class="s4-rhead"><span data-hf-id="hf-5tht">Lumio receipt</span><span data-hf-id="hf-ex98">120 kWh · Monthly</span></div>
+              <div data-hf-id="hf-6use" class="s4-big">S/ 89.88</div>
+              <div data-hf-id="hf-j61b" class="s4-sub">Energy + fixed + lighting · IGV 18% incl.</div>
+            </div>
+            <div data-hf-id="hf-act1" class="s4-actions">
+              <div data-hf-id="hf-s9xv" class="s4-btn"><svg data-hf-id="hf-ulu9" viewBox="0 0 24 24"><rect data-hf-id="hf-aun5" x="9" y="9" width="13" height="13" rx="2" /><path data-hf-id="hf-uk1v" d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>Copy</div>
+              <div data-hf-id="hf-0zpt" class="s4-btn"><svg data-hf-id="hf-1tol" viewBox="0 0 24 24"><path data-hf-id="hf-l57f" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline data-hf-id="hf-9u64" points="7 10 12 15 17 10" /><line data-hf-id="hf-4itj" x1="12" y1="15" x2="12" y2="3" /></svg>PNG</div>
+              <div data-hf-id="hf-yu5w" class="s4-btn s4-primary" id="s4-wa"><svg data-hf-id="hf-30lo" viewBox="0 0 24 24"><path data-hf-id="hf-2fyj" d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>WhatsApp</div>
+            </div>
+          </div>
+        </div>
+        <div data-hf-id="hf-ts01" class="s4-toast" id="s4-toast"><svg data-hf-id="hf-2man" viewBox="0 0 24 24"><polyline data-hf-id="hf-mlxs" points="20 6 9 17 4 12" /></svg>Receipt ready to send</div>
+        <div data-hf-id="hf-end1" id="s4-end">
+          <div data-hf-id="hf-end2" class="s4-logo"><div data-hf-id="hf-sd1h" class="s4-mark"><svg data-hf-id="hf-nuvz" width="44" height="44" viewBox="0 0 24 24" fill="#191713"><path data-hf-id="hf-gy5o" d="M13 2 4 14h7l-1 8 9-12h-7z" /></svg></div>Lumio</div>
+          <div data-hf-id="hf-end3" class="s4-tag"><b data-hf-id="hf-071b">kWh → S/</b> in seconds · free, no sign-up</div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+        <script>
+          (function () {
+            'use strict';
+            gsap.set('#s4-root .s4-rv', { opacity: 0, y: 20 });
+            gsap.set('#s4-receipt', { opacity: 0, y: 40, rotate: -1.5 });
+            gsap.set('#s4-root .s4-btn', { opacity: 0, y: 14 });
+            gsap.set('#s4-toast', { opacity: 0, y: 16, xPercent: -50 });
+            gsap.set('#s4-end', { opacity: 0 });
+            gsap.set('#s4-root .s4-logo, #s4-root .s4-tag', { opacity: 0, y: 24 });
+
+            var tl = gsap.timeline({ paused: true });
+            tl.to('#s4-root .s4-rv', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.1 }, 0.15);
+            tl.to('#s4-receipt', { opacity: 1, y: 0, rotate: 0, duration: 0.7, ease: 'back.out(1.4)' }, 0.3);
+            tl.to('#s4-root .s4-btn', { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', stagger: 0.08 }, 0.75);
+
+            // Press feedback on the primary action, then confirm with a toast.
+            tl.to('#s4-wa', { scale: 0.94, duration: 0.1, ease: 'power2.out' }, 1.55);
+            tl.to('#s4-wa', { scale: 1, duration: 0.25, ease: 'back.out(2)' }, 1.66);
+            tl.to('#s4-toast', { opacity: 1, y: 0, duration: 0.35, ease: 'power3.out' }, 1.75);
+            tl.to('#s4-toast', { opacity: 0, y: 8, duration: 0.25, ease: 'power2.in' }, 2.75);
+
+            // End card: one clear lockup to close on, held long enough to read.
+            tl.to('#s4-main', { opacity: 0, scale: 0.98, duration: 0.35, ease: 'power2.in' }, 2.8);
+            tl.to('#s4-end', { opacity: 1, duration: 0.35, ease: 'power1.out' }, 2.95);
+            tl.to('#s4-root .s4-logo, #s4-root .s4-tag', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.12 }, 3.05);
+            tl.fromTo('#s4-root .s4-mark', { rotate: -12 }, { rotate: 0, duration: 0.8, ease: 'back.out(2)' }, 3.05);
+            tl.seek(0);
+            window.__timelines = window.__timelines || {};
+            window.__timelines['scene-4'] = tl;
+          })();
+        </script>
+      </div>
+    </template>
+  </body>
+</html>
