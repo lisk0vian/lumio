@@ -14,7 +14,9 @@ export const ReferenceBlock = ({ lang }: { lang: AppLang }) => {
     <div className="mt-3.5 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
       {REFERENCE_KWH.map((kwh, idx) => (
         <Fragment key={kwh}>
-          <p>{idx === 0 ? `${t('receipt.reference')}: ${kwh} kWh` : `${kwh} kWh`}</p>
+          <p>
+            {idx === 0 ? `${t('receipt.reference')}: ${kwh} kWh` : `${kwh} kWh`}
+          </p>
           <p className="text-right font-mono tabular-nums">
             {formatMoney(calculateKwhToMoney(kwh, inputs).total)}
           </p>

@@ -19,22 +19,35 @@ export function getCounterRef(unit: CounterUnit): number {
  * Non-finite or non-positive input falls back to the minimum.
  */
 export function getCounterDuration(delta: number, ref: number): number {
-  if (!Number.isFinite(delta) || !Number.isFinite(ref) || ref <= 0 || delta <= 0) {
+  if (
+    !Number.isFinite(delta) ||
+    !Number.isFinite(ref) ||
+    ref <= 0 ||
+    delta <= 0
+  ) {
     return COUNTER_MIN_DURATION
   }
   const t = COUNTER_MIN_DURATION + 220 * Math.sqrt(delta / ref)
-  return Math.min(Math.max(Math.round(t), COUNTER_MIN_DURATION), COUNTER_MAX_DURATION)
+  return Math.min(
+    Math.max(Math.round(t), COUNTER_MIN_DURATION),
+    COUNTER_MAX_DURATION
+  )
 }
 
 /** Big jumps (>= 1 ref) ease out harder; small ones stay soft. */
-export function getCounterEasing(delta: number, ref: number): 'outExpo' | 'outCubic' {
-  if (!Number.isFinite(delta) || !Number.isFinite(ref) || ref <= 0) return 'outCubic'
+export function getCounterEasing(
+  delta: number,
+  ref: number
+): 'outExpo' | 'outCubic' {
+  if (!Number.isFinite(delta) || !Number.isFinite(ref) || ref <= 0)
+    return 'outCubic'
   return delta / ref >= 1 ? 'outExpo' : 'outCubic'
 }
 
 /** SSR-safe reduced-motion check: server prerender never matches. */
 export function isReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function')
+    return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 

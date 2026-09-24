@@ -23,7 +23,13 @@ export const ReceiptDetails = ({ receipts }: ReceiptDetailsProps) => {
   )
 }
 
-const ReceiptField = ({ receipt, isTotal }: { receipt: Receipt; isTotal: boolean }) => {
+const ReceiptField = ({
+  receipt,
+  isTotal,
+}: {
+  receipt: Receipt
+  isTotal: boolean
+}) => {
   if (isTotal) return <TotalField receipt={receipt} />
   return <RowField receipt={receipt} />
 }
@@ -34,10 +40,18 @@ const TotalField = ({ receipt }: { receipt: Receipt }) => {
   const display = useAnimatedNumber(receipt.money, 'money')
   return (
     <>
-      <p className={cn('border-t border-border pt-1.5 font-medium text-foreground')}>
+      <p
+        className={cn(
+          'border-t border-border pt-1.5 font-medium text-foreground'
+        )}
+      >
         {receipt.label}
       </p>
-      <p className={cn('border-t border-border pt-1.5 text-right font-medium tabular-nums text-foreground')}>
+      <p
+        className={cn(
+          'border-t border-border pt-1.5 text-right font-medium tabular-nums text-foreground'
+        )}
+      >
         S/ {display.toFixed(2)}
       </p>
     </>
@@ -55,7 +69,9 @@ const RowField = ({ receipt }: { receipt: Receipt }) => {
   const mountedRef = useRef(false)
 
   useEffect(() => {
-    const targets = [labelRef.current, valueRef.current].filter((el) => el !== null)
+    const targets = [labelRef.current, valueRef.current].filter(
+      (el) => el !== null
+    )
     if (targets.length === 0 || isReducedMotion()) {
       prevRef.current = money
       mountedRef.current = true
@@ -75,7 +91,11 @@ const RowField = ({ receipt }: { receipt: Receipt }) => {
     }
     if (prevRef.current === money) return
     prevRef.current = money
-    animRef.current = animate(targets, { opacity: [0.4, 1], duration: 150, ease: 'outCubic' })
+    animRef.current = animate(targets, {
+      opacity: [0.4, 1],
+      duration: 150,
+      ease: 'outCubic',
+    })
   }, [money])
 
   useEffect(() => {
@@ -86,9 +106,7 @@ const RowField = ({ receipt }: { receipt: Receipt }) => {
 
   return (
     <>
-      <p ref={labelRef}>
-        {receipt.label}
-      </p>
+      <p ref={labelRef}>{receipt.label}</p>
       <p ref={valueRef} className="text-right tabular-nums">
         S/ {money.toFixed(2)}
       </p>

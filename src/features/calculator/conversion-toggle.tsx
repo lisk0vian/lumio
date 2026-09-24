@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { animate } from 'animejs'
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLumioStore } from '@/stores/lumio-store'
 import { isReducedMotion } from '@/utils/animated-number.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 
 export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
   const direction = useLumioStore((state) => state.direction)
-  const setDirectionWithConversion = useLumioStore((state) => state.setDirectionWithConversion)
+  const setDirectionWithConversion = useLumioStore(
+    (state) => state.setDirectionWithConversion
+  )
   const t = useTranslations(lang)
 
   const barRef = useRef<HTMLSpanElement | null>(null)
@@ -59,7 +61,9 @@ export const ConversionToggle = ({ lang }: { lang: AppLang }) => {
     <Tabs
       value={activeKey}
       onValueChange={(val) =>
-        setDirectionWithConversion(val === 's-kwh' ? 'money-to-kwh' : 'kwh-to-money')
+        setDirectionWithConversion(
+          val === 's-kwh' ? 'money-to-kwh' : 'kwh-to-money'
+        )
       }
     >
       <TabsList

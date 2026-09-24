@@ -18,7 +18,7 @@ import {
 export function useAnimatedNumber(
   target: number,
   unit: CounterUnit,
-  titleRef?: RefObject<HTMLHeadingElement | null>,
+  titleRef?: RefObject<HTMLHeadingElement | null>
 ): number {
   const [display, setDisplay] = useState(target)
   const displayRef = useRef(target)

@@ -19,16 +19,20 @@ export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   if (records.length === 0) {
     return (
       <div>
-        <p className="text-xs">
-          {t('history.empty')}
-        </p>
+        <p className="text-xs">{t('history.empty')}</p>
       </div>
     )
   }
 
   const avgs = {
-    money: (records.reduce((acc, { resultMoney }) => acc + resultMoney, 0) / records.length).toFixed(2),
-    kwh: (records.reduce((acc, { resultKwh }) => acc + resultKwh, 0) / records.length).toFixed(2),
+    money: (
+      records.reduce((acc, { resultMoney }) => acc + resultMoney, 0) /
+      records.length
+    ).toFixed(2),
+    kwh: (
+      records.reduce((acc, { resultKwh }) => acc + resultKwh, 0) /
+      records.length
+    ).toFixed(2),
   }
 
   const moneyArr = records.map(({ resultMoney }) => resultMoney)
@@ -44,7 +48,10 @@ export const HistoryDetails = ({ lang }: { lang: AppLang }) => {
   }
 
   return (
-    <div ref={enterRef} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-xs text-muted-foreground">
+    <div
+      ref={enterRef}
+      className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-xs text-muted-foreground"
+    >
       {Object.entries(historyMapper).map(([label, value], idx) => (
         <HistoryField key={idx} label={label} value={value} />
       ))}

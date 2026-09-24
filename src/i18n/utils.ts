@@ -1,6 +1,6 @@
 import { defaultLang, ui, type AppLang } from './ui'
 
-export type I18nKey = keyof typeof ui[typeof defaultLang]
+export type I18nKey = keyof (typeof ui)[typeof defaultLang]
 
 export function useTranslations(lang: AppLang) {
   return function translate(key: I18nKey): string {

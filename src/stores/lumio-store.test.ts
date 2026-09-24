@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { HISTORY_LIMIT } from '../types'
 import { tariffCategories } from '../data/tariffs.data'
-import {
-  migratePersistedState,
-  useLumioStore,
-} from './lumio-store'
+import { migratePersistedState, useLumioStore } from './lumio-store'
 
 function state() {
   return useLumioStore.getState()

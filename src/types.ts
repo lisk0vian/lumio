@@ -1,16 +1,11 @@
-export const MONEY = 'S/';
+export const MONEY = 'S/'
 
 export type ReceiptId =
-  | 'energy'
-  | 'fixed'
-  | 'lighting'
-  | 'subtotal'
-  | 'igv'
-  | 'total'
+  'energy' | 'fixed' | 'lighting' | 'subtotal' | 'igv' | 'total'
 
 export type Receipt = {
-  id?: ReceiptId,
-  label: string,
+  id?: ReceiptId
+  label: string
   money: number
 }
 
@@ -82,16 +77,16 @@ export type BillingPeriod = 'monthly' | 'bimonthly'
  * Usage segment for a tariff category.
  * Extend this union as needed (e.g. "seasonal", "prepaid") if the data requires it.
  */
-export type Segment = "residential" | "commercial" | "industrial" | "rural";
+export type Segment = 'residential' | 'commercial' | 'industrial' | 'rural'
 
 /**
  * A national/regional regulatory body that defines its own tariff codes.
  * Example: OSINERGMIN in Peru. Each regulator is scoped to one country.
  */
 export interface Regulator {
-  id: string;          // e.g. "osinergmin"
-  name: string;         // e.g. "OSINERGMIN"
-  countryCode: string;  // ISO-ish country code, e.g. "PE"
+  id: string // e.g. "osinergmin"
+  name: string // e.g. "OSINERGMIN"
+  countryCode: string // ISO-ish country code, e.g. "PE"
 }
 
 /**
@@ -101,17 +96,17 @@ export interface Regulator {
  * `voltageLevel` links the category to the universal IEC classification.
  */
 export interface TariffCategory {
-  id: string;                   // unique id, e.g. "osinergmin-bt5b-residential"
-  regulatorId: string;          // FK to Regulator.id
-  code: string;                 // regulator-specific code, e.g. "BT5B"
-  voltageLevel: VoltageLevel;
-  segment: Segment;
-  label: string;                // human-readable segment label, e.g. "Residential"
-  pricePerKwh: number;          // approximate reference price, user-editable
-  fixedCharge: number;          // regulated base fee, charged regardless of consumption
-  publicLightingCharge: number; // municipal fee for public lighting, varies by district
-  verified: boolean;            // true if this price was confirmed against a real source
-  billingPeriod: BillingPeriod;
+  id: string // unique id, e.g. "osinergmin-bt5b-residential"
+  regulatorId: string // FK to Regulator.id
+  code: string // regulator-specific code, e.g. "BT5B"
+  voltageLevel: VoltageLevel
+  segment: Segment
+  label: string // human-readable segment label, e.g. "Residential"
+  pricePerKwh: number // approximate reference price, user-editable
+  fixedCharge: number // regulated base fee, charged regardless of consumption
+  publicLightingCharge: number // municipal fee for public lighting, varies by district
+  verified: boolean // true if this price was confirmed against a real source
+  billingPeriod: BillingPeriod
 }
 
 /**
@@ -119,7 +114,7 @@ export interface TariffCategory {
  * that share the same code + voltageLevel (e.g. all "BT5B" segments together).
  */
 export interface TariffGroup {
-  code: string;
-  voltageLevel: VoltageLevel;
-  items: TariffCategory[];
+  code: string
+  voltageLevel: VoltageLevel
+  items: TariffCategory[]
 }

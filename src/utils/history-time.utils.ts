@@ -64,6 +64,10 @@ export function formatRecordTime(
   const dayOptions: Intl.DateTimeFormatOptions = sameYear
     ? { day: '2-digit', month: 'short' }
     : { day: '2-digit', month: 'short', year: 'numeric' }
-  const day = getFormatter(locale, sameYear ? 'day' : 'dayYear', dayOptions).format(date)
+  const day = getFormatter(
+    locale,
+    sameYear ? 'day' : 'dayYear',
+    dayOptions
+  ).format(date)
   return `${day} · ${time}`
 }

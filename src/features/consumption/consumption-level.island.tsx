@@ -1,7 +1,10 @@
 import type { FC } from 'react'
 import { EnergyScale, LevelHint, LevelTitle } from './energy-scale'
 import { useEnterAnimation } from '@/hooks/use-enter-animation'
-import { useActiveKwh, useCalculationInputs } from '../calculator/use-calculation-inputs'
+import {
+  useActiveKwh,
+  useCalculationInputs,
+} from '../calculator/use-calculation-inputs'
 import type { AppLang } from '@/i18n'
 
 // Right-column consumption level: derives from the same tariff inputs as

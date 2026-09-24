@@ -31,7 +31,13 @@ function getTerms(t: (key: I18nKey) => string) {
 // `.peer:checked ~ *`, which leaks across all preceding radios when several
 // share one container and selects/shows multiple tabs at once.
 // `groupId` keeps the radio groups of desktop and mobile apart.
-export const GlossaryBlock = ({ lang, groupId = 'glossary' }: { lang: AppLang; groupId?: string }) => {
+export const GlossaryBlock = ({
+  lang,
+  groupId = 'glossary',
+}: {
+  lang: AppLang
+  groupId?: string
+}) => {
   const t = useTranslations(lang)
   const TERMS = getTerms(t)
 
@@ -56,10 +62,7 @@ export const GlossaryBlock = ({ lang, groupId = 'glossary' }: { lang: AppLang; g
             >
               {term}
             </label>
-            <div
-              data-glossary-panel
-              className="order-2 w-full basis-full"
-            >
+            <div data-glossary-panel className="order-2 w-full basis-full">
               <p className="mt-2 line-clamp-4 min-h-16 text-xs leading-relaxed text-muted-foreground">
                 {def}
               </p>

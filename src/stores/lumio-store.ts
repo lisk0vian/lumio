@@ -45,7 +45,9 @@ export type LumioAction = {
   setDirectionWithConversion: (direction: CalculationDirection) => void
   setInputKwh: (inputKwh: number) => void
   setInputMoney: (inputMoney: number) => void
-  addRecord: (record: Omit<HistoryRecord, 'id' | 'createdAt' | 'snapshot'>) => void
+  addRecord: (
+    record: Omit<HistoryRecord, 'id' | 'createdAt' | 'snapshot'>
+  ) => void
   removeRecord: (id: string) => void
   clearRecords: () => void
   resetAll: () => void
@@ -132,8 +134,11 @@ export function migratePersistedState(persisted: unknown): LumioState {
   if (!persisted || typeof persisted !== 'object') return initialData
   // v2 drops the language keys: language now lives in the URL, and the
   // remaining state (tariff, inputs, history) is language-independent.
-  const { activeLang: _droppedLang, langResolved: _droppedResolved, ...rest } =
-    persisted as Partial<LumioState> & Record<string, unknown>
+  const {
+    activeLang: _droppedLang,
+    langResolved: _droppedResolved,
+    ...rest
+  } = persisted as Partial<LumioState> & Record<string, unknown>
   return { ...initialData, ...rest }
 }
 

@@ -8,7 +8,10 @@ import { SelectRegulator } from './select-regulator'
 import { SelectTariff } from './select-tariff'
 import { TaxToggle } from './tax-toggle'
 import { ChargeToggle } from './charge-toggle'
-import { parseSettingNumber, parseTaxPercent } from '@/utils/setting-parse.utils'
+import {
+  parseSettingNumber,
+  parseTaxPercent,
+} from '@/utils/setting-parse.utils'
 import { formatTaxPercent } from '@/utils/format.utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import type { SettingFieldId } from '@/utils/animated-number.utils'
@@ -19,11 +22,19 @@ import { useTranslations, type AppLang } from '@/i18n'
 const GHOST_TRIGGER =
   'w-auto border-none bg-transparent px-1 font-mono text-[0.8125rem] shadow-none max-lg:min-h-11 [&_[data-slot=select-value]]:justify-end'
 
-function SettingRow({ label, children }: { label: string; children: ReactNode }) {
+function SettingRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
   return (
     <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border py-3">
       <p className="text-sm whitespace-nowrap">{label}</p>
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">{children}</div>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+        {children}
+      </div>
     </div>
   )
 }
@@ -44,12 +55,19 @@ function UnderlineInput({
   onChange: (val: string) => void
 }) {
   const wrapRef = useRef<HTMLSpanElement | null>(null)
-  const { sweepRef, sweep, setHover, prime, settle, commit } = useFieldFeedback(field)
+  const { sweepRef, sweep, setHover, prime, settle, commit } =
+    useFieldFeedback(field)
   const fixedOn = useLumioStore((state) => state.isFixedChargeEnabled)
   const lightingOn = useLumioStore((state) => state.isPublicLightingEnabled)
   const taxOn = useLumioStore((state) => state.isTaxEnabled)
   const enabled =
-    field === 'fixed' ? fixedOn : field === 'lighting' ? lightingOn : field === 'tax' ? taxOn : true
+    field === 'fixed'
+      ? fixedOn
+      : field === 'lighting'
+        ? lightingOn
+        : field === 'tax'
+          ? taxOn
+          : true
 
   return (
     <span

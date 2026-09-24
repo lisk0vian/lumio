@@ -72,7 +72,10 @@ export const HistoryRail: FC<{ lang: AppLang }> = ({ lang }) => {
           />
           <span>
             {t('history.title')} <span className="opacity-45">·</span>{' '}
-            <span key={records.length} className="count-pop font-medium text-ember">
+            <span
+              key={records.length}
+              className="count-pop font-medium text-ember"
+            >
               {records.length}
             </span>
           </span>
@@ -91,7 +94,9 @@ export const HistoryRail: FC<{ lang: AppLang }> = ({ lang }) => {
               </div>
             </div>
             {records.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{t('history.empty')}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('history.empty')}
+              </p>
             ) : (
               <HistoryRecordList lang={lang} />
             )}
@@ -103,6 +108,9 @@ export const HistoryRail: FC<{ lang: AppLang }> = ({ lang }) => {
 }
 
 /** Manual mount entry for the loader (not an Astro island). */
-export function mountHistoryRailPanel(rootEl: Element, opts: { lang: AppLang }) {
+export function mountHistoryRailPanel(
+  rootEl: Element,
+  opts: { lang: AppLang }
+) {
   createRoot(rootEl).render(<HistoryRail lang={opts.lang} />)
 }

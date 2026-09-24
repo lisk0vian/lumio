@@ -9,19 +9,27 @@ const iso = (y: number, m: number, d: number, h: number, min: number) =>
 
 describe('isSameDay', () => {
   it('separates two instants minutes apart across midnight', () => {
-    expect(isSameDay(new Date(2026, 8, 22, 23, 59), new Date(2026, 8, 23, 0, 1))).toBe(false)
+    expect(
+      isSameDay(new Date(2026, 8, 22, 23, 59), new Date(2026, 8, 23, 0, 1))
+    ).toBe(false)
   })
 
   it('separates the same day number in different months', () => {
-    expect(isSameDay(new Date(2026, 7, 22, 12, 0), new Date(2026, 8, 22, 12, 0))).toBe(false)
+    expect(
+      isSameDay(new Date(2026, 7, 22, 12, 0), new Date(2026, 8, 22, 12, 0))
+    ).toBe(false)
   })
 
   it('separates the same day number in different years', () => {
-    expect(isSameDay(new Date(2025, 8, 22, 12, 0), new Date(2026, 8, 22, 12, 0))).toBe(false)
+    expect(
+      isSameDay(new Date(2025, 8, 22, 12, 0), new Date(2026, 8, 22, 12, 0))
+    ).toBe(false)
   })
 
   it('matches two instants on the same calendar day', () => {
-    expect(isSameDay(new Date(2026, 8, 22, 0, 0), new Date(2026, 8, 22, 23, 59))).toBe(true)
+    expect(
+      isSameDay(new Date(2026, 8, 22, 0, 0), new Date(2026, 8, 22, 23, 59))
+    ).toBe(true)
   })
 })
 

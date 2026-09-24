@@ -31,14 +31,22 @@ export function useFieldFeedback(field?: SettingFieldId) {
     if (!el) return
     lastSweepRef.current = Date.now()
     animRef.current?.cancel()
-    animRef.current = animate(el, { scaleX: [0, 1], duration: 200, ease: 'outCubic' })
+    animRef.current = animate(el, {
+      scaleX: [0, 1],
+      duration: 200,
+      ease: 'outCubic',
+    })
   }
 
   const hideBar = () => {
     const bar = sweepRef.current
     if (!bar) return
     animRef.current?.cancel()
-    animRef.current = animate(bar, { scaleX: 0, duration: 150, ease: 'outCubic' })
+    animRef.current = animate(bar, {
+      scaleX: 0,
+      duration: 150,
+      ease: 'outCubic',
+    })
   }
 
   const sweep = () => {
@@ -81,7 +89,8 @@ export function useFieldFeedback(field?: SettingFieldId) {
     }
     if (isReducedMotion()) return
     hideBar()
-    if (wrap) animate(wrap, { opacity: [0.45, 1], duration: 250, ease: 'outCubic' })
+    if (wrap)
+      animate(wrap, { opacity: [0.45, 1], duration: 250, ease: 'outCubic' })
   }
 
   // Paired toggle off: the field goes dormant, bar out.
@@ -93,7 +102,9 @@ export function useFieldFeedback(field?: SettingFieldId) {
   useEffect(() => {
     if (!field) return
     const onToggle = (event: Event) => {
-      const detail = (event as CustomEvent<{ field: SettingFieldId; enabled: boolean }>).detail
+      const detail = (
+        event as CustomEvent<{ field: SettingFieldId; enabled: boolean }>
+      ).detail
       if (!detail || detail.field !== field) return
       if (detail.enabled) {
         prime()
@@ -114,7 +125,11 @@ export function useFieldFeedback(field?: SettingFieldId) {
   return { sweepRef, sweep, setHover, prime, settle, commit }
 }
 
-export const FieldSweep = ({ sweepRef }: { sweepRef: RefObject<HTMLSpanElement | null> }) => (
+export const FieldSweep = ({
+  sweepRef,
+}: {
+  sweepRef: RefObject<HTMLSpanElement | null>
+}) => (
   <span
     ref={sweepRef}
     aria-hidden="true"

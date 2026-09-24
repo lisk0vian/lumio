@@ -6,7 +6,13 @@ import type { AppLang } from '@/i18n'
 // Slim utility header for the mobile shell (inside the MobileTabs island):
 // brand on the left, language + theme controls on the right.
 // The desktop shell uses the static top-bar.astro instead.
-export const TopBar = ({ lang, routes }: { lang: AppLang; routes?: Record<AppLang, string> }) => {
+export const TopBar = ({
+  lang,
+  routes,
+}: {
+  lang: AppLang
+  routes?: Record<AppLang, string>
+}) => {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <p className="flex min-w-0 items-center gap-2">

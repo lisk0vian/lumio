@@ -14,7 +14,11 @@ export const ReceiptIsland: FC<{ lang: AppLang }> = ({ lang }) => {
   const t = useTranslations(lang)
   const enterRef = useEnterAnimation<HTMLDivElement>()
 
-  const receipts = buildReceipts(activeKwh, inputs, getReceiptLabels(t)).receipts
+  const receipts = buildReceipts(
+    activeKwh,
+    inputs,
+    getReceiptLabels(t)
+  ).receipts
 
   return (
     <div ref={enterRef} className="contents">

@@ -40,11 +40,7 @@ export const CalculatorBlock: FC<{ lang: AppLang }> = ({ lang }) => {
   return (
     // display:contents keeps a single island root without adding layout.
     <div ref={enterRef} className="contents">
-      <SummaryTotal
-        total={displayTotal}
-        unit={unit}
-        surcharges={surcharges}
-      />
+      <SummaryTotal total={displayTotal} unit={unit} surcharges={surcharges} />
       <ShareReceiptButton lang={lang} className="mt-3" />
       <ConversionToggle lang={lang} />
       <CountTotal lang={lang} />

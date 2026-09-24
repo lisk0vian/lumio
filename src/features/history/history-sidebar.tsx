@@ -13,7 +13,12 @@ type HistorySidebarProps = {
 // Inline (non-drawer) history, used only by the mobile tab. The rows and the
 // clear button are the shared components, so this surface and the desktop
 // drawer stay in sync by construction.
-export const HistorySidebar = ({ lang, hidden, onHide, onShow }: HistorySidebarProps) => {
+export const HistorySidebar = ({
+  lang,
+  hidden,
+  onHide,
+  onShow,
+}: HistorySidebarProps) => {
   const records = useLumioStore((state) => state.records)
   const t = useTranslations(lang)
   if (records.length === 0) return null

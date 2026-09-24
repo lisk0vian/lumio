@@ -12,12 +12,7 @@ import {
 } from 'lucide-react'
 
 export type ReceiptLineKind =
-  | 'energy'
-  | 'fixed'
-  | 'lighting'
-  | 'subtotal'
-  | 'igv'
-  | 'total'
+  'energy' | 'fixed' | 'lighting' | 'subtotal' | 'igv' | 'total'
 
 export type ReceiptLine = {
   kind: ReceiptLineKind
@@ -184,9 +179,7 @@ export const ReceiptCard = ({
           borderTop: `1px dashed ${DASH}`,
         }}
       >
-        <span
-          style={{ fontFamily: MONO, fontSize: '30px', fontWeight: 700 }}
-        >
+        <span style={{ fontFamily: MONO, fontSize: '30px', fontWeight: 700 }}>
           {kwhValue}
         </span>
         <span style={{ fontFamily: MONO, fontSize: '13px', color: MUTED }}>
