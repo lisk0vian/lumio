@@ -22,6 +22,7 @@ import {
   useCalculationInputs,
 } from '../calculator/use-calculation-inputs'
 import { getReceiptLabels } from '../calculator/receipt-labels'
+import { calculationPath } from '@/constants/routes'
 import { useTranslations, type AppLang } from '@/i18n'
 
 export type MobileTab = 'calc' | 'hist' | 'ajustes'
@@ -74,7 +75,7 @@ export function CalcPanel({ lang }: { lang: AppLang }) {
         </SectionBlock>
         <p className="mt-3">
           <a
-            href={lang === 'en' ? '/en/calculation' : '/calculo'}
+            href={calculationPath(lang)}
             className="inline-flex min-h-11 items-center text-xs link-ember"
           >
             {t('explainer.link')}

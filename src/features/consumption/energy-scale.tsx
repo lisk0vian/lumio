@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { formatKwh } from '@/utils/format.utils'
 import { useTranslations, type AppLang } from '@/i18n'
 import type { I18nKey } from '@/i18n/utils'
 
@@ -67,37 +68,29 @@ export const LevelHint = ({
   return (
     <p className={className}>
       {level && activeKwh != null
-        ? `${activeKwh.toFixed(1)} kWh · ${getLevelRange(level)}`
+        ? `${formatKwh(activeKwh)} · ${getLevelRange(level)}`
         : t('calculator.writeConsumption')}
     </p>
   )
 }
 
-function getEnergyLevels(t: (key: I18nKey) => string): (EnergyBandProps & { key: string })[] {
-  return [
-    {
-      key: 'low',
-      label: t('scale.low'),
-      range: '< 70',
-    },
-    {
-      key: 'normal',
-      label: t('scale.normal'),
-      range: '70-140',
-    },
-    {
-      key: 'high',
-      label: t('scale.high'),
-      range: '140-250',
-    },
-    {
-      key: 'extra-high',
-      label: t('scale.extraHigh'),
-      range: '> 250',
-    },
-  ]
+// Derived from LEVEL_BANDS so ranges never drift from the thresholds above.
+function getEnergyLevels(
+  t: (key: I18nKey) => string
+): (EnergyBandProps & { key: string })[] {
+  return LEVEL_BANDS.map((band) => ({
+    key: band.key,
+    label: t(LEVEL_LABEL_KEY[band.key]),
+    range: band.range,
+  }))
 }
-export const EnergyScale = ({ lang, activeKwh }: { lang: AppLang; activeKwh?: number | null }) => {
+export const EnergyScale = ({
+  lang,
+  activeKwh,
+}: {
+  lang: AppLang
+  activeKwh?: number | null
+}) => {
   const t = useTranslations(lang)
   const level = activeKwh == null ? null : getConsumptionLevel(activeKwh)
   const energyLevels = getEnergyLevels(t)
@@ -145,11 +138,7 @@ const EnergyBand = ({ label, range, isActive }: EnergyBandProps) => {
       >
         {label}
       </p>
-      <p
-        className="mt-0.5 text-[0.625rem]"
-      >
-        {range}
-      </p>
+      <p className="mt-0.5 text-[0.625rem]">{range}</p>
     </div>
   )
 }

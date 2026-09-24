@@ -10,6 +10,7 @@ import { LevelBlock } from '../features/consumption/consumption-level.island.tsx
 import { SavingTip } from '../features/tips/saving-tip.island.tsx'
 import { SettingsBar } from '../features/settings/settings-bar.island.tsx'
 import { MobileTabs } from '../features/shell/mobile-tabs.island.tsx'
+import { calculationPath } from '../constants/routes'
 import { useTranslations, type AppLang } from '../i18n'
 
 // Shared page composition, rendered once per language route (`/` = es,
@@ -76,7 +77,7 @@ const t = useTranslations(lang)
                   </div>
                   <p class="mt-2">
                     <a
-                      href={lang === 'en' ? '/en/calculation' : '/calculo'}
+                      href={calculationPath(lang)}
                       class="text-xs link-ember"
                     >
                       {t('explainer.link')}

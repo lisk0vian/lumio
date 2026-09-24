@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { languages, type AppLang } from '@/i18n/ui'
+import { HOME_ROUTES } from '@/constants/routes'
 
 const LANGS = Object.keys(languages) as AppLang[]
 
@@ -11,7 +12,7 @@ const LANGS = Object.keys(languages) as AppLang[]
 // to `/`.
 export const LanguagePicker = ({
   lang,
-  routes = { es: '/', en: '/en/' },
+  routes = HOME_ROUTES,
 }: {
   lang: AppLang
   routes?: Record<AppLang, string>

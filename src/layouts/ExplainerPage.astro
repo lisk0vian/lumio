@@ -8,7 +8,8 @@ import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
 } from '../utils/calculation.utils';
-import { useTranslations, type AppLang } from '../i18n';
+import { useTranslations, type AppLang } from '../i18n'
+import { CALCULATION_ROUTES, homePath } from '../constants/routes'
 
 // Static explainer page: zero islands, one bundled script for the anime.js
 // reveals and the scroll progress bar. The worked example is computed at
@@ -156,7 +157,7 @@ const sources = [
   },
 ];
 
-const backHref = lang === 'en' ? '/en/' : '/';
+const backHref = homePath(lang);
 const pageTitle = `${t('explainer.title')} · Lumio`;
 
 const headingClass = 'flex items-baseline gap-2.5 text-sm font-semibold';
@@ -180,7 +181,7 @@ const leadClass = 'mt-2 text-sm leading-relaxed text-foreground';
     <main
       class="mx-auto flex min-h-screen w-full max-w-2xl flex-1 flex-col px-5 pt-4 pb-20 md:px-8 md:pt-8"
     >
-      <TopBar lang={lang} routes={{ es: '/calculo', en: '/en/calculation' }} />
+      <TopBar lang={lang} routes={CALCULATION_ROUTES} />
       <p class="mt-6">
         <a href={backHref} class="text-xs link-ember text-ember">
           {t('explainer.back')}

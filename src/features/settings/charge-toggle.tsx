@@ -1,12 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { animate } from 'animejs'
+import { useRef } from 'react'
 import { Power, PowerOff } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { cn } from '@/lib/utils'
-import {
-  isReducedMotion,
-  LUMIO_SETTING_EVENT,
-} from '@/utils/animated-number.utils'
+import { LUMIO_SETTING_EVENT } from '@/utils/animated-number.utils'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
 
@@ -32,18 +29,13 @@ export const ChargeToggle = ({
   )
   const stateLabel = t(isEnabled ? 'receipt.included' : 'receipt.excluded')
   const iconRef = useRef<HTMLSpanElement | null>(null)
-  const firstRef = useRef(true)
 
   // Icon swap pops in, skipped on first paint.
-  useEffect(() => {
-    if (firstRef.current) {
-      firstRef.current = false
-      return
-    }
-    const el = iconRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { scale: [0.6, 1], duration: 180, ease: 'outCubic' })
-  }, [isEnabled])
+  useAnimateOnChange(
+    () => iconRef.current,
+    { scale: [0.6, 1], duration: 180, ease: 'outCubic' },
+    [isEnabled]
+  )
 
   return (
     <Toggle

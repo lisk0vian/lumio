@@ -1,0 +1,174 @@
+/* Design tokens: warm paper/ink, ember brand, charts, sidebar, fonts.
+   Imported first so every layer below resolves from these vars. */
+
+:root {
+  --radius: 0.5rem;
+
+  /* base — papel cálido, no blanco puro: la página es off-white para que
+     --card (#fff) siga existiendo *encima* y las superficies se distingan.
+     Los neutros llevan chroma ~0.007–0.018 en hue 80–95 (ámbar tenue):
+     grises puros (chroma 0) leían como blanco/negro ajeno a la marca. */
+  --background: oklch(0.981 0.007 95);
+  --foreground: oklch(0.205 0.008 80);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.008 80);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0.008 80);
+
+  --muted: oklch(0.945 0.018 90);
+  --muted-foreground: oklch(0.5 0.014 88);
+
+  --border: oklch(0.892 0.018 90);
+  --input: oklch(0.892 0.018 90);
+  --ring: oklch(0.8541 0.1706 86.9206);
+
+  /* brand */
+  --primary: oklch(0.8541 0.1706 86.9206);
+  --primary-foreground: oklch(0.1913 0 0);
+
+  /* Acento legible: terracota en claro (5.5:1 sobre papel), amarillo primary
+     en oscuro (13:1). text-primary pelado falla en claro (1.57:1). También
+     es el color de los trazos que *significan* algo (underline activo, rail). */
+  --ember: oklch(0.52 0.13 45);
+
+  --secondary: oklch(0.205 0.008 80);
+  --secondary-foreground: oklch(0.985 0.006 95);
+
+  --destructive: oklch(0.5676 0.2084 27.0613);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* accent = superficie de selección (ámbar tenue). Nunca blanco: el blanco
+     queda reservado a la tinta. accent-foreground = el ámbar legible encima. */
+  --accent: oklch(0.955 0.045 90);
+  --accent-foreground: var(--ember);
+
+  /* charts — escala de intensidad de consumo, amarillo a rojo, negro como referencia */
+  --chart-1: oklch(0.8541 0.1706 86.9206); /* consumo bajo */
+  --chart-2: oklch(0.7837 0.1587 72.9913); /* consumo medio-bajo */
+  --chart-3: oklch(0.6574 0.1789 40.4469); /* consumo medio-alto */
+  --chart-4: oklch(0.549 0.1741 29.9397); /* consumo alto */
+  --chart-5: oklch(0.205 0.008 80); /* línea de referencia / promedio */
+
+  /* sidebar — siempre negro, en claro y oscuro */
+  --sidebar: oklch(0.19 0.008 85);
+  --sidebar-foreground: oklch(0.965 0.012 95);
+  --sidebar-primary: oklch(0.8541 0.1706 86.9206);
+  --sidebar-primary-foreground: oklch(0.1913 0 0);
+  --sidebar-accent: oklch(0.265 0.01 85);
+  --sidebar-accent-foreground: oklch(0.965 0.012 95);
+  --sidebar-border: oklch(0.295 0.012 85);
+  --sidebar-ring: oklch(0.8541 0.1706 86.9206);
+
+  /* tipografía */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.dark {
+  /* Carbón cálido (mismo hue ámbar que el claro), no #121212 puro. La tinta
+     baja de 98% a 94.5% L: sigue en 16:1, pero deja de encandilar. */
+  --background: oklch(0.18 0.006 85);
+  --foreground: oklch(0.945 0.016 92);
+
+  --card: oklch(0.223 0.009 85);
+  --card-foreground: oklch(0.945 0.016 92);
+
+  --popover: oklch(0.223 0.009 85);
+  --popover-foreground: oklch(0.945 0.016 92);
+
+  --muted: oklch(0.272 0.013 85);
+  --muted-foreground: oklch(0.73 0.014 90);
+
+  --border: oklch(0.305 0.016 85);
+  --input: oklch(0.305 0.016 85);
+  --ring: oklch(0.8799 0.1535 89.7806);
+
+  --primary: oklch(0.8799 0.1535 89.7806);
+  --primary-foreground: oklch(0.1913 0 0);
+  --ember: oklch(0.8799 0.1535 89.7806);
+
+  /* Era casi blanco (0.9843): --secondary es una *superficie*, y tenerlo claro
+     convertía todo bg-secondary en un bloque blanco. */
+  --secondary: oklch(0.272 0.013 85);
+  --secondary-foreground: oklch(0.945 0.016 92);
+
+  --destructive: oklch(0.6922 0.1976 23.8341);
+  --destructive-foreground: oklch(0.1913 0 0);
+
+  /* Selección ámbar sobre carbón: primary encima da 9.5:1 (AA/AAA de sobra). */
+  --accent: oklch(0.3 0.045 85);
+  --accent-foreground: oklch(0.8799 0.1535 89.7806);
+
+  --chart-1: oklch(0.8799 0.1535 89.7806);
+  --chart-2: oklch(0.8217 0.1402 79.0805);
+  --chart-3: oklch(0.7321 0.1454 51.5425);
+  --chart-4: oklch(0.6384 0.1762 32.722);
+  --chart-5: oklch(0.945 0.016 92);
+
+  --sidebar: oklch(0.165 0.008 85);
+  --sidebar-foreground: oklch(0.965 0.012 95);
+  --sidebar-primary: oklch(0.8799 0.1535 89.7806);
+  --sidebar-primary-foreground: oklch(0.1913 0 0);
+  --sidebar-accent: oklch(0.245 0.01 85);
+  --sidebar-accent-foreground: oklch(0.965 0.012 95);
+  --sidebar-border: oklch(0.275 0.012 85);
+  --sidebar-ring: oklch(0.8799 0.1535 89.7806);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-ember: var(--ember);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

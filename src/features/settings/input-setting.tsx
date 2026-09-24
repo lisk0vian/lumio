@@ -1,4 +1,7 @@
 import { useRef } from 'react'
+// Base UI input on purpose: ui/input is a plain <input> wrapper without the
+// onValueChange API this settings field needs. CountTotal can use ui/input
+// because it wires onChange manually.
 import { Input } from '@base-ui/react'
 import { FieldSweep, useFieldFeedback } from './field-feedback'
 import type { SettingFieldId } from '@/utils/animated-number.utils'

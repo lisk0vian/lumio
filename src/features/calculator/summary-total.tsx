@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { animate } from 'animejs'
-import { isReducedMotion } from '@/utils/animated-number.utils'
+import { useRef } from 'react'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import { formatKwh, formatMoney } from '@/utils/format.utils'
 import { useAnimatedNumber } from './use-animated-number'
 
@@ -10,24 +9,23 @@ type SummaryTotalProp = {
   surcharges?: string[] // tax, charge, fee, etc.
 }
 
-export const SummaryTotal = ({ total, unit = 'money', surcharges }: SummaryTotalProp) => {
+export const SummaryTotal = ({
+  total,
+  unit = 'money',
+  surcharges,
+}: SummaryTotalProp) => {
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const labelRef = useRef<HTMLParagraphElement | null>(null)
-  const firstLabelRef = useRef(true)
   const display = useAnimatedNumber(total, unit, titleRef)
   const label = surcharges?.join(' · ') ?? ''
 
   // The surcharges line (e.g. Con/Sin IGV) follows the settings toggles:
   // fade + slide when its text changes, instant under reduced motion.
-  useEffect(() => {
-    if (firstLabelRef.current) {
-      firstLabelRef.current = false
-      return
-    }
-    const el = labelRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { opacity: [0, 1], y: [4, 0], duration: 150, ease: 'outCubic' })
-  }, [label])
+  useAnimateOnChange(
+    () => labelRef.current,
+    { opacity: [0, 1], y: [4, 0], duration: 150, ease: 'outCubic' },
+    [label]
+  )
 
   return (
     <div>
@@ -37,7 +35,9 @@ export const SummaryTotal = ({ total, unit = 'money', surcharges }: SummaryTotal
       >
         {unit === 'money' ? formatMoney(display) : formatKwh(display)}
       </h1>
-      <p ref={labelRef} className="font-mono text-xs font-medium text-ember">{label}</p>
+      <p ref={labelRef} className="font-mono text-xs font-medium text-ember">
+        {label}
+      </p>
     </div>
   )
 }

@@ -1,0 +1,72 @@
+/* Base layer: resets, number-input fixes, focus and touch defaults, plus the
+   desktop app-shell viewport contract (see AppPage.astro). */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  input[type='number'] {
+    appearance: textfield; /* estándar */
+    -webkit-appearance: none; /* Chrome, Safari, Edge */
+  }
+
+  /* Firefox no entiende el keyword estándar `textfield`: necesita el prefijo.
+     Va en @supports para que LightningCSS no lo elimine como "redundante". */
+  @supports (-moz-appearance: textfield) {
+    input[type='number'] {
+      -moz-appearance: textfield;
+    }
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    appearance: none; /* estándar */
+    margin: 0;
+  }
+
+  /* Blink (Chrome/Brave/Edge) exige el prefijo en estos pseudo-elementos
+     aunque exista el estándar. Va en @supports para que LightningCSS
+     no lo elimine como "redundante" (misma técnica que el fix Firefox). */
+  @supports (-webkit-appearance: none) {
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+  }
+
+  input:focus {
+    @apply outline-none ring-0;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+}
+
+/* Desktop app-shell (ver AppPage.astro): en lg+ la página mide exactamente
+   100dvh sin scroll de body ni scroll interno — todo el aire está
+   presupuestado para que quepa. En móvil y en las páginas explicativas
+   no se usa: ahí el scroll de página se mantiene. Solo en viewports muy
+   bajos se rehabilita el scroll de página como fallback. */
+@media (min-width: 64rem) {
+  .lumio-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+@media (min-width: 64rem) and (max-height: 44rem) {
+  .lumio-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .lumio-shell main {
+    height: auto;
+    overflow: visible;
+  }
+}

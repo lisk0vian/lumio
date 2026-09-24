@@ -1,11 +1,8 @@
-import { useEffect, useRef } from 'react'
-import { animate } from 'animejs'
+import { useRef } from 'react'
 import { Toggle } from '@/components/ui/toggle'
 import { cn } from '@/lib/utils'
-import {
-  isReducedMotion,
-  LUMIO_SETTING_EVENT,
-} from '@/utils/animated-number.utils'
+import { LUMIO_SETTING_EVENT } from '@/utils/animated-number.utils'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
 
@@ -14,18 +11,13 @@ export const TaxToggle = ({ lang }: { lang: AppLang }) => {
   const setIsTaxEnabled = useLumioStore((state) => state.setIsTaxEnabled)
   const t = useTranslations(lang)
   const textRef = useRef<HTMLSpanElement | null>(null)
-  const firstRef = useRef(true)
 
   // Incluido/Excluido swaps: fade + slide, skipped on first paint.
-  useEffect(() => {
-    if (firstRef.current) {
-      firstRef.current = false
-      return
-    }
-    const el = textRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' })
-  }, [isTaxEnabled])
+  useAnimateOnChange(
+    () => textRef.current,
+    { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' },
+    [isTaxEnabled]
+  )
 
   return (
     <Toggle

@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { animate } from 'animejs'
+import { useRef } from 'react'
 import { tariffCategories } from '@/data/tariffs.data'
 import {
   Select,
@@ -14,7 +13,7 @@ import {
   groupTariffsByCode,
   isCustomTariff,
 } from '@/utils/tariff-catalog.utils'
-import { isReducedMotion } from '@/utils/animated-number.utils'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
@@ -38,7 +37,6 @@ export const SelectTariff = ({
   const t = useTranslations(lang)
   const tariff = tariffCategories.find((item) => item.id === tariffId)
   const nameRef = useRef<HTMLSpanElement | null>(null)
-  const firstRef = useRef(true)
 
   // Editing any tariff-owned field diverges from the catalog entry: the
   // trigger then reads Personalizada until a tariff is picked again.
@@ -53,15 +51,11 @@ export const SelectTariff = ({
       : ''
 
   // Trigger text crossfades on tariff switches, including into Personalizada.
-  useEffect(() => {
-    if (firstRef.current) {
-      firstRef.current = false
-      return
-    }
-    const el = nameRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { opacity: [0.3, 1], duration: 120, ease: 'outCubic' })
-  }, [display])
+  useAnimateOnChange(
+    () => nameRef.current,
+    { opacity: [0.3, 1], duration: 120, ease: 'outCubic' },
+    [display]
+  )
 
   return (
     <Select value={tariffId ?? ''} onValueChange={(id) => id && setTariff(id)}>

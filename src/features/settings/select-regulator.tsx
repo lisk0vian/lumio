@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { animate } from 'animejs'
+import { useRef } from 'react'
 import { regulators } from '@/data/tariffs.data'
 import {
   Select,
@@ -9,7 +8,7 @@ import {
   SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
-import { isReducedMotion } from '@/utils/animated-number.utils'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import { cn } from '@/lib/utils'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
@@ -25,19 +24,14 @@ export const SelectRegulator = ({
   const regulatorId = useLumioStore((state) => state.regulatorId)
   const setRegulator = useLumioStore((state) => state.setRegulator)
   const nameRef = useRef<HTMLSpanElement | null>(null)
-  const firstRef = useRef(true)
   const name = regulators.find((r) => r.id === regulatorId)?.name ?? ''
 
   // Trigger text crossfades when the regulator changes.
-  useEffect(() => {
-    if (firstRef.current) {
-      firstRef.current = false
-      return
-    }
-    const el = nameRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { opacity: [0.3, 1], duration: 120, ease: 'outCubic' })
-  }, [name])
+  useAnimateOnChange(
+    () => nameRef.current,
+    { opacity: [0.3, 1], duration: 120, ease: 'outCubic' },
+    [name]
+  )
 
   return (
     <Select value={regulatorId} onValueChange={(id) => id && setRegulator(id)}>

@@ -3,7 +3,11 @@ import { animate } from 'animejs'
 import { Input } from '@/components/ui/input'
 import { useLumioStore } from '@/stores/lumio-store'
 import { useTranslations, type AppLang } from '@/i18n'
-import { isReducedMotion, LUMIO_COMMIT_EVENT } from '@/utils/animated-number.utils'
+import {
+  isReducedMotion,
+  LUMIO_COMMIT_EVENT,
+} from '@/utils/animated-number.utils'
+import { useAnimateOnChange } from '@/hooks/use-animate-on-change'
 import {
   calculateKwhToMoney,
   calculateMoneyToKwh,
@@ -17,7 +21,13 @@ import {
 import { formatKwh, formatMoney } from '@/utils/format.utils'
 import { useCalculationInputs } from './use-calculation-inputs'
 
-export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showResumen?: boolean }) => {
+export const CountTotal = ({
+  lang,
+  showResumen = false,
+}: {
+  lang: AppLang
+  showResumen?: boolean
+}) => {
   const direction = useLumioStore((state) => state.direction)
   const inputKwh = useLumioStore((state) => state.inputKwh)
   const inputMoney = useLumioStore((state) => state.inputMoney)
@@ -31,7 +41,6 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
   const unitRef = useRef<HTMLSpanElement | null>(null)
   const hintRef = useRef<HTMLParagraphElement | null>(null)
   const shakeAnimRef = useRef<ReturnType<typeof animate> | null>(null)
-  const firstDirectionRef = useRef(true)
   const lastHintAnimRef = useRef(0)
 
   const isKwhMode = direction === 'kwh-to-money'
@@ -54,7 +63,11 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
     const el = rowRef.current
     if (!el || isReducedMotion()) return
     shakeAnimRef.current?.cancel()
-    shakeAnimRef.current = animate(el, { x: [0, -7, 7, -5, 5, 0], duration: 300, ease: 'outQuad' })
+    shakeAnimRef.current = animate(el, {
+      x: [0, -7, 7, -5, 5, 0],
+      duration: 300,
+      ease: 'outQuad',
+    })
   }
 
   const handleCommit = () => {
@@ -91,15 +104,11 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
     : `≈ ${formatKwh(calculateMoneyToKwh(rawValue, inputs).kwh)}`
 
   // Unit fades/slides when the conversion direction flips (rare event).
-  useEffect(() => {
-    if (firstDirectionRef.current) {
-      firstDirectionRef.current = false
-      return
-    }
-    const el = unitRef.current
-    if (!el || isReducedMotion()) return
-    animate(el, { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' })
-  }, [isKwhMode])
+  useAnimateOnChange(
+    () => unitRef.current,
+    { opacity: [0, 1], y: [4, 0], duration: 120, ease: 'outCubic' },
+    [isKwhMode]
+  )
 
   // Hint slides on value changes, throttled so fast typing never queues it.
   useEffect(() => {
@@ -108,7 +117,12 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
     const now = Date.now()
     if (now - lastHintAnimRef.current < 250) return
     lastHintAnimRef.current = now
-    animate(el, { opacity: [0.35, 1], y: [3, 0], duration: 150, ease: 'outCubic' })
+    animate(el, {
+      opacity: [0.35, 1],
+      y: [3, 0],
+      duration: 150,
+      ease: 'outCubic',
+    })
   }, [hint])
 
   useEffect(() => {
@@ -128,7 +142,9 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
             type="text"
             inputMode="decimal"
             placeholder="0"
-            aria-label={isKwhMode ? t('calculator.consumption') : t('calculator.amount')}
+            aria-label={
+              isKwhMode ? t('calculator.consumption') : t('calculator.amount')
+            }
             value={draft}
             onChange={(e) => {
               const text = sanitizeEntryText(e.target.value)
@@ -143,12 +159,18 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
             }}
             className="h-auto min-w-0 flex-1 border-transparent bg-background! py-1 text-right font-mono font-medium text-[clamp(2rem,8vw,3rem)] leading-none outline-none ring-0 tabular-nums focus-visible:border-foreground lg:text-[clamp(1.75rem,3vw,2rem)] 2xl:text-[2rem]"
           />
-          <span ref={unitRef} className="inline-block font-mono text-base text-muted-foreground 2xl:text-lg">
+          <span
+            ref={unitRef}
+            className="inline-block font-mono text-base text-muted-foreground 2xl:text-lg"
+          >
             {isKwhMode ? 'kWh' : 'S/'}
           </span>
         </p>
       </div>
-      <p ref={hintRef} className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground">
+      <p
+        ref={hintRef}
+        className="pt-1 text-right font-mono text-xs tabular-nums text-muted-foreground"
+      >
         {hint}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-2">
@@ -169,7 +191,11 @@ export const CountTotal = ({ lang, showResumen = false }: { lang: AppLang; showR
         </div>
         {showResumen ? (
           <p className="text-right font-mono text-[0.625rem] text-muted-foreground">
-            S/ {inputs.pricePerKwh}/kWh · {t('settings.fixedCharge')} S/ {inputs.fixedCharge} · {inputs.isTaxEnabled ? `IGV ${Math.round(inputs.igvRate * 100)}%` : t('calculator.withoutIgv')}
+            S/ {inputs.pricePerKwh}/kWh · {t('settings.fixedCharge')} S/{' '}
+            {inputs.fixedCharge} ·{' '}
+            {inputs.isTaxEnabled
+              ? `IGV ${Math.round(inputs.igvRate * 100)}%`
+              : t('calculator.withoutIgv')}
           </p>
         ) : null}
       </div>
